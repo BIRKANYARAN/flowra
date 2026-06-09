@@ -6,6 +6,7 @@
 // cost calculator modal, search, currency toggle.
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
@@ -98,10 +99,47 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
   const canConvert: boolean = currency === 'TRY' || (currency === 'USD' ? fxRates.USD > 0 : fxRates.EUR > 0)
   const SYM = currencySym(currency)
 
+  const router = useRouter()
+
   // ── Inline edit state ─────────────────────────────────────────────────────
   const [editingId,    setEditingId]    = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState('')
   const [savingPrice,  setSavingPrice]  = useState(false)
+
+  // ── New-product modal state ───────────────────────────────────────────────
+  const [showCreate, setShowCreate] = useState(false)
+  const [creating,   setCreating]   = useState(false)
+  const [createErr,  setCreateErr]  = useState('')
+  const [np, setNp] = useState({ name: '', unit: 'adet', category: '', catalog_price: '', unit_cost: '', stock_qty: '', stock_alert_qty: '' })
+
+  function resetNp() { setNp({ name: '', unit: 'adet', category: '', catalog_price: '', unit_cost: '', stock_qty: '', stock_alert_qty: '' }); setCreateErr('') }
+
+  async function createProduct() {
+    const name = np.name.trim()
+    if (!name) { setCreateErr('Ürün adı zorunludur.'); return }
+    setCreating(true); setCreateErr('')
+    try {
+      const res = await fetch('/api/products', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          unit:            np.unit.trim() || 'adet',
+          category:        np.category.trim() || undefined,
+          catalog_price:   parseFloat(np.catalog_price) || 0,
+          unit_cost:       parseFloat(np.unit_cost) || 0,
+          stock_qty:       parseFloat(np.stock_qty) || 0,
+          stock_alert_qty: parseFloat(np.stock_alert_qty) || 0,
+          is_active:       true,   // catalog list filters .eq('is_active', true)
+        }),
+      })
+      if (!res.ok) { setCreateErr((await res.json().catch(() => ({})))?.error || 'Ürün oluşturulamadı.'); setCreating(false); return }
+      setShowCreate(false); resetNp(); setCreating(false)
+      router.refresh()   // re-fetch the server-rendered product list
+    } catch {
+      setCreateErr('Ürün oluşturulamadı.'); setCreating(false)
+    }
+  }
 
   // ── Cost calculator modal state ───────────────────────────────────────────
   const [costCalcId,         setCostCalcId]         = useState<string | null>(null)
@@ -313,8 +351,75 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
             onChange={e => setSearch(e.target.value)}
             className="border border-[#e8eaef] rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 w-56"
           />
+
+          {/* New product */}
+          <button
+            onClick={() => { resetNp(); setShowCreate(true) }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-sm font-semibold hover:bg-brand-light transition-colors whitespace-nowrap">
+            + Yeni Ürün
+          </button>
         </div>
       </div>
+
+      {/* ── New product modal ────────────────────────────────────────── */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={() => !creating && setShowCreate(false)}>
+          <div className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-[#0f172a]">Yeni Ürün</h3>
+              <button onClick={() => !creating && setShowCreate(false)} className="text-[#94a3b8] hover:text-[#334155] text-xl leading-none">×</button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-semibold text-[#64748b]">Ürün Adı *</label>
+                <input autoFocus value={np.name} onChange={e => setNp({ ...np, name: e.target.value })}
+                  onKeyDown={e => { if (e.key === 'Enter') createProduct() }}
+                  className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="örn. Danışmanlık Hizmeti" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Birim</label>
+                  <input value={np.unit} onChange={e => setNp({ ...np, unit: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="adet" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Kategori</label>
+                  <input value={np.category} onChange={e => setNp({ ...np, category: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="opsiyonel" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Satış Fiyatı (₺)</label>
+                  <input type="number" min="0" value={np.catalog_price} onChange={e => setNp({ ...np, catalog_price: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="0" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Birim Maliyet (₺)</label>
+                  <input type="number" min="0" value={np.unit_cost} onChange={e => setNp({ ...np, unit_cost: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="0" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Başlangıç Stok</label>
+                  <input type="number" min="0" value={np.stock_qty} onChange={e => setNp({ ...np, stock_qty: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="0" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748b]">Kritik Stok Eşiği</label>
+                  <input type="number" min="0" value={np.stock_alert_qty} onChange={e => setNp({ ...np, stock_alert_qty: e.target.value })}
+                    className="mt-1 w-full border border-[#e8eaef] rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30" placeholder="0" />
+                </div>
+              </div>
+              {createErr && <div className="text-xs text-neg font-medium">{createErr}</div>}
+            </div>
+            <div className="flex items-center justify-end gap-2 mt-5">
+              <button onClick={() => !creating && setShowCreate(false)} className="px-3.5 py-2 rounded-lg text-sm font-semibold text-[#64748b] hover:bg-[#f1f5f9] transition-colors">İptal</button>
+              <button onClick={createProduct} disabled={creating}
+                className="px-4 py-2 rounded-lg bg-brand text-white text-sm font-semibold hover:bg-brand-light transition-colors disabled:opacity-50">
+                {creating ? 'Kaydediliyor…' : 'Ürünü Oluştur'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Catalog Intelligence Alerts ──────────────────────────────── */}
       {(catalogInsights.negativeMarginCount > 0 || catalogInsights.lowMarginCount > 0 || catalogInsights.highestMargin.margin > -Infinity) && (
@@ -340,11 +445,18 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       {/* ── Table ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="text-sm text-[#94a3b8]">
+          <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="text-3xl opacity-50">📦</div>
+            <div className="text-sm text-[#64748b]">
               {products.length === 0 ? 'Henüz ürün eklenmedi.' : 'Aramayla eşleşen ürün bulunamadı.'}
             </div>
-            {products.length === 0 && <p className="text-xs text-[#94a3b8] mt-1">Katalog oluşturmak için ürün ekleyin.</p>}
+            {products.length === 0 && (
+              <button
+                onClick={() => { resetNp(); setShowCreate(true) }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+                + İlk ürününü ekle
+              </button>
+            )}
           </div>
         ) : (
           <>
