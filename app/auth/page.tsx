@@ -6,7 +6,7 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 
 type Mode = 'login' | 'register'
 
-const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white'
+const IL  = 'w-full border border-[#e8eaef] rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-shadow'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export default function AuthPage() {
@@ -76,24 +76,67 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded border border-[#e8eaef] shadow-sm p-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded bg-brand-light flex items-center justify-center">
-            <span className="text-white font-black text-sm">F</span>
+    <main className="min-h-screen flex bg-[#f6f7f9]">
+
+      {/* ── LEFT — dark brand panel (premium first impression) ─────────────── */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-[#0f172a] via-[#161a33] to-[#2e1065] text-white relative overflow-hidden">
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="w-10 h-10 rounded-xl bg-brand-light flex items-center justify-center shadow-soft-lg">
+            <span className="text-white font-black">F</span>
           </div>
           <div>
-            <div className="font-black text-[#0f172a]">Flowra</div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">ERP Sistemi</div>
+            <div className="font-black text-lg leading-none">Flowra</div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-white/40 mt-0.5">ERP Sistemi</div>
           </div>
         </div>
 
-        <h2 className="text-base font-bold text-[#0f172a] mb-6">
-          {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
-        </h2>
+        <div className="max-w-md relative z-10">
+          <h1 className="text-[2rem] font-black leading-[1.15] tracking-tight">
+            İşletmenizin finansal komuta merkezi.
+          </h1>
+          <p className="mt-4 text-white/60 leading-relaxed">
+            Nakit, kâr, vergi, stok ve ortak hesaplarınız tek ekranda — gerçek zamanlı, denetime hazır.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {['Anlık nakit & kâr göstergeleri', 'Otomatik KDV & kurumlar vergisi', 'Ortak sermaye & temettü takibi', 'TTK uyumlu belge arşivi'].map(f => (
+              <li key={f} className="flex items-center gap-3 text-sm text-white/80">
+                <span className="w-5 h-5 rounded-full bg-brand/30 flex items-center justify-center text-brand-light text-[11px] font-black flex-shrink-0">✓</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        <div className="space-y-4">
+        <div className="text-xs text-white/30 relative z-10">© 2026 Flowra · Tüm hakları saklıdır</div>
+
+        {/* decorative brand glow */}
+        <div aria-hidden className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-brand/25 blur-3xl" />
+        <div aria-hidden className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-light/10 blur-3xl" />
+      </div>
+
+      {/* ── RIGHT — auth form ──────────────────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          {/* Mobile brand (left panel hidden on mobile) */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-9 h-9 rounded-xl bg-brand-light flex items-center justify-center">
+              <span className="text-white font-black text-sm">F</span>
+            </div>
+            <div>
+              <div className="font-black text-[#0f172a]">Flowra</div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">ERP Sistemi</div>
+            </div>
+          </div>
+
+          <div className="fl-card p-8">
+            <h2 className="text-lg font-black text-[#0f172a] tracking-tight mb-1">
+              {mode === 'login' ? 'Tekrar hoş geldiniz' : 'Hesap oluşturun'}
+            </h2>
+            <p className="text-sm text-[#64748b] mb-6">
+              {mode === 'login' ? 'Komuta merkezinize giriş yapın.' : 'Birkaç saniyede başlayın.'}
+            </p>
+
+            <div className="space-y-4">
           {mode === 'register' && (
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -152,6 +195,8 @@ export default function AuthPage() {
               {mode === 'login' ? 'Kayıt Ol' : 'Giriş Yap'}
             </button>
           </p>
+            </div>
+          </div>
         </div>
       </div>
     </main>
