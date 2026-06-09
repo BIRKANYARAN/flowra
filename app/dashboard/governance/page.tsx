@@ -51,8 +51,8 @@ export default function GovernancePage() {
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Yönetişim Merkezi</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-xl font-bold text-[#0f172a]">Yönetişim Merkezi</h1>
+        <p className="text-sm text-[#64748b] mt-1">
           Kurumsal takvim, aksiyon kaydı ve karar defteri
         </p>
       </div>
@@ -66,8 +66,8 @@ export default function GovernancePage() {
             className={cn(
               'px-3.5 py-1.5 text-xs rounded transition-colors',
               i === activeGroupIdx
-                ? 'bg-violet-100 text-violet-800 font-black'
-                : 'text-gray-500 hover:text-gray-700 font-semibold',
+                ? 'bg-brand-subtle text-brand font-black'
+                : 'text-[#64748b] hover:text-[#334155] font-semibold',
             )}
           >
             {g.label}
@@ -75,7 +75,7 @@ export default function GovernancePage() {
         ))}
       </div>
       {/* Level 2: sub-tabs of the active group */}
-      <div className="flex gap-1 border-b border-gray-200 -mt-3">
+      <div className="flex gap-1 border-b border-[#e8eaef] -mt-3">
         {activeGroup.tabs.map(t => (
           <button
             key={t.id}
@@ -83,8 +83,8 @@ export default function GovernancePage() {
             className={cn(
               'px-4 py-2 text-sm font-medium transition-colors -mb-px border-b-2',
               activeTab === t.id
-                ? 'border-violet-600 text-violet-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700',
+                ? 'border-brand text-brand'
+                : 'border-transparent text-[#64748b] hover:text-[#334155]',
             )}
           >
             <span className="mr-1.5">{t.icon}</span>

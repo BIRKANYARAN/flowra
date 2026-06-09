@@ -64,16 +64,16 @@ interface FxReport {
 
 const RISK_BADGE: Record<string, { label: string; cls: string }> = {
   minimal:           { label: 'Minimal',          cls: 'bg-green-100  text-green-800  border-green-200'  },
-  low:               { label: 'Düşük',            cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  low:               { label: 'Düşük',            cls: 'bg-info-light   text-info-text   border-info-light'   },
   moderate:          { label: 'Orta',             cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   significant:       { label: 'Önemli',           cls: 'bg-orange-100 text-orange-800 border-orange-200' },
   critical:          { label: 'Kritik',           cls: 'bg-red-100    text-red-800    border-red-200'    },
-  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-gray-100   text-gray-600   border-gray-200'   },
+  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-[#f1f5f9]   text-[#475569]   border-[#e8eaef]'   },
 }
 
 const HEDGE_BADGE: Record<string, { label: string; cls: string }> = {
   no_action:        { label: 'Aksiyon Gerekmez',   cls: 'bg-green-100  text-green-800  border-green-200'  },
-  monitor:          { label: 'İzle',               cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  monitor:          { label: 'İzle',               cls: 'bg-info-light   text-info-text   border-info-light'   },
   natural_hedge:    { label: 'Doğal Hedge',        cls: 'bg-teal-100   text-teal-800   border-teal-200'   },
   forward_contract: { label: 'Vadeli Kontrat',     cls: 'bg-orange-100 text-orange-800 border-orange-200' },
   urgent_hedge:     { label: 'Acil Hedge!',        cls: 'bg-red-100    text-red-800    border-red-200'    },
@@ -89,7 +89,7 @@ function fmtForeign(amount: number, currency: string): string {
 function fmtScenarioLoss(loss: number): { text: string; cls: string } {
   if (loss > 0) return { text: `-${fmtTRY(loss)}`,    cls: 'text-red-600 font-bold' }
   if (loss < 0) return { text: `+${fmtTRY(-loss)}`,   cls: 'text-green-600 font-bold' }
-  return { text: '—', cls: 'text-gray-400' }
+  return { text: '—', cls: 'text-[#94a3b8]' }
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────

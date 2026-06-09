@@ -59,7 +59,7 @@ interface CapitalReport {
 
 const STRUCTURE_BADGE: Record<string, { label: string; cls: string }> = {
   conservative: { label: 'Muhafazakâr',    cls: 'bg-green-100  text-green-800  border-green-200'  },
-  balanced:     { label: 'Dengeli',        cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  balanced:     { label: 'Dengeli',        cls: 'bg-info-light   text-info-text   border-info-light'   },
   leveraged:    { label: 'Kaldıraçlı',    cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   over_leveraged: { label: 'Aşırı Borçlu', cls: 'bg-orange-100 text-orange-800 border-orange-200' },
   critical:     { label: 'Kritik',         cls: 'bg-red-100    text-red-800    border-red-200'    },
@@ -67,10 +67,10 @@ const STRUCTURE_BADGE: Record<string, { label: string; cls: string }> = {
 
 const DSCR_BADGE: Record<string, { label: string; cls: string }> = {
   strong:            { label: 'Güçlü',            cls: 'bg-green-100  text-green-800  border-green-200'  },
-  adequate:          { label: 'Yeterli',           cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  adequate:          { label: 'Yeterli',           cls: 'bg-info-light   text-info-text   border-info-light'   },
   tight:             { label: 'Sınırda',           cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   distressed:        { label: 'Stresli',           cls: 'bg-red-100    text-red-800    border-red-200'    },
-  insufficient_data: { label: 'Veri Yetersiz',     cls: 'bg-gray-100   text-gray-600   border-gray-200'   },
+  insufficient_data: { label: 'Veri Yetersiz',     cls: 'bg-[#f1f5f9]   text-[#475569]   border-[#e8eaef]'   },
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export function CapitalStructureClient({ companyId }: Props) {
 
   const dscrColor =
     ds.dscr_health === 'strong'   ? 'text-green-700'  :
-    ds.dscr_health === 'adequate' ? 'text-blue-700'   :
+    ds.dscr_health === 'adequate' ? 'text-info-text'   :
     ds.dscr_health === 'tight'    ? 'text-yellow-700' : 'text-red-700'
 
   const headroomColor = headroom >= 0 ? 'text-green-700' : 'text-red-700'

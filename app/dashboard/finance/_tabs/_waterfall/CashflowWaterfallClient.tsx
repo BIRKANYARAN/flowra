@@ -40,7 +40,7 @@ const SCENARIOS: { key: Scenario; label: string }[] = [
 function PositionBadge({ position }: { position: WaterfallMonth['cash_position'] }) {
   const map = {
     strong:   { text: 'Güçlü',     cls: 'bg-green-100 text-green-800' },
-    adequate: { text: 'Yeterli',   cls: 'bg-blue-100 text-blue-800' },
+    adequate: { text: 'Yeterli',   cls: 'bg-info-light text-info-text' },
     tight:    { text: 'Sınırlı',   cls: 'bg-yellow-100 text-yellow-800' },
     negative: { text: 'Negatif',   cls: 'bg-red-100 text-red-800' },
   }

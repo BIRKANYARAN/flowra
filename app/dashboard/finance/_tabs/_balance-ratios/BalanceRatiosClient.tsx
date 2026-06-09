@@ -28,18 +28,18 @@ interface Props {
 
 const LIQUIDITY_BADGE: Record<string, { label: string; cls: string }> = {
   strong:            { label: 'Güçlü',           cls: 'bg-green-100  text-green-800  border-green-200'  },
-  adequate:          { label: 'Yeterli',          cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  adequate:          { label: 'Yeterli',          cls: 'bg-info-light   text-info-text   border-info-light'   },
   tight:             { label: 'Sınırda',          cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   critical:          { label: 'Kritik',           cls: 'bg-red-100    text-red-800    border-red-200'    },
-  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-gray-100   text-gray-600   border-gray-200'   },
+  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-[#f1f5f9]   text-[#475569]   border-[#e8eaef]'   },
 }
 
 const SOLVENCY_BADGE: Record<string, { label: string; cls: string }> = {
   strong:            { label: 'Güçlü',           cls: 'bg-green-100  text-green-800  border-green-200'  },
-  adequate:          { label: 'Yeterli',          cls: 'bg-blue-100   text-blue-800   border-blue-200'   },
+  adequate:          { label: 'Yeterli',          cls: 'bg-info-light   text-info-text   border-info-light'   },
   leveraged:         { label: 'Kaldıraçlı',       cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   distressed:        { label: 'Riskli',           cls: 'bg-red-100    text-red-800    border-red-200'    },
-  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-gray-100   text-gray-600   border-gray-200'   },
+  insufficient_data: { label: 'Veri Yetersiz',    cls: 'bg-[#f1f5f9]   text-[#475569]   border-[#e8eaef]'   },
 }
 
 // ── Score meter ───────────────────────────────────────────────────────────────

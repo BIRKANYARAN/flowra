@@ -246,7 +246,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
                 {marginReport.products.slice(0, 10).map(p => {
                   const gradeColors: Record<string, string> = {
                     excellent: 'bg-pos-light text-pos-text',
-                    good:      'bg-blue-50 text-blue-700',
+                    good:      'bg-info-light text-info-text',
                     fair:      'bg-warn-light text-warn-text',
                     poor:      'bg-neg-light text-neg-text',
                   }

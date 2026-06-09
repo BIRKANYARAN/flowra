@@ -60,7 +60,7 @@ interface CostCenterReport {
 function healthCfg(h: CostStructureHealth): { label: string; color: string } {
   switch (h) {
     case 'flexible':          return { label: 'Esnek Yapı',     color: 'bg-[#dcfce7] border-green-200 text-[#16a34a]' }
-    case 'balanced':          return { label: 'Dengeli Yapı',   color: 'bg-blue-50 border-blue-200 text-blue-700' }
+    case 'balanced':          return { label: 'Dengeli Yapı',   color: 'bg-info-light border-info-light text-info-text' }
     case 'rigid':             return { label: 'Katı Yapı',      color: 'bg-[#fefce8] border-yellow-200 text-yellow-700' }
     case 'fragile':           return { label: 'Kırılgan Yapı',  color: 'bg-[#fee2e2] border-red-200 text-[#dc2626]' }
     case 'insufficient_data': return { label: 'Yetersiz Veri',  color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#94a3b8]' }
@@ -69,7 +69,7 @@ function healthCfg(h: CostStructureHealth): { label: string; color: string } {
 
 function behaviorCfg(b: CostBehavior): { label: string; color: string } {
   switch (b) {
-    case 'fixed':         return { label: 'Sabit',    color: 'bg-blue-50 text-blue-700' }
+    case 'fixed':         return { label: 'Sabit',    color: 'bg-info-light text-info-text' }
     case 'variable':      return { label: 'Değişken', color: 'bg-orange-50 text-orange-700' }
     case 'semi_variable': return { label: 'Karma',    color: 'bg-[#f1f5f9] text-[#64748b]' }
   }

@@ -17,7 +17,7 @@ import { useState } from 'react'
 
 const SEGMENT_CFG: Record<RfmSegment, { label: string; bg: string; text: string; dot: string }> = {
   champion:            { label: 'Şampiyon',          bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500'  },
-  loyal_customer:      { label: 'Sadık Müşteri',     bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500'    },
+  loyal_customer:      { label: 'Sadık Müşteri',     bg: 'bg-info-light',   text: 'text-info-text',   dot: 'bg-blue-500'    },
   potential_loyalist:  { label: 'Potansiyel Sadık',  bg: 'bg-cyan-100',   text: 'text-cyan-700',   dot: 'bg-cyan-500'    },
   recent_customer:     { label: 'Yeni Müşteri',      bg: 'bg-green-100',  text: 'text-green-700',  dot: 'bg-green-500'   },
   promising:           { label: 'Umut Vadeden',      bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'    },

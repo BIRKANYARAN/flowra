@@ -35,7 +35,7 @@ interface Props {
 function gradeConfig(grade: CccScorecardReport['efficiency_grade']) {
   const cfg = {
     A: { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700',  label: 'Mükemmel' },
-    B: { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   label: 'İyi' },
+    B: { bg: 'bg-info-light',   border: 'border-info-light',   text: 'text-info-text',   label: 'İyi' },
     C: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', label: 'Orta' },
     D: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', label: 'Zayıf' },
     F: { bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    label: 'Kritik' },
@@ -48,9 +48,9 @@ function gradeConfig(grade: CccScorecardReport['efficiency_grade']) {
 function trendLabel(trend: CccScorecardReport['trend']) {
   const cfg = {
     improving:         { label: 'Gelişiyor',    cls: 'text-green-600' },
-    stable:            { label: 'Stabil',        cls: 'text-blue-600' },
+    stable:            { label: 'Stabil',        cls: 'text-info-text' },
     deteriorating:     { label: 'Kötüleşiyor',  cls: 'text-red-600' },
-    insufficient_data: { label: 'Yetersiz Veri', cls: 'text-gray-400' },
+    insufficient_data: { label: 'Yetersiz Veri', cls: 'text-[#94a3b8]' },
   }
   return cfg[trend]
 }
@@ -141,11 +141,11 @@ function worstComponentLabel(component: 'dso' | 'dpo' | 'dio'): string {
 function TrendRow({ period, isCurrent }: { period: CccScorecardPeriod; isCurrent: boolean }) {
   const grade = inlineGrade(period.efficiency_score)
   return (
-    <tr className={isCurrent ? 'bg-blue-50' : 'hover:bg-[#f8fafc]'}>
+    <tr className={isCurrent ? 'bg-info-light' : 'hover:bg-[#f8fafc]'}>
       <td className="px-3 py-2 text-xs font-medium text-[#334155] whitespace-nowrap">
         {period.period_label}
         {isCurrent && (
-          <span className="ml-1.5 text-[9px] font-black uppercase tracking-wide text-blue-600">
+          <span className="ml-1.5 text-[9px] font-black uppercase tracking-wide text-info-text">
             Güncel
           </span>
         )}
@@ -159,7 +159,7 @@ function TrendRow({ period, isCurrent }: { period: CccScorecardPeriod; isCurrent
       <td className="px-3 py-2 text-center">
         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black ${
           grade === 'A' ? 'bg-green-100 text-green-700' :
-          grade === 'B' ? 'bg-blue-100 text-blue-700' :
+          grade === 'B' ? 'bg-info-light text-info-text' :
           grade === 'C' ? 'bg-yellow-100 text-yellow-700' :
           grade === 'D' ? 'bg-orange-100 text-orange-700' :
                           'bg-red-100 text-red-700'

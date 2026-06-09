@@ -79,7 +79,7 @@ const QUADRANT_CFG: Record<ProductQuadrant, {
   question_mark: {
     label:       'Soru İşareti',
     emoji:       '?',
-    colors:      'bg-blue-50 border-blue-200 text-blue-700',
+    colors:      'bg-info-light border-info-light text-info-text',
     description: 'Düşük ciro + yüksek marj',
   },
   dog: {

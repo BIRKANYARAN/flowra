@@ -31,7 +31,7 @@ function ImpactBadge({ impact }: { impact: StressScenario['stress_impact'] }) {
     moderate:   { label: 'Orta',       cls: 'bg-yellow-100 text-yellow-800' },
     vulnerable: { label: 'Kırılgan',   cls: 'bg-orange-100 text-orange-800' },
     critical:   { label: 'Kritik',     cls: 'bg-red-100 text-red-800' },
-    unknown:    { label: 'Bilinmiyor', cls: 'bg-gray-100 text-gray-600' },
+    unknown:    { label: 'Bilinmiyor', cls: 'bg-[#f1f5f9] text-[#475569]' },
   }
   const cfg = map[impact]
   return (

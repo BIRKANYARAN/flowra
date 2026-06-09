@@ -36,7 +36,7 @@ function PriorityBadge({ priority }: { priority: WorkingCapitalGap['priority'] }
   const cfg = {
     high:   { label: 'Yüksek Öncelik', cls: 'bg-red-100 text-red-800 border-red-200' },
     medium: { label: 'Orta Öncelik',   cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    low:    { label: 'Düşük Öncelik',  cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+    low:    { label: 'Düşük Öncelik',  cls: 'bg-[#f1f5f9] text-[#475569] border-[#e8eaef]' },
     none:   { label: 'Hedefte',        cls: 'bg-green-100 text-green-800 border-green-200' },
   }[priority]
 
@@ -82,7 +82,7 @@ function GapCard({ gap }: { gap: WorkingCapitalGap }) {
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-            gap.dimension === 'receivables' ? 'bg-blue-100 text-blue-700'
+            gap.dimension === 'receivables' ? 'bg-info-light text-info-text'
             : gap.dimension === 'payables'  ? 'bg-purple-100 text-purple-700'
             : 'bg-orange-100 text-orange-700'
           }`}>

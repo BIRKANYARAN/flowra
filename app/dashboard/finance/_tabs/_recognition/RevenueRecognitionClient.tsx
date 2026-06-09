@@ -199,7 +199,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
                     {fmtMonthShort(m.year_month)}
                   </span>
                   <span className={`text-[10px] tabular-nums font-semibold ${
-                    m.recognition_gap > 0 ? 'text-blue-600' : 'text-green-600'
+                    m.recognition_gap > 0 ? 'text-info-text' : 'text-green-600'
                   }`}>
                     {m.recognition_gap !== 0
                       ? `${m.recognition_gap > 0 ? '+' : ''}${fmtTRY(m.recognition_gap, 0)} fark`

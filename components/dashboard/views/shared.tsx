@@ -98,7 +98,7 @@ export function KpiTile({
 const SEV_STYLE: Record<string, string> = {
   critical: 'border-l-red-500 bg-red-50/40',
   warning:  'border-l-amber-500 bg-amber-50/40',
-  info:     'border-l-blue-400 bg-blue-50/30',
+  info:     'border-l-blue-400 bg-info-light/30',
 }
 
 export function AlertList({ alerts }: { alerts: HomePayload['summary']['top_alerts'] }) {

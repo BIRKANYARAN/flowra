@@ -63,10 +63,10 @@ export function OnboardingChecklist() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 px-5 pt-5">
         <div>
-          <h2 className="text-base font-bold text-gray-900">
+          <h2 className="text-base font-bold text-[#0f172a]">
             {status.is_empty ? "Flowra'ya hoş geldiniz 👋" : 'Kuruluma devam edin'}
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-[#64748b] mt-0.5">
             {status.is_empty
               ? 'Birkaç adımda işletmenizi kurun — kokpitiniz bu verilerle canlanır.'
               : 'Birkaç adım kaldı. Tamamladıkça göstergeleriniz doğrulukla dolar.'}
@@ -74,7 +74,7 @@ export function OnboardingChecklist() {
         </div>
         <button
           onClick={handleDismiss}
-          className="text-xs text-gray-400 hover:text-gray-600 shrink-0 mt-1"
+          className="text-xs text-[#94a3b8] hover:text-[#475569] shrink-0 mt-1"
           aria-label="Şimdilik gizle"
         >
           Şimdilik gizle
@@ -83,11 +83,11 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-5 mt-4">
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+        <div className="flex items-center justify-between text-xs text-[#64748b] mb-1.5">
           <span>{status.completed_count} / {status.total_count} adım tamamlandı</span>
-          <span className="font-semibold text-gray-700">%{pct}</span>
+          <span className="font-semibold text-[#334155]">%{pct}</span>
         </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
           <div
             className="h-full bg-emerald-500 rounded-full transition-all"
             style={{ width: `${pct}%` }}
@@ -109,20 +109,20 @@ export function OnboardingChecklist() {
                 className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                   step.done
                     ? 'bg-emerald-500 text-white'
-                    : 'border-2 border-gray-300 text-transparent'
+                    : 'border-2 border-[#e8eaef] text-transparent'
                 }`}
                 aria-hidden
               >
                 ✓
               </span>
               <span className="min-w-0">
-                <span className={`block text-sm font-medium ${step.done ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                <span className={`block text-sm font-medium ${step.done ? 'text-[#64748b] line-through' : 'text-[#0f172a]'}`}>
                   {step.label}
                 </span>
-                <span className="block text-xs text-gray-400 mt-0.5">{step.description}</span>
+                <span className="block text-xs text-[#94a3b8] mt-0.5">{step.description}</span>
               </span>
               {!step.done && (
-                <span className="ml-auto self-center text-sm text-blue-600 shrink-0">→</span>
+                <span className="ml-auto self-center text-sm text-info-text shrink-0">→</span>
               )}
             </a>
           </li>

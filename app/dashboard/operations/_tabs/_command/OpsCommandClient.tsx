@@ -43,7 +43,7 @@ function fmtTime(iso: string): string {
 
 const PULSE_CONFIG = {
   strong:   { bg: 'bg-green-50 border-green-200',   text: 'text-green-700',  dot: 'bg-green-500',  label: 'Güçlü' },
-  normal:   { bg: 'bg-blue-50 border-blue-200',     text: 'text-blue-700',   dot: 'bg-blue-500',   label: 'Normal' },
+  normal:   { bg: 'bg-info-light border-info-light',     text: 'text-info-text',   dot: 'bg-blue-500',   label: 'Normal' },
   slow:     { bg: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', dot: 'bg-yellow-500', label: 'Yavaş' },
   critical: { bg: 'bg-red-50 border-red-200',       text: 'text-red-700',    dot: 'bg-red-500',    label: 'Kritik' },
 } as const
@@ -53,7 +53,7 @@ const PULSE_CONFIG = {
 const ALERT_CONFIG = {
   critical: { bg: 'bg-red-50 border-red-200',       text: 'text-red-700',    icon: '●' },
   warning:  { bg: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', icon: '▲' },
-  info:     { bg: 'bg-blue-50 border-blue-200',     text: 'text-blue-700',   icon: 'ℹ' },
+  info:     { bg: 'bg-info-light border-info-light',     text: 'text-info-text',   icon: 'ℹ' },
 } as const
 
 // ── Delta badge ───────────────────────────────────────────────────────────────

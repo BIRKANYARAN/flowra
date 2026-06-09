@@ -22,7 +22,7 @@ type EbitdaTrend = EbitdaBridgeReport['trend']
 const TREND_CONFIG: Record<EbitdaTrend, { label: string; cls: string }> = {
   strong_growth:    { label: 'Güçlü Büyüme',     cls: 'bg-green-50 border-green-200 text-green-800' },
   growth:           { label: 'Büyüme',            cls: 'bg-green-50 border-green-100 text-green-700' },
-  stable:           { label: 'Stabil',            cls: 'bg-blue-50 border-blue-200 text-blue-800' },
+  stable:           { label: 'Stabil',            cls: 'bg-info-light border-info-light text-info-text' },
   decline:          { label: 'Gerileme',          cls: 'bg-amber-50 border-amber-200 text-amber-800' },
   severe_decline:   { label: 'Ciddi Düşüş',       cls: 'bg-red-50 border-red-200 text-red-800' },
   turnaround:       { label: 'Dönüş',             cls: 'bg-emerald-50 border-emerald-200 text-emerald-800' },

@@ -299,7 +299,7 @@ export async function CollectionsContent({ companyId }: Props) {
           <div className="flex items-center gap-2 px-4 py-2 border-b border-[#f1f5f9] flex-wrap">
             {[
               { key: 'routine',   label: 'Rutin',      count: priorityReport.by_urgency.routine,   color: 'bg-[#f1f5f9] text-[#64748b]' },
-              { key: 'follow_up', label: 'Takip',      count: priorityReport.by_urgency.follow_up, color: 'bg-blue-50 text-blue-700' },
+              { key: 'follow_up', label: 'Takip',      count: priorityReport.by_urgency.follow_up, color: 'bg-info-light text-info-text' },
               { key: 'urgent',    label: 'Acil',       count: priorityReport.by_urgency.urgent,    color: 'bg-warn-light text-warn-text' },
               { key: 'critical',  label: 'Kritik',     count: priorityReport.by_urgency.critical,  color: 'bg-neg-light text-neg-text' },
             ].map(pill => pill.count > 0 && (
@@ -316,7 +316,7 @@ export async function CollectionsContent({ companyId }: Props) {
               const urgencyColors: Record<string, string> = {
                 critical:  'border-l-2 border-neg bg-neg-light/30',
                 urgent:    'border-l-2 border-warn bg-warn-light/30',
-                follow_up: 'border-l-2 border-blue-300 bg-blue-50/30',
+                follow_up: 'border-l-2 border-info-light bg-info-light/30',
                 routine:   '',
               }
               const tierLabels: Record<string, string> = {

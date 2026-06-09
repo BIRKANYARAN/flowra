@@ -126,7 +126,7 @@ function WaterfallBar({
 
 function DominantDriverBadge({ driver }: { driver: MarginBridgeReport['dominant_driver'] }) {
   const cfg: Record<MarginBridgeReport['dominant_driver'], { label: string; color: string }> = {
-    price:    { label: 'Fiyat Odaklı',   color: 'bg-blue-50 border-blue-200 text-blue-700' },
+    price:    { label: 'Fiyat Odaklı',   color: 'bg-info-light border-info-light text-info-text' },
     volume:   { label: 'Hacim Odaklı',   color: 'bg-[#fefce8] border-yellow-200 text-yellow-700' },
     mix:      { label: 'Karışım Odaklı', color: 'bg-purple-50 border-purple-200 text-purple-700' },
     balanced: { label: 'Dengeli Etki',   color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]' },
@@ -369,7 +369,7 @@ export default function MarginBridgeClient({ companyId }: Props) {
             </div>
 
             {/* ── Narrative ────────────────────────────────────────────────── */}
-            <div className="px-4 py-3 border-t border-[#f1f5f9] bg-blue-50/30">
+            <div className="px-4 py-3 border-t border-[#f1f5f9] bg-info-light/30">
               <p className="text-[11px] text-[#334155] leading-snug">
                 <span className="text-[#94a3b8] mr-1.5">—</span>
                 {report.narrative}

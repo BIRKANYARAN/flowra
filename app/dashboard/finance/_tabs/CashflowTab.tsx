@@ -32,7 +32,7 @@ import { CashForecastClient }        from '@/app/dashboard/finance/_tabs/_cashfo
 const SEGMENT_COLOR: Record<WaterfallSegment['color_class'], { bar: string; text: string; bg: string }> = {
   green:  { bar: 'bg-pos',       text: 'text-pos-text',  bg: 'bg-pos-light' },
   red:    { bar: 'bg-neg',       text: 'text-neg',       bg: 'bg-neg-light' },
-  blue:   { bar: 'bg-[#3b82f6]', text: 'text-[#1d4ed8]', bg: 'bg-blue-50' },
+  blue:   { bar: 'bg-[#3b82f6]', text: 'text-[#1d4ed8]', bg: 'bg-info-light' },
   gray:   { bar: 'bg-[#94a3b8]', text: 'text-[#475569]', bg: 'bg-slate-100' },
   purple: { bar: 'bg-[#a855f7]', text: 'text-[#7e22ce]', bg: 'bg-purple-50' },
 }

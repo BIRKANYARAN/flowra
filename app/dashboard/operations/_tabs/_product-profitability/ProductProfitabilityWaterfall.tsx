@@ -39,7 +39,7 @@ type Tier = ProductProfitabilityStats['tier']
 const TIER_CONFIG: Record<Tier, { label: string; bg: string; text: string }> = {
   star:             { label: 'Yıldız',        bg: 'bg-amber-100',   text: 'text-amber-800'  },
   hero:             { label: 'Kahraman',       bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  workhorse:        { label: 'İş Atı',         bg: 'bg-blue-100',    text: 'text-blue-700'   },
+  workhorse:        { label: 'İş Atı',         bg: 'bg-info-light',    text: 'text-info-text'   },
   low_margin:       { label: 'Düşük Marj',     bg: 'bg-yellow-100',  text: 'text-yellow-700' },
   loss_leader:      { label: 'Zarar Eden',     bg: 'bg-neg-light',   text: 'text-neg-text'   },
   insufficient_data: { label: 'Yetersiz Veri', bg: 'bg-[#f1f5f9]',  text: 'text-[#94a3b8]' },

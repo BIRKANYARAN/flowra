@@ -118,7 +118,7 @@ function SeverityBadge({ severity }: { severity: GovernanceFinding['severity'] }
   const map = {
     critical: 'bg-red-100 text-red-700 border border-red-200',
     warning:  'bg-amber-100 text-amber-700 border border-amber-200',
-    info:     'bg-blue-50 text-blue-700 border border-blue-200',
+    info:     'bg-info-light text-info-text border border-info-light',
   }
   const label = { critical: 'Kritik', warning: 'Uyarı', info: 'Bilgi' }
   return (
@@ -572,7 +572,7 @@ export default async function ReconciliationDetailPage({
                   <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
                     {t16.total_warning} Uyarı
                   </span>
-                  <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                  <span className="text-xs font-semibold text-info-text bg-info-light border border-info-light px-2 py-1 rounded">
                     {t16.total_info} Bilgi
                   </span>
                 </div>

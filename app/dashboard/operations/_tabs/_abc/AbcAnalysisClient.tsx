@@ -32,7 +32,7 @@ function fmtPct(n: number): string {
 function TierBadge({ tier }: { tier: 'A' | 'B' | 'C' }) {
   const styles: Record<string, string> = {
     A: 'bg-pos-light text-pos-text font-black',
-    B: 'bg-blue-50 text-blue-700 font-black',
+    B: 'bg-info-light text-info-text font-black',
     C: 'bg-[#f1f5f9] text-[#64748b] font-semibold',
   }
   return (
@@ -90,7 +90,7 @@ function AbcDistributionBar({ report }: { report: AbcAnalysisReport }) {
       count: report.b_count,
       revPct: report.b_revenue_pct,
       color: 'bg-blue-400',
-      textColor: 'text-blue-700',
+      textColor: 'text-info-text',
     },
     {
       label: 'C',

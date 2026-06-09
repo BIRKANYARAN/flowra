@@ -31,7 +31,7 @@ function fmtDate(d: string): string {
 
 const SEGMENT_CFG: Record<CustomerSegment, { label: string; bg: string; text: string }> = {
   champions: { label: 'Şampiyon',    bg: 'bg-purple-100', text: 'text-purple-700' },
-  loyal:     { label: 'Sadık',       bg: 'bg-blue-100',   text: 'text-blue-700'   },
+  loyal:     { label: 'Sadık',       bg: 'bg-info-light',   text: 'text-info-text'   },
   at_risk:   { label: 'Risk Altında',bg: 'bg-orange-100', text: 'text-orange-700' },
   new:       { label: 'Yeni',        bg: 'bg-green-100',  text: 'text-green-700'  },
   lost:      { label: 'Kayıp',       bg: 'bg-[#f1f5f9]',  text: 'text-[#94a3b8]' },
@@ -66,7 +66,7 @@ function Skeleton() {
 function SegmentPills({ report }: { report: CustomerLtvReport }) {
   const pills = [
     { label: 'Şampiyon',     count: report.champions,     bg: 'bg-purple-100', text: 'text-purple-700' },
-    { label: 'Sadık',        count: report.loyal,         bg: 'bg-blue-100',   text: 'text-blue-700'   },
+    { label: 'Sadık',        count: report.loyal,         bg: 'bg-info-light',   text: 'text-info-text'   },
     { label: 'Risk Altında', count: report.at_risk,       bg: 'bg-orange-100', text: 'text-orange-700' },
     { label: 'Yeni',         count: report.new_customers, bg: 'bg-green-100',  text: 'text-green-700'  },
     { label: 'Kayıp',        count: report.lost,          bg: 'bg-[#f1f5f9]',  text: 'text-[#94a3b8]'  },

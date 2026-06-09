@@ -69,7 +69,7 @@ function TrendBadge({ trend }: { trend: MarginTrend }) {
 const HEALTH_CONFIG: Record<MarginHealth, { label: string; cls: string }> = {
   excellent:         { label: 'Mükemmel',      cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
   strong:            { label: 'Güçlü',          cls: 'bg-green-100 text-green-800 border-green-300' },
-  adequate:          { label: 'Yeterli',        cls: 'bg-blue-100 text-blue-800 border-blue-300' },
+  adequate:          { label: 'Yeterli',        cls: 'bg-info-light text-info-text border-info-light' },
   thin:              { label: 'İnce',           cls: 'bg-amber-100 text-amber-800 border-amber-300' },
   negative:          { label: 'Negatif',        cls: 'bg-red-100 text-red-800 border-red-300' },
   insufficient_data: { label: 'Yetersiz Veri', cls: 'bg-slate-100 text-slate-500 border-slate-200' },

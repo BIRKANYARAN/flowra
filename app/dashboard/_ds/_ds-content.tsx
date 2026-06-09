@@ -26,9 +26,9 @@ export default function DesignSystemContent() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-10">
       <header>
-        <h1 className="font-black text-2xl tracking-tight text-gray-900">Flowra — Design System</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Internal showcase · <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">/dashboard/_ds</code>
+        <h1 className="font-black text-2xl tracking-tight text-[#0f172a]">Flowra — Design System</h1>
+        <p className="text-sm text-[#64748b] mt-1">
+          Internal showcase · <code className="text-xs bg-[#f1f5f9] px-1 py-0.5 rounded">/dashboard/_ds</code>
           · not linked from nav · dev-only (production returns 404)
         </p>
       </header>
@@ -38,9 +38,9 @@ export default function DesignSystemContent() {
         <SectionHeader label="Primary · Violet" />
         <div className="grid grid-cols-10 gap-2">
           {[50,100,200,300,400,500,600,700,800,900].map(w => (
-            <div key={w} className="rounded-lg overflow-hidden border border-gray-200">
+            <div key={w} className="rounded-lg overflow-hidden border border-[#e8eaef]">
               <div className={`h-10 bg-primary-${w}`} />
-              <div className="text-[10px] font-mono text-gray-500 text-center py-1">{w}</div>
+              <div className="text-[10px] font-mono text-[#64748b] text-center py-1">{w}</div>
             </div>
           ))}
         </div>
@@ -149,13 +149,13 @@ export default function DesignSystemContent() {
         <Card>
           <div className="grid grid-cols-8 gap-3">
             {ICON_KEYS.map(k => (
-              <div key={k} className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-gray-50">
-                <Icon name={k} size={20} className="text-gray-700" />
-                <span className="text-[10px] font-mono text-gray-400 text-center">{k}</span>
+              <div key={k} className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-[#f8fafc]">
+                <Icon name={k} size={20} className="text-[#334155]" />
+                <span className="text-[10px] font-mono text-[#94a3b8] text-center">{k}</span>
               </div>
             ))}
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-[#f1f5f9]">
             <Label className="mb-2">Emoji passthrough</Label>
             <div className="flex gap-4 items-center">
               <Icon name="🔥" size={20} />

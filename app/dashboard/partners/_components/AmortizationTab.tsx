@@ -186,7 +186,7 @@ function ScheduleTable({ rows }: { rows: AmortizationRow[] }) {
                 <td className="py-1 px-2 whitespace-nowrap">
                   {row.month_label}
                   {row.is_current && (
-                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-blue-500">
+                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-info">
                       Şimdi
                     </span>
                   )}
@@ -533,7 +533,7 @@ function ScheduleDetailTable({
             const rowCls = isPast
               ? 'bg-[#f1f5f9] text-[#94a3b8]'
               : isCurrent
-              ? 'bg-blue-50 font-semibold text-[#0f172a]'
+              ? 'bg-info-light font-semibold text-[#0f172a]'
               : 'bg-white text-[#334155]'
 
             return (
@@ -542,7 +542,7 @@ function ScheduleDetailTable({
                 <td className="py-1 px-2 whitespace-nowrap">
                   {fmtDate(row.period_date)}
                   {isCurrent && (
-                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-blue-500">
+                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-info">
                       Şimdi
                     </span>
                   )}

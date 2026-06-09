@@ -290,7 +290,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
           glMode === 'gl_primary' && hasGlData
             ? 'bg-pos-light border-pos-light text-pos-text'
             : glMode === 'parallel'
-            ? 'bg-blue-50 border-blue-200 text-blue-700'
+            ? 'bg-info-light border-info-light text-info-text'
             : 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]'
         }`}>
           {dataSource}
