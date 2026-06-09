@@ -131,12 +131,12 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
 
 function TabSkeleton() {
   return (
-    <div className="space-y-3 animate-pulse">
+    <div className="space-y-3">
       <div className="grid grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => <div key={i} className="bg-[#f1f5f9] rounded h-16" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="fl-shimmer rounded-lg h-16" />)}
       </div>
-      <div className="bg-[#f1f5f9] rounded h-48" />
-      <div className="bg-[#f1f5f9] rounded h-32" />
+      <div className="fl-shimmer rounded-lg h-48" />
+      <div className="fl-shimmer rounded-lg h-32" />
     </div>
   )
 }
@@ -216,7 +216,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
       </div>
 
       {/* OPS COMMAND PANEL — always visible at the top */}
-      <Suspense fallback={<div className="h-[132px] bg-[#f1f5f9] rounded-lg animate-pulse" />}>
+      <Suspense fallback={<div className="h-[132px] fl-shimmer rounded-lg" />}>
         <OpsCommandPanel companyId={companyId} />
       </Suspense>
 
