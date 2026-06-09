@@ -68,6 +68,9 @@ module.exports = {
           light:   '#7c3aed',
           subtle:  '#ede9fe',
         },
+        // App canvas + hairline used by the v3 "Calm Capital" surface system.
+        canvas: '#f6f7f9',
+        line:   '#edeef2',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
@@ -75,11 +78,6 @@ module.exports = {
       borderRadius: {
         xl:    '12px',
         '2xl': '16px',
-      },
-      colors: {
-        // App canvas + hairline used by the v3 "Calm Capital" surface system.
-        canvas: '#f6f7f9',
-        line:   '#edeef2',
       },
       boxShadow: {
         card: '0 1px 2px 0 rgba(17,24,39,0.05), 0 1px 3px 0 rgba(17,24,39,0.06)',
