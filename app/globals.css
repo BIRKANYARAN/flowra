@@ -117,12 +117,8 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 @layer components {
-  /* Standard card chrome */
-  .fl-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-  }
+  /* (the canonical .fl-card with soft elevation is defined above — do NOT
+     redefine it here; a duplicate same-specificity rule would drop the shadow.) */
 
   /* Focus ring for inputs */
   .fl-focus {
@@ -130,4 +126,25 @@ input[type="number"] { -moz-appearance: textfield; }
     border-color: #a78bfa;
     box-shadow: 0 0 0 3px #ede9fe;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Shimmer skeleton — premium loading placeholder (replaces flat pulse).
+   ───────────────────────────────────────────────────────────────────────── */
+.fl-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #eef1f5;
+}
+.fl-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: fl-shimmer 1.5s infinite;
+}
+@keyframes fl-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .fl-shimmer::after { animation: none; }
 }

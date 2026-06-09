@@ -378,7 +378,7 @@ export function Skeleton({
   className?: string
 }) {
   return (
-    <div className={cn('bg-[#f1f5f9] rounded animate-pulse', height, className)} />
+    <div className={cn('fl-shimmer rounded-lg', height, className)} />
   )
 }
 
