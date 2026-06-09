@@ -6,7 +6,7 @@
 // cost calculator modal, search, currency toggle.
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
@@ -111,6 +111,10 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
   const [creating,   setCreating]   = useState(false)
   const [createErr,  setCreateErr]  = useState('')
   const [np, setNp] = useState({ name: '', unit: 'adet', category: '', catalog_price: '', unit_cost: '', stock_qty: '', stock_alert_qty: '' })
+
+  // Task-first: open the new-product modal immediately when reached via ?new=1
+  const searchParams = useSearchParams()
+  useEffect(() => { if (searchParams.get('new') === '1') setShowCreate(true) }, [searchParams])
 
   function resetNp() { setNp({ name: '', unit: 'adet', category: '', catalog_price: '', unit_cost: '', stock_qty: '', stock_alert_qty: '' }); setCreateErr('') }
 
