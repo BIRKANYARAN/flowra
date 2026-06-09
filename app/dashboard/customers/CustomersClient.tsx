@@ -164,14 +164,17 @@ export default function CustomersClient({ initialCustomers }: Props) {
       {/* ── Customer List ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="text-xs font-medium text-[#334155] mb-1">
+          <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="text-3xl opacity-50">👤</div>
+            <div className="text-sm text-[#64748b]">
               {search ? 'Eşleşen müşteri bulunamadı' : 'Henüz müşteri eklenmedi'}
             </div>
             {!search && (
-              <p className="text-xs text-[#94a3b8]">
-                Yeni müşteri eklemek için &quot;Yeni Müşteri&quot; butonuna tıklayın.
-              </p>
+              <button
+                onClick={openNew}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+                + İlk müşterini ekle
+              </button>
             )}
           </div>
         ) : (

@@ -545,11 +545,16 @@ export default function DocumentsClient() {
       {loading ? (
         <div className="py-16 text-center text-sm text-gray-400">Belgeler yükleniyor…</div>
       ) : docs.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-gray-300 rounded-xl">
-          <p className="text-sm text-gray-400">Henüz belge yok.</p>
-          <p className="text-xs text-gray-400 mt-1">
-            &quot;Belge Yükle&quot; butonu ile ilk belgenizi ekleyin.
-          </p>
+        <div className="py-16 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-[#e8eaef] rounded-xl">
+          <div className="text-3xl opacity-50">📄</div>
+          <p className="text-sm text-[#64748b]">Henüz belge yok.</p>
+          {!showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+              + İlk belgeni yükle
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
