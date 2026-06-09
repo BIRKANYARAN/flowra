@@ -37,16 +37,16 @@ function fmtBytes(bytes: number | null): string {
 
 function typeColor(t: DocumentType): string {
   const colors: Record<DocumentType, string> = {
-    invoice:          'bg-blue-50 text-blue-700 border-blue-200',
-    contract:         'bg-violet-50 text-violet-700 border-violet-200',
+    invoice:          'bg-info-light text-info-text border-info-light',
+    contract:         'bg-brand-subtle text-brand border-brand-subtle',
     bank_statement:   'bg-green-50 text-green-700 border-green-200',
     board_resolution: 'bg-amber-50 text-amber-700 border-amber-200',
     tax_declaration:  'bg-red-50 text-red-700 border-red-200',
     proof_of_payment: 'bg-teal-50 text-teal-700 border-teal-200',
     audit_report:     'bg-indigo-50 text-indigo-700 border-indigo-200',
-    other:            'bg-gray-50 text-gray-600 border-gray-200',
+    other:            'bg-[#f8fafc] text-[#475569] border-[#e8eaef]',
   }
-  return colors[t] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+  return colors[t] ?? 'bg-[#f8fafc] text-[#475569] border-[#e8eaef]'
 }
 
 const today = new Date().toISOString().slice(0, 10)
@@ -61,21 +61,21 @@ function SummaryBar({ summary }: { summary: DocumentSummary }) {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div className="border border-gray-200 rounded-xl p-3 bg-white">
-        <p className="text-xs font-medium text-gray-500">Toplam Belge</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{summary.total_documents}</p>
+      <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+        <p className="text-xs font-medium text-[#64748b]">Toplam Belge</p>
+        <p className="text-2xl font-bold text-[#0f172a] mt-1">{summary.total_documents}</p>
       </div>
-      <div className="border border-gray-200 rounded-xl p-3 bg-white">
-        <p className="text-xs font-medium text-gray-500">Denetim Hazırlığı</p>
+      <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+        <p className="text-xs font-medium text-[#64748b]">Denetim Hazırlığı</p>
         <p className={cn('text-2xl font-bold mt-1', readinessColor)}>
           %{readinessPct}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-[#94a3b8] mt-0.5">
           {summary.audit_required_verified}/{summary.audit_required_total} doğrulandı
         </p>
       </div>
-      <div className="border border-gray-200 rounded-xl p-3 bg-white col-span-2">
-        <p className="text-xs font-medium text-gray-500 mb-2">Tür Dağılımı</p>
+      <div className="border border-[#e8eaef] rounded-xl p-3 bg-white col-span-2">
+        <p className="text-xs font-medium text-[#64748b] mb-2">Tür Dağılımı</p>
         <div className="flex flex-wrap gap-1.5">
           {ALL_DOCUMENT_TYPES.filter(t => (summary.by_type[t] ?? 0) > 0).map(t => (
             <span
@@ -86,7 +86,7 @@ function SummaryBar({ summary }: { summary: DocumentSummary }) {
             </span>
           ))}
           {ALL_DOCUMENT_TYPES.every(t => !summary.by_type[t]) && (
-            <span className="text-xs text-gray-400">Henüz belge yok</span>
+            <span className="text-xs text-[#94a3b8]">Henüz belge yok</span>
           )}
         </div>
       </div>
@@ -154,12 +154,12 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
   }
 
   return (
-    <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-3">
-      <h3 className="text-sm font-semibold text-violet-900">Yeni Belge Yükle</h3>
+    <div className="border border-brand-subtle rounded-xl p-4 bg-brand-subtle space-y-3">
+      <h3 className="text-sm font-semibold text-brand">Yeni Belge Yükle</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Belge Türü *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Belge Türü *</label>
           <select
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.document_type}
@@ -172,7 +172,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Belge Tarihi *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Belge Tarihi *</label>
           <input
             type="date"
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
@@ -182,7 +182,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Başlık *</label>
           <input
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             placeholder="Ör: Ocak 2025 Banka Ekstresi"
@@ -192,7 +192,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">
+          <label className="text-xs text-[#475569] mb-1 block">
             Dosya URL (Supabase Storage veya harici bağlantı) *
           </label>
           <input
@@ -204,7 +204,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Dosya Adı *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Dosya Adı *</label>
           <input
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             placeholder="ocak-2025-ekstre.pdf"
@@ -214,7 +214,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">İlgili Kayıt Türü (opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">İlgili Kayıt Türü (opsiyonel)</label>
           <select
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.linked_resource_type}
@@ -231,7 +231,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">Açıklama (opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">Açıklama (opsiyonel)</label>
           <textarea
             rows={2}
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
@@ -249,7 +249,7 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
             checked={form.is_audit_required || AUDIT_REQUIRED_TYPES.includes(form.document_type)}
             onChange={e => set('is_audit_required', e.target.checked)}
           />
-          <label htmlFor="audit-req-check" className="text-xs text-gray-600">
+          <label htmlFor="audit-req-check" className="text-xs text-[#475569]">
             Denetim için zorunlu belge
           </label>
         </div>
@@ -261,13 +261,13 @@ function UploadForm({ onClose, onSuccess }: UploadFormProps) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          className="text-xs bg-brand-light text-white px-4 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50 transition-colors"
         >
           {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
         <button
           onClick={onClose}
-          className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9] transition-colors"
         >
           İptal
         </button>
@@ -288,7 +288,7 @@ interface DocCardProps {
 
 function DocCard({ doc, isAdmin, onVerify, onDelete, verifying, deleting }: DocCardProps) {
   return (
-    <div className="border border-gray-200 rounded-xl p-4 bg-white hover:border-gray-300 transition-colors">
+    <div className="border border-[#e8eaef] rounded-xl p-4 bg-white hover:border-[#e8eaef] transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {/* Type + audit badge */}
@@ -304,19 +304,19 @@ function DocCard({ doc, isAdmin, onVerify, onDelete, verifying, deleting }: DocC
           </div>
 
           {/* Title */}
-          <p className="text-sm font-semibold text-gray-900 truncate">{doc.title}</p>
+          <p className="text-sm font-semibold text-[#0f172a] truncate">{doc.title}</p>
 
           {/* File info */}
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
+          <p className="text-xs text-[#64748b] mt-0.5 truncate">
             {doc.file_name}
-            {doc.file_size_bytes ? <span className="ml-2 text-gray-400">{fmtBytes(doc.file_size_bytes)}</span> : null}
+            {doc.file_size_bytes ? <span className="ml-2 text-[#94a3b8]">{fmtBytes(doc.file_size_bytes)}</span> : null}
           </p>
 
           {/* Date + linked resource */}
           <div className="flex items-center gap-3 mt-1">
-            <p className="text-xs text-gray-400">{fmtDate(doc.document_date)}</p>
+            <p className="text-xs text-[#94a3b8]">{fmtDate(doc.document_date)}</p>
             {doc.linked_resource_type && (
-              <span className="text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded capitalize">
+              <span className="text-[11px] text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded capitalize">
                 {doc.linked_resource_type.replace('_', ' ')}
               </span>
             )}
@@ -341,7 +341,7 @@ function DocCard({ doc, isAdmin, onVerify, onDelete, verifying, deleting }: DocC
             href={doc.file_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-violet-600 hover:text-violet-800 hover:underline"
+            className="text-xs text-brand-light hover:text-brand hover:underline"
           >
             Aç →
           </a>
@@ -369,7 +369,7 @@ function DocCard({ doc, isAdmin, onVerify, onDelete, verifying, deleting }: DocC
       </div>
 
       {doc.description && (
-        <p className="text-xs text-gray-500 mt-2 border-t border-gray-100 pt-2">{doc.description}</p>
+        <p className="text-xs text-[#64748b] mt-2 border-t border-[#f1f5f9] pt-2">{doc.description}</p>
       )}
     </div>
   )
@@ -458,14 +458,14 @@ export default function DocumentsClient() {
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Belge Kütüphanesi</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-[#0f172a]">Belge Kütüphanesi</h1>
+          <p className="text-sm text-[#64748b] mt-1">
             Finansal belgeler — TTK kapsamında 10 yıl saklama zorunluluğu
           </p>
         </div>
         <button
           onClick={() => setShowForm(s => !s)}
-          className="text-sm bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors shrink-0"
+          className="text-sm bg-brand-light text-white px-4 py-2 rounded-lg hover:bg-brand transition-colors shrink-0"
         >
           + Belge Yükle
         </button>
@@ -485,7 +485,7 @@ export default function DocumentsClient() {
       {/* Filter toolbar */}
       <div className="flex flex-wrap gap-2 items-center">
         <select
-          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+          className="border border-[#e8eaef] rounded-lg px-3 py-1.5 text-sm bg-white"
           value={filterType}
           onChange={e => setParam('type', e.target.value)}
         >
@@ -496,7 +496,7 @@ export default function DocumentsClient() {
         </select>
 
         <select
-          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+          className="border border-[#e8eaef] rounded-lg px-3 py-1.5 text-sm bg-white"
           value={filterYear}
           onChange={e => setParam('period_year', e.target.value)}
         >
@@ -506,7 +506,7 @@ export default function DocumentsClient() {
 
         {filterYear && (
           <select
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+            className="border border-[#e8eaef] rounded-lg px-3 py-1.5 text-sm bg-white"
             value={filterMonth}
             onChange={e => setParam('period_month', e.target.value)}
           >
@@ -519,7 +519,7 @@ export default function DocumentsClient() {
           </select>
         )}
 
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-sm text-[#475569] cursor-pointer select-none">
           <input
             type="checkbox"
             className="w-4 h-4 accent-violet-600"
@@ -534,7 +534,7 @@ export default function DocumentsClient() {
             onClick={() => {
               router.replace('/dashboard/documents', { scroll: false })
             }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            className="text-xs text-[#64748b] hover:text-[#334155] underline"
           >
             Filtreleri temizle
           </button>
@@ -543,7 +543,7 @@ export default function DocumentsClient() {
 
       {/* Document list */}
       {loading ? (
-        <div className="py-16 text-center text-sm text-gray-400">Belgeler yükleniyor…</div>
+        <div className="py-16 text-center text-sm text-[#94a3b8]">Belgeler yükleniyor…</div>
       ) : docs.length === 0 ? (
         <div className="py-16 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-[#e8eaef] rounded-xl">
           <div className="text-3xl opacity-50">📄</div>
@@ -573,7 +573,7 @@ export default function DocumentsClient() {
       )}
 
       {/* Footer note */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+      <p className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-lg px-3 py-2">
         Türk Ticaret Kanunu (TTK) Madde 82 kapsamında finansal belgeler 10 yıl süresince saklanmalıdır.
         Saklama süresi belge tarihinden itibaren hesaplanmaktadır.
       </p>
