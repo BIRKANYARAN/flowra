@@ -85,7 +85,8 @@ const KNOWN_ORPHANS = new Set<string>([
   'expense_items',
   'logos',
   'period_close_manual_confirmations',
-  'product_cost_entries',
+  // product_cost_entries — IMPLEMENTED: folded into canonical install + migration
+  //   20260610000001 (per-product landed-cost entries; catalog cost-entry UI). No longer orphan.
   'sale_lines',
   'sales_targets',
   'tax_obligations',

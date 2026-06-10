@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { CURRENCIES_EXTENDED } from '@/types'
 import { getOrFetchFxRate } from '@/lib/fx'
+import { isMissingSchemaError } from '@/lib/db-errors'
 
 const ALLOWED_CURRENCIES = CURRENCIES_EXTENDED as readonly string[]
 const ALLOWED_TYPES = ['purchase', 'customs', 'tax', 'shipping', 'other'] as const
@@ -28,7 +29,16 @@ export async function GET(req: NextRequest) {
     .order('entry_date', { ascending: false })
     .limit(500)   // per-product cost entries are bounded; cap prevents runaway scan on bulk imports
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Schema-gap degradation: until migration 20260610000001 (product_cost_entries)
+    // is applied to an env, browsing a product's cost entries returns empty rather
+    // than a hard 500. Logged loudly so ops applies the migration.
+    if (isMissingSchemaError(error)) {
+      console.error('[cost-entries] product_cost_entries table missing — apply migration 20260610000001:', error.message)
+      return NextResponse.json([])
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
   return NextResponse.json(data ?? [])
 }
 
