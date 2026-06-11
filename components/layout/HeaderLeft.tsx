@@ -17,18 +17,21 @@ const NAV_ITEMS = [
 ]
 
 function hubForPath(pathname: string): { label: string; href: string } | null {
-  // Home only matches itself; every other hub matches its whole subtree, and
-  // the longest matching href wins (so /admin/workflows beats /admin).
-  let best: { label: string; href: string } | null = null
+  // Home only matches itself; every other hub matches its whole subtree. An item's
+  // own href AND its `match` prefixes both count (so the Muhasebe item, href
+  // /dashboard/accounting + match ['/dashboard/cfo'], also owns the GL tool pages).
+  // The longest matching prefix wins (so /admin/workflows beats /admin).
+  let best: { label: string; href: string; len: number } | null = null
   for (const item of NAV_ITEMS) {
-    const isMatch = item.href === '/dashboard'
-      ? pathname === '/dashboard'
-      : pathname === item.href || pathname.startsWith(item.href + '/')
-    if (isMatch && (!best || item.href.length > best.href.length)) {
-      best = { label: item.label, href: item.href }
+    const prefixes = item.href === '/dashboard' ? ['/dashboard'] : [item.href, ...(item.match ?? [])]
+    for (const p of prefixes) {
+      const isMatch = p === '/dashboard' ? pathname === '/dashboard' : (pathname === p || pathname.startsWith(p + '/'))
+      if (isMatch && (!best || p.length > best.len)) {
+        best = { label: item.label, href: item.href, len: p.length }
+      }
     }
   }
-  return best
+  return best ? { label: best.label, href: best.href } : null
 }
 
 export function HeaderLeft({ companyName }: { companyName: string | null }) {
