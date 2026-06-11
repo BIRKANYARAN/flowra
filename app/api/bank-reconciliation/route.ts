@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       throw e
     }
 
-    const body = await req.json()
+    const body = await req.json().catch(() => ({}))
     const { lines } = body as { lines?: unknown[] }
 
     if (!Array.isArray(lines) || lines.length === 0) {

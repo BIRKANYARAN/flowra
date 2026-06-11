@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       throw e
     }
 
-    const body = await req.json()
+    const body = await req.json().catch(() => ({} as Record<string, unknown>))
     const annual_rate = Number(body.annual_rate)
     if (!isFinite(annual_rate) || annual_rate < 0 || annual_rate > 1000) {
       return NextResponse.json({ error: 'Geçersiz faiz oranı (0-1000 arası olmalıdır)' }, { status: 422 })

@@ -66,7 +66,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return apiError(ctx, 'Bu işlem için yönetici yetkisi gereklidir', 403, 'FORBIDDEN')
     }
 
-    const body = await req.json()
+    const body = await req.json().catch(() => ({} as Record<string, unknown>))
     const { trigger_type, trigger_label, trigger_id } = body
 
     if (!trigger_type || !trigger_label) {
