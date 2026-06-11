@@ -49,8 +49,8 @@ const GROUPS: Group[] = [
   {
     label: 'Raporlama & Cockpit',
     tools: [
-      { href: '/dashboard/finance?tab=cfo',     icon: '🎛️', title: 'CFO Kokpiti',       desc: 'Muhasebe doğruluğu · çeyreklik · dönem yönetimi' },
-      { href: '/dashboard/finance?tab=reports', icon: '📦', title: 'Yönetim Paketi',     desc: 'Aylık CFO paketi · tüm tablolar · ZIP indirme' },
+      { href: '/dashboard/accounting/cockpit', icon: '🎛️', title: 'CFO Kokpiti',     desc: 'Muhasebe doğruluğu · çeyreklik · dönem yönetimi' },
+      { href: '/dashboard/accounting/reports', icon: '📦', title: 'Raporlama Paketi', desc: 'Aylık CFO paketi · mizan · yönetim paketi · tablolar' },
       { href: '/dashboard/reports',             icon: '📑', title: 'Biçimli Tablolar',   desc: 'Gelir Tablosu · Bilanço · Nakit Akışı · CSV/Excel export' },
     ],
   },

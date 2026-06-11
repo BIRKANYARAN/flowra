@@ -277,17 +277,17 @@ export const PLANNING_TABS = [
 ] as const
 
 /** Finance center — /dashboard/finance?tab=
- *  Flat row of the 7 primary views (kurumlar-vergisi/boardpack/mizan live as
- *  "Detaylı" panels inside Vergi/Raporlar, reachable by deep link). The finance
- *  page imports this so the tab bar and the header breadcrumb share one source. */
+ *  Refoundation W3 — OWNER-FIRST. 5 owner views only. Accountant depth (CFO
+ *  cockpit, reporting pack, mizan, board pack) MOVED to the Muhasebe zone
+ *  (/dashboard/accounting/*); finance?tab=cfo|reports|mizan|boardpack redirect
+ *  there. kurumlar-vergisi stays as a Vergi "Detaylı" fold. The finance page
+ *  imports this so the tab bar and the header breadcrumb share one source. */
 export const FINANCE_TABS = [
   { key: 'pnl',      label: 'Kâr/Zarar' },
   { key: 'balance',  label: 'Bilanço'   },
   { key: 'cashflow', label: 'Nakit'     },
   { key: 'tax',      label: 'Vergi'     },
   { key: 'risks',    label: 'Riskler'   },
-  { key: 'cfo',      label: 'CFO'       },
-  { key: 'reports',  label: 'Raporlar'  },
 ] as const
 
 /** Hub href → its ?tab= label list. Single source for the header breadcrumb

@@ -36,13 +36,9 @@ import { BalanceTab }       from './_tabs/BalanceTab'
 import { CashflowTab }      from './_tabs/CashflowTab'
 import { TaxTab }           from './_tabs/TaxTab'
 import { RisksTab }         from './_tabs/RisksTab'
-import { CFOTab }           from './_tabs/CFOTab'
-import { BoardPackTab }     from './_tabs/BoardPackTab'
 import { CorporateTaxTab }  from './_tabs/CorporateTaxTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 import { DetailSection }     from '@/components/dashboard/DetailSection'
-import ReportsTab        from '@/app/dashboard/cfo/_tabs/ReportsTab'
-import { TrialBalanceTab } from '@/app/dashboard/cfo/_tabs/TrialBalanceTab'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
@@ -129,14 +125,16 @@ export default async function FinancePage({ searchParams }: PageProps) {
   // Legacy tabs absorbed into other pages
   if (rawTab === 'overview')  redirect('/dashboard')
   if (rawTab === 'forecast')  redirect('/dashboard/finance?tab=cashflow')
-  if (rawTab === 'quarterly') redirect('/dashboard/finance?tab=cfo')
 
-  // Faz 3 merge — fewer top tabs. Merged tabs render inside the canonical tab's
-  // "Detaylı" panel, so old deep-links still land on the right content.
+  // Refoundation W3 — accountant depth moved OUT of the owner's Finance hub into
+  // the Muhasebe zone. The CFO cockpit + reporting pack (and their mizan/boardpack
+  // folds) now live under /dashboard/accounting; old deep-links redirect there.
+  if (rawTab === 'quarterly' || rawTab === 'cfo') redirect('/dashboard/accounting/cockpit')
+  if (rawTab === 'reports' || rawTab === 'boardpack' || rawTab === 'mizan') redirect('/dashboard/accounting/reports')
+
+  // Co-located "Detaylı" panel merges that stay inside Finance.
   const TAB_MERGE: Record<string, FinanceTab> = {
     'kurumlar-vergisi': 'tax',     // Kurumlar Vergisi now under Vergi (Detaylı)
-    boardpack:          'reports', // Yönetim Paketi now under Raporlar (Detaylı)
-    mizan:              'reports', // Mizan now under Raporlar (Detaylı)
   }
   const mergedTab = TAB_MERGE[rawTab] ?? rawTab
   const activeTab = (VALID_TABS.includes(mergedTab as FinanceTab) ? mergedTab : 'pnl') as FinanceTab
@@ -219,18 +217,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
             </DetailSection>
           </div>
         )}
-        {activeTab === 'risks'             && <RisksTab         {...tabProps} />}
-        {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
-        {activeTab === 'reports' && (
-          <div className="space-y-5">
-            <ReportsTab />
-            {/* Faz 3 merge — Mizan + Yönetim Paketi co-located under Raporlar */}
-            <DetailSection title="Mizan & Yönetim Paketi" subtitle="Trial balance · yönetim kurulu paketi">
-              <TrialBalanceTab />
-              <BoardPackTab {...tabProps} />
-            </DetailSection>
-          </div>
-        )}
+        {activeTab === 'risks'     && <RisksTab     {...tabProps} />}
       </Suspense>
 
     </div>
