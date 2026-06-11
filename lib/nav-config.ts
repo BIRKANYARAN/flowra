@@ -107,6 +107,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 
+  // ── MUHASEBE (mali müşavir alanı) ──────────────────────────────────────────
+  // Refoundation: the deep GL tools (mizan · yevmiye · dönem kapanış · mutabakat ·
+  // KDV/kurumlar) used to have NO nav home — buried behind a Finance tab. The
+  // accountant now has one findable home, and the owner's Finance hub can stay
+  // owner-first. /dashboard/accounting is a launcher into the existing cfo/* tools.
+  {
+    id: 'muhasebe',
+    label: 'Muhasebe',
+    items: [
+      { href: '/dashboard/accounting', label: 'Muhasebe', icon: 'tax' },
+    ],
+  },
+
   // ── ANALİZ & PLAN ─────────────────────────────────────────────────────────
   {
     id: 'gelismis',

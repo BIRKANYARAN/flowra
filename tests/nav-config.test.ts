@@ -50,48 +50,48 @@ describe('hasMinRole', () => {
 // ── Group filtering ───────────────────────────────────────────────────────────
 
 describe('getGroupsForRole', () => {
-  it('admin sees all 4 groups (genel + calisma + gelismis + yonetim)', () => {
+  it('admin sees all 5 groups (genel + calisma + muhasebe + gelismis + yonetim)', () => {
     const groups = getGroupsForRole('admin')
-    expect(groups.length).toBe(4)
-    expect(groups.map(g => g.id)).toEqual(['genel', 'calisma', 'gelismis', 'yonetim'])
+    expect(groups.length).toBe(5)
+    expect(groups.map(g => g.id)).toEqual(['genel', 'calisma', 'muhasebe', 'gelismis', 'yonetim'])
   })
 
-  it('manager sees 3 groups (no yonetim)', () => {
+  it('manager sees 4 groups (no yonetim)', () => {
     const groups = getGroupsForRole('manager')
-    expect(groups.length).toBe(3)
+    expect(groups.length).toBe(4)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('viewer sees 3 groups (no yonetim)', () => {
+  it('viewer sees 4 groups (no yonetim)', () => {
     const groups = getGroupsForRole('viewer')
-    expect(groups.length).toBe(3)
+    expect(groups.length).toBe(4)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('null role sees 3 groups', () => {
+  it('null role sees 4 groups', () => {
     const groups = getGroupsForRole(null)
-    expect(groups.length).toBe(3)
+    expect(groups.length).toBe(4)
   })
 })
 
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // One entry per hub. Groups: genel(1) + calisma(4) + gelismis(4, governance admin-only) + yonetim(3, admin)
-  it('admin sees 12 nav items (1+4+4 + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(12)
+  // One entry per hub. Groups: genel(1) + calisma(4) + muhasebe(1) + gelismis(4, governance admin-only) + yonetim(3, admin)
+  it('admin sees 13 nav items (1+4+1+4 + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(13)
   })
 
-  it('manager sees 8 nav items (no yonetim, no governance)', () => {
-    expect(getAllItemsForRole('manager').length).toBe(8)
+  it('manager sees 9 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('manager').length).toBe(9)
   })
 
-  it('viewer sees 8 nav items (no yonetim, no governance)', () => {
-    expect(getAllItemsForRole('viewer').length).toBe(8)
+  it('viewer sees 9 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('viewer').length).toBe(9)
   })
 
-  it('null role sees 8 nav items', () => {
-    expect(getAllItemsForRole(null).length).toBe(8)
+  it('null role sees 9 nav items', () => {
+    expect(getAllItemsForRole(null).length).toBe(9)
   })
 
   it('getNavCount matches getAllItemsForRole length', () => {
@@ -546,12 +546,12 @@ describe('Tab key uniqueness within each center', () => {
 // ── NAV_GROUPS structural integrity ──────────────────────────────────────────
 
 describe('NAV_GROUPS structural integrity', () => {
-  it('has exactly 4 groups', () => {
-    expect(NAV_GROUPS.length).toBe(4)
+  it('has exactly 5 groups', () => {
+    expect(NAV_GROUPS.length).toBe(5)
   })
 
   it('group ids follow the area-first order', () => {
-    expect(NAV_GROUPS.map(g => g.id)).toEqual(['genel', 'calisma', 'gelismis', 'yonetim'])
+    expect(NAV_GROUPS.map(g => g.id)).toEqual(['genel', 'calisma', 'muhasebe', 'gelismis', 'yonetim'])
   })
 
   it('first group id is genel', () => {
