@@ -54,10 +54,11 @@ const STATIC_CMDS: Cmd[] = [
 
   // ── Merkezler — navigation ────────────────────────────────────────────────
   { id: 'n-home',  grp: 'Merkezler',     label: 'Kokpit',     sub: 'Ana panel · Karar sırası · Durum',    href: '/dashboard',                            kind: 'nav' },
-  { id: 'n-fin',   grp: 'Merkezler',     label: 'Finans',     sub: 'P&L · Bilanço · CFO · Nakit',        href: '/dashboard/finance',                    kind: 'nav' },
+  { id: 'n-fin',   grp: 'Merkezler',     label: 'Finans',     sub: 'Kâr/Zarar · Bilanço · Nakit · Vergi', href: '/dashboard/finance',                    kind: 'nav' },
   { id: 'n-com',   grp: 'Merkezler',     label: 'Satış',      sub: 'Satış · Tahsilat · Satış hattı',     href: '/dashboard/commercial',                 kind: 'nav' },
   { id: 'n-ops',   grp: 'Merkezler',     label: 'Operasyon',  sub: 'Gider · Katalog · Stok',             href: '/dashboard/operations',                 kind: 'nav' },
   { id: 'n-par',   grp: 'Merkezler',     label: 'Ortaklar',   sub: 'Borç · Dağıtım · Getiri',           href: '/dashboard/partners',                   kind: 'nav' },
+  { id: 'n-muh',   grp: 'Merkezler',     label: 'Muhasebe',   sub: 'Mizan · Yevmiye · Dönem · KDV · CFO', href: '/dashboard/accounting',                 kind: 'nav' },
   { id: 'n-pln',   grp: 'Merkezler',     label: 'Planlama',   sub: 'Senaryo · Simülasyon · Görevler',   href: '/dashboard/planning',                   kind: 'nav' },
 ]
 
