@@ -198,6 +198,16 @@ describe('isNavItemActive — tab-aware', () => {
   it('leading ? in search is tolerated', () => {
     expect(isNavItemActive(sales, '/dashboard/commercial', '?tab=sales')).toBe(true)
   })
+
+  it('match prefixes light the item on sub-tool paths under a different href', () => {
+    const muhasebe: NavItem = { href: '/dashboard/accounting', label: 'Muhasebe', icon: 'tax', match: ['/dashboard/cfo'] }
+    expect(isNavItemActive(muhasebe, '/dashboard/accounting')).toBe(true)            // own href
+    expect(isNavItemActive(muhasebe, '/dashboard/accounting/cockpit')).toBe(true)    // own subpath
+    expect(isNavItemActive(muhasebe, '/dashboard/cfo/trial-balance')).toBe(true)     // matched prefix
+    expect(isNavItemActive(muhasebe, '/dashboard/cfo')).toBe(true)                   // matched prefix root
+    expect(isNavItemActive(muhasebe, '/dashboard/finance')).toBe(false)              // unrelated
+    expect(isNavItemActive(muhasebe, '/dashboard/cfo-extra')).toBe(false)            // hyphen guard
+  })
 })
 
 // ── findNavItem / isKnownNavHref ──────────────────────────────────────────────

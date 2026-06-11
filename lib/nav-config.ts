@@ -61,6 +61,9 @@ export interface NavItem {
   minRole?: MemberRole
   /** Optional numeric badge (e.g. alert count) */
   badge?: number
+  /** Extra path prefixes that should also light this item active — for sub-tools
+   *  that live under a different path than href (e.g. Muhasebe → /dashboard/cfo/*). */
+  match?: string[]
   /** Nested sub-items rendered indented below this item. */
   children?: NavItem[]
 }
@@ -116,7 +119,8 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'muhasebe',
     label: 'Muhasebe',
     items: [
-      { href: '/dashboard/accounting', label: 'Muhasebe', icon: 'tax' },
+      // match: also active on the /dashboard/cfo/* GL tool pages the launcher opens.
+      { href: '/dashboard/accounting', label: 'Muhasebe', icon: 'tax', match: ['/dashboard/cfo'] },
     ],
   },
 
@@ -203,6 +207,10 @@ export function isNavItemActive(item: NavItem, pathname: string, search?: string
   const [itemPath, itemQuery] = item.href.split('?')
 
   if (item.exact) return cleanPath === itemPath
+
+  // Extra match prefixes — sub-tools that live under a different path than href
+  // (e.g. Muhasebe item active on the /dashboard/cfo/* GL tool pages).
+  if (item.match?.some(m => cleanPath === m || cleanPath.startsWith(m + '/'))) return true
 
   const pathMatches = cleanPath === itemPath || cleanPath.startsWith(itemPath + '/')
   if (!pathMatches) return false
