@@ -80,7 +80,8 @@ const KNOWN_ORPHANS = new Set<string>([
   'bank_transactions',
   'cfo_pack_manifests',
   'company_budgets',
-  'cost_centers',
+  // cost_centers — its only querier (cost-allocation.service) was removed in the
+  //   dead-analytics de-sprawl; no longer queried, so it's no longer an orphan.
   'cost_entries',
   'expense_items',
   'logos',
