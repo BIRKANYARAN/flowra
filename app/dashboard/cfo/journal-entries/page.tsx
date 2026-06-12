@@ -96,8 +96,8 @@ export default async function JournalEntriesPage() {
           <div className="text-xs text-warn-text">
             GL modu <strong>shadow</strong> modunda çalışıyorsa journal kayıtları otomatik oluşturulmaz.
             Kayıt oluşturmaya başlamak için{' '}
-            <Link href="/dashboard/admin/settings" className="underline font-semibold hover:text-warn-text">
-              Şirket Ayarları
+            <Link href="/dashboard/admin" className="underline font-semibold hover:text-warn-text">
+              Yönetim
             </Link>{' '}
             sayfasından <code className="bg-warn-light px-1 rounded">gl_mode</code> değerini{' '}
             <code className="bg-warn-light px-1 rounded">parallel</code> olarak güncelleyin.
