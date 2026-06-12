@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic'
 
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { ProformaInvoice } from '@/components/pdf/ProformaInvoice'
 import { loadPublicProformaBundle } from '@/lib/public-proforma'
+
+const getBundle = cache((id: string) => loadPublicProformaBundle(id).catch(() => null))
 
 // ── Safe helpers (inlined to avoid import issues) ───────────────────────────
 function sn(v: unknown, fb = 0): number {
@@ -20,11 +23,21 @@ function sn_str(v: unknown): string | null {
   return null
 }
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const bundle  = await getBundle(params?.id)
+  const cs      = bundle?.proforma?.company_snapshot as { name?: unknown } | null | undefined
+  const company = sn_str(cs?.name) ?? sn_str((bundle?.settings as { company_name?: unknown } | null)?.company_name)
+  return {
+    title: { absolute: company ? `Proforma — ${company}` : 'Proforma' },
+    robots: { index: false, follow: false },
+  }
+}
+
 export default async function PrintProformaPage({ params }: { params: { id: string } }) {
   const id = params?.id
   if (!id || typeof id !== 'string') return notFound()
 
-  const bundle = await loadPublicProformaBundle(id)
+  const bundle = await getBundle(id)
   if (!bundle) return notFound()
 
   const { proforma: p, items, settings, banks, customer } = bundle
