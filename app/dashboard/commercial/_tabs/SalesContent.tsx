@@ -10,6 +10,7 @@ import { createClient }    from '@/lib/supabase-server'
 import { normalizeSaleRow } from '@/lib/normalize'
 import { fmtTRY as fmt, fmtPct }   from '@/lib/format'
 import { SalesTable }       from './SalesTable'
+import { DetailSection }    from '@/components/dashboard/DetailSection'
 import { RevenueAttributionService, type RevenueContributor } from '@/lib/services/commercial/revenue-attribution.service'
 import RecurringRevenueClient from './_recurring/RecurringRevenueClient'
 import { SalesCharts } from './SalesCharts'
@@ -136,19 +137,104 @@ export async function SalesContent({ companyId }: Props) {
   return (
     <div className="max-w-4xl space-y-4">
 
-      {/* ── Visual summary — monthly sales + top customers ──────────────── */}
-      <SalesCharts monthly={salesMonthly} topCustomers={salesTopCustomers} />
+      {/* ── Headline KPI Strip ───────────────────────────────────────────── */}
+      {(mtdCount > 0 || list.length > 0) && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          {[
+            {
+              label: 'Bu Ay Ciro (MTD)',
+              value: mtdRevenue > 0 ? fmt(mtdRevenue) : '—',
+              sub:   momDelta
+                ? <span className={`font-semibold ${momDelta.color}`}>{momDelta.text} geçen ay</span>
+                : `${mtdCount} fatura`,
+              color: 'text-[#0f172a]',
+            },
+            {
+              label: 'Tahsil Edildi',
+              value: mtdPaid > 0 ? fmt(mtdPaid) : '—',
+              sub:   `%${collRatePct} tahsilat oranı · ${mtdPaidCount} fatura`,
+              color: collRatePct >= 80 ? 'text-pos-text' : collRatePct >= 50 ? 'text-warn-text' : 'text-[#0f172a]',
+            },
+            {
+              label: 'Bekleyen Tahsilat',
+              value: mtdPending > 0 ? fmt(mtdPending) : '—',
+              sub:   mtdPending > 0
+                ? `${mtdCount - mtdPaidCount} ödenmemiş fatura`
+                : 'Bu ay tamamı tahsil edildi',
+              color: mtdPending > 0 ? 'text-neg' : 'text-pos-text',
+            },
+            {
+              label: 'Toplam Satış',
+              value: fmt(lifetimeRevenue),
+              sub:   `${list.length} kayıt · tüm dönemler`,
+              color: 'text-[#0f172a]',
+            },
+          ].map((card, i) => (
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* ── Zone 0: Tekrarlayan Gelir Analizi (MRR/ARR/NRR) ─────────────── */}
-      <RecurringRevenueClient companyId={companyId} />
+      {/* ── MTD vs Prior Month Alert (önemli sinyal — üstte) ─────────────── */}
+      {momDelta && prevRevenue > 0 && (() => {
+        const pctChange = ((mtdRevenue - prevRevenue) / prevRevenue) * 100
+        const dayOfMonth = new Date().getDate()
+        if (dayOfMonth < 10 || Math.abs(pctChange) < 15) return null
+        const isDown = pctChange < 0
+        return (
+          <div className={`rounded border px-4 py-3 ${
+            isDown ? 'bg-warn-light border-warn-light' : 'bg-pos-light border-pos-light'
+          }`}>
+            <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
+              {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
+            </div>
+            <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
+              Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
+              <span className="font-bold">{momDelta.text}</span>.
+              {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
+            </div>
+            <Link
+              href="/dashboard/finance?tab=pnl"
+              className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}
+            >
+              P&amp;L Analizi →
+            </Link>
+          </div>
+        )
+      })()}
 
-      {/* ── Gelir Kaynakları (90d Revenue Attribution) ───────────────────── */}
+      {/* ── Satış Kayıtları — asıl iş yüzeyi (ön planda) ─────────────────── */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[#94a3b8]">{list.length} satış kaydı · tüm dönemler</p>
+        <Link
+          href="/dashboard/commercial?tab=collections"
+          className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
+        >
+          Tahsilatlar →
+        </Link>
+      </div>
+      <SalesTable rows={list} />
+
+      {/* ── Görsel Özet (expand-in-place) ────────────────────────────────── */}
+      <DetailSection title="Görsel Özet" subtitle="Aylık satış trendi + en iyi müşteriler">
+        <SalesCharts monthly={salesMonthly} topCustomers={salesTopCustomers} />
+      </DetailSection>
+
+      {/* ── Tekrarlayan Gelir (MRR/ARR/NRR — expand-in-place) ────────────── */}
+      <DetailSection title="Tekrarlayan Gelir" subtitle="MRR · ARR · NRR — abonelik/tekrar analizi">
+        <RecurringRevenueClient companyId={companyId} />
+      </DetailSection>
+
+      {/* ── Gelir Kaynakları (90g atıf — expand-in-place) ────────────────── */}
       {attribution && attribution.total_revenue_try > 0 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
-          {/* Header + concentration summary */}
-          <div className="px-4 pt-4 pb-3 border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gelir Kaynakları — Son 90 Gün</div>
-            <div className="flex flex-wrap gap-4 items-center mt-2">
+        <DetailSection title="Gelir Kaynakları — Son 90 Gün" subtitle="Müşteri ve ürün bazlı ciro dağılımı · konsantrasyon">
+          {/* Concentration summary */}
+          <div className="pb-3 border-b border-[#f1f5f9]">
+            <div className="flex flex-wrap gap-4 items-center">
               <div>
                 <span className="text-[10px] text-[#94a3b8]">Toplam Ciro</span>
                 <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(attribution.total_revenue_try)}</div>
@@ -260,55 +346,12 @@ export async function SalesContent({ companyId }: Props) {
               </div>
             )}
           </div>
-        </div>
+        </DetailSection>
       )}
 
-      {/* ── KPI Strip ────────────────────────────────────────────────────── */}
-      {(mtdCount > 0 || list.length > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          {[
-            {
-              label: 'Bu Ay Ciro (MTD)',
-              value: mtdRevenue > 0 ? fmt(mtdRevenue) : '—',
-              sub:   momDelta
-                ? <span className={`font-semibold ${momDelta.color}`}>{momDelta.text} geçen ay</span>
-                : `${mtdCount} fatura`,
-              color: 'text-[#0f172a]',
-            },
-            {
-              label: 'Tahsil Edildi',
-              value: mtdPaid > 0 ? fmt(mtdPaid) : '—',
-              sub:   `%${collRatePct} tahsilat oranı · ${mtdPaidCount} fatura`,
-              color: collRatePct >= 80 ? 'text-pos-text' : collRatePct >= 50 ? 'text-warn-text' : 'text-[#0f172a]',
-            },
-            {
-              label: 'Bekleyen Tahsilat',
-              value: mtdPending > 0 ? fmt(mtdPending) : '—',
-              sub:   mtdPending > 0
-                ? `${mtdCount - mtdPaidCount} ödenmemiş fatura`
-                : 'Bu ay tamamı tahsil edildi',
-              color: mtdPending > 0 ? 'text-neg' : 'text-pos-text',
-            },
-            {
-              label: 'Toplam Satış',
-              value: fmt(lifetimeRevenue),
-              sub:   `${list.length} kayıt · tüm dönemler`,
-              color: 'text-[#0f172a]',
-            },
-          ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-              <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
+      {/* ── Para Birimi Dağılımı (expand-in-place — çoklu döviz varsa) ────── */}
       {topCurrencies.length > 1 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bu Ay — Para Birimi Dağılımı</div>
+        <DetailSection title="Para Birimi Dağılımı" subtitle="Bu ay — döviz bazlı ciro dağılımı">
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
               <div key={cur} className="flex items-center gap-2">
@@ -320,50 +363,8 @@ export async function SalesContent({ companyId }: Props) {
               </div>
             ))}
           </div>
-        </div>
+        </DetailSection>
       )}
-
-      {/* ── Table header row ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-[#94a3b8]">{list.length} satış kaydı · tüm dönemler</p>
-        <Link
-          href="/dashboard/commercial?tab=collections"
-          className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
-        >
-          Tahsilatlar →
-        </Link>
-      </div>
-
-      {/* ── MTD vs Prior Month Alert ──────────────────────────────────── */}
-      {momDelta && prevRevenue > 0 && (() => {
-        const pctChange = ((mtdRevenue - prevRevenue) / prevRevenue) * 100
-        const dayOfMonth = new Date().getDate()
-        // Only alert if we're past day 10 (early month skew less likely)
-        if (dayOfMonth < 10 || Math.abs(pctChange) < 15) return null
-        const isDown = pctChange < 0
-        return (
-          <div className={`rounded border px-4 py-3 ${
-            isDown ? 'bg-warn-light border-warn-light' : 'bg-pos-light border-pos-light'
-          }`}>
-            <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
-              {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
-            </div>
-            <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
-              Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
-              <span className="font-bold">{momDelta.text}</span>.
-              {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
-            </div>
-            <Link
-              href="/dashboard/finance?tab=pnl"
-              className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}
-            >
-              P&amp;L Analizi →
-            </Link>
-          </div>
-        )
-      })()}
-
-      <SalesTable rows={list} />
 
       {/* Cross-navigation */}
       <NarrativeFooter
