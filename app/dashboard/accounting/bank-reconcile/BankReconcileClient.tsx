@@ -49,6 +49,19 @@ export default function BankReconcileClient() {
 
   const matchPct = result ? Math.round(result.matchRate * 100) : 0
 
+  function downloadGaps() {
+    if (!result) return
+    const esc = (s: string) => (/[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s)
+    const rows: string[] = ['﻿Yön;Tarih;Açıklama;Tutar (TRY)']
+    for (const b of result.unmatchedBank) rows.push(['Bankada var, Flowra\'da yok', b.date, esc(b.description ?? ''), fmt(b.amount)].join(';'))
+    for (const b of result.unmatchedBook) rows.push(['Flowra\'da var, bankada yok', b.date, esc(b.label ?? ''), fmt(b.amount)].join(';'))
+    const blob = new Blob([rows.join('\r\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'flowra-mutabakat-acik-kalemler.csv'
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="flex flex-col gap-4 max-w-4xl">
       {/* Step 1 — upload */}
@@ -109,6 +122,17 @@ export default function BankReconcileClient() {
                 <div className="text-[10px] text-[#94a3b8]">eşleşmeyen banka hareketi</div>
               </div>
             </div>
+
+            {(result.unmatchedBank.length > 0 || result.unmatchedBook.length > 0) && (
+              <div className="flex justify-end">
+                <button
+                  onClick={downloadGaps}
+                  className="border border-[#e8eaef] px-3 py-1.5 rounded text-xs font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+                >
+                  Açık kalemleri CSV indir
+                </button>
+              </div>
+            )}
 
             {/* Unmatched bank lines — the actionable list */}
             {result.unmatchedBank.length > 0 && (
