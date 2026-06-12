@@ -33,7 +33,7 @@ export async function seedProformas({ supabase, uid, companyId, customers, defau
       customer_id:   customers[0].id,
       bank_id:       defaultBankId,
       customer_name: 'ABC Teknoloji A.Ş.',
-      currency:      'TRY', status: 'draft', validity_days: 30,
+      currency:      'TRY', status: 'accepted', validity_days: 30,
       notes:         'Destek, bulut ve eğitim teklifi.',
       total: 3245, fx_try: 1, fx_usd: null, fx_eur: null, fx_rate_try: 1,
     })
@@ -92,7 +92,7 @@ export async function seedProformas({ supabase, uid, companyId, customers, defau
       customer_id:   customers[2].id,
       bank_id:       defaultBankId,
       customer_name: 'Demo Müşteri A',
-      currency:      'USD', status: 'draft', validity_days: 60,
+      currency:      'USD', status: 'converted', validity_days: 60,
       notes:         'API entegrasyon modülü - USD fiyatlandırma.',
       total: 590, fx_try: 1, fx_usd: 32.5, fx_eur: null, fx_rate_try: 32.5,
     })

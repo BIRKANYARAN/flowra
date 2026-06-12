@@ -14,6 +14,7 @@ import { seedBanks     } from './_seed/banks'
 import { seedProducts  } from './_seed/products'
 import { seedExpenses  } from './_seed/expenses'
 import { seedProformas } from './_seed/proformas'
+import { seedSales     } from './_seed/sales'
 
 export async function POST(req: NextRequest) {
   // Feature flag guard
@@ -61,6 +62,12 @@ export async function POST(req: NextRequest) {
       await seedProformas({ ...ctx, customers: custResult.customers, products, defaultBankId })
     } else {
       console.error('[seed] skipping proformas: missing products or customers')
+    }
+
+    // Sales spread over ~6 months (revenue trend, collections pressure, P&L,
+    // cashflow, customer attribution, MTD) — standalone, no proforma dependency.
+    if (custResult.customers.length > 0) {
+      await seedSales(ctx)
     }
 
     console.log('[seed] completed for user', uid)
