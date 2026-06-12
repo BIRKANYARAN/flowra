@@ -110,6 +110,11 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
           }
           .no-print, .print\\:hidden { display: none !important; }
           .print-wrapper { padding: 0; }
+          /* Multi-page proformas: keep each line-item row whole, repeat the table
+             header on every page, and don't split the totals/bank/footer blocks. */
+          tr { page-break-inside: avoid; }
+          thead { display: table-header-group; }
+          .pf-no-break { page-break-inside: avoid; }
         }
         * { box-sizing: border-box; }
         body { margin: 0; background: white; }

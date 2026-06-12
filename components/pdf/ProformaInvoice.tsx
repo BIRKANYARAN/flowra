@@ -344,7 +344,7 @@ export function ProformaInvoice({
       </div>
 
       {/* ── Totals ────────────────────────────────────────────────────────── */}
-      <div className="px-6 py-5">
+      <div className="pf-no-break px-6 py-5">
         <div className="ml-auto w-80">
 
           {/* Line items */}
@@ -389,7 +389,7 @@ export function ProformaInvoice({
       </div>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <div className="mx-6 mb-6 border border-[#e8eaef] rounded-xl overflow-hidden">
+      <div className="pf-no-break mx-6 mb-6 border border-[#e8eaef] rounded-xl overflow-hidden">
 
         {/* Yazı ile tutar */}
         <div className="px-5 py-3 bg-[#f8fafc] border-b border-[#e8eaef] border-l-4 border-l-gray-800">
