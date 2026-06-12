@@ -256,7 +256,8 @@ export function isKnownNavHref(href: string): boolean {
 
 /** Commercial center — /dashboard/commercial?tab= */
 export const COMMERCIAL_TABS = [
-  { key: 'pipeline',    label: 'Satış Hattı' },
+  { key: 'ozet',        label: 'Özet'        },
+  { key: 'teklifler',   label: 'Teklifler'   },
   { key: 'sales',       label: 'Satışlar'    },
   { key: 'collections', label: 'Tahsilatlar' },
   { key: 'customers',   label: 'Müşteriler'  },

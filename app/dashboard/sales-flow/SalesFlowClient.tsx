@@ -199,7 +199,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
         </tbody>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/commercial?tab=proformas" className="text-xs text-brand-light font-semibold hover:underline">Tüm teklifler →</Link>
+        <Link href="/dashboard/commercial?tab=teklifler" className="text-xs text-brand-light font-semibold hover:underline">Tüm teklifler →</Link>
       </div>
     </div>
   )

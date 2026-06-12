@@ -26,7 +26,6 @@ function TabSkeleton() {
 }
 import { PipelineContent }    from './_tabs/PipelineContent'
 import { ProformasContent }   from './_tabs/ProformasContent'
-import { DetailSection }      from '@/components/dashboard/DetailSection'
 import { SalesContent }       from './_tabs/SalesContent'
 import { CollectionsContent } from './_tabs/CollectionsContent'
 import { CustomersContent }   from './_tabs/CustomersContent'
@@ -66,19 +65,21 @@ export default async function CommercialPage({ searchParams }: PageProps) {
     </div>
   )
 
-  const params    = await searchParams
-  const rawTab    = params.tab ?? 'pipeline'
-  const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'pipeline'
+  const params  = await searchParams
+  // Legacy deep-links: ?tab=pipeline → ozet, ?tab=proformas → teklifler.
+  const aliases: Record<string, string> = { pipeline: 'ozet', proformas: 'teklifler' }
+  const rawTab    = aliases[params.tab ?? ''] ?? params.tab ?? 'ozet'
+  const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'ozet'
 
   const tabSubtitles: Record<string, string> = {
-    pipeline:    'Satış hattı · Açık teklifler · Kapanmaya yakın fırsatlar',
-    proformas:   'Proforma teklifler · Bekleyen onaylar · Dönüşüm oranları',
+    ozet:        'Satış hattı sağlığı · Açık teklifler · Kapanmaya yakın fırsatlar',
+    teklifler:   'Proforma teklifler · Bekleyen onaylar · Dönüşüm oranları',
     sales:       'Satış kayıtları · Fatura özeti · Ödeme durumu',
     collections: 'Tahsilat takibi · Vadesi gelen ödemeler · Yaşlandırma',
     customers:   'Müşteri portföyü · İlişki geçmişi · Alacak durumu',
   }
   const tabTitles: Record<string, string> = {
-    pipeline: 'Satış Hattı', proformas: 'Proformalar', sales: 'Satışlar',
+    ozet: 'Satış Özeti', teklifler: 'Teklifler', sales: 'Satışlar',
     collections: 'Tahsilatlar', customers: 'Müşteriler',
   }
 
@@ -103,16 +104,8 @@ export default async function CommercialPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
-        {activeTab === 'pipeline'    && (
-          <div className="space-y-4">
-            <PipelineContent  companyId={companyId} />
-            {/* Proformalar — co-located in the sales pipeline (teklif → satış lifecycle),
-                folded so the tab opens on the pipeline view; expands on demand. */}
-            <DetailSection title="Teklifler (Proformalar)" subtitle="Tüm teklifler · dönüşüm analizi · son 90 gün">
-              <ProformasContent companyId={companyId} />
-            </DetailSection>
-          </div>
-        )}
+        {activeTab === 'ozet'        && <PipelineContent    companyId={companyId} />}
+        {activeTab === 'teklifler'   && <ProformasContent   companyId={companyId} />}
         {activeTab === 'sales'       && <SalesContent       companyId={companyId} />}
         {activeTab === 'collections' && <CollectionsContent companyId={companyId} />}
         {activeTab === 'customers'   && <CustomersContent   companyId={companyId} />}

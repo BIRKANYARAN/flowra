@@ -370,7 +370,7 @@ export async function SalesContent({ companyId }: Props) {
         narrative="MTD ciro tahsil edildiğinde nakit pozisyonuna girer — tahsilat hızı runway'ı doğrudan belirler."
         links={[
           { label: 'P&L Analizi', href: '/dashboard/finance?tab=pnl' },
-          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=pipeline' },
+          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=ozet' },
         ]}
       />
     </div>

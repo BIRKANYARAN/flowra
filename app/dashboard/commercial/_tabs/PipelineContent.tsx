@@ -177,12 +177,12 @@ export async function PipelineContent({ companyId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* ── TİCARİ BORU HATTI ANALİZİ ─────────────────────────────────────── */}
+      {/* ── SATIŞ HATTI SAĞLIĞI ───────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {/* Header */}
         <div className="px-4 py-2.5 border-b border-[#e8eaef] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-            Ticari Boru Hattı Analizi
+            Satış Hattı Sağlığı
           </span>
           {healthBadge && (
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${healthBadge.cls}`}>

@@ -588,31 +588,39 @@ export function ContextReading({
     status === 'critical' ? 'text-neg' :
     status === 'warn'     ? 'text-warn-text' :
     'text-[#0f172a]'
+  const dotCls =
+    status === 'critical' ? 'bg-neg' :
+    status === 'warn'     ? 'bg-warn' :
+    status === 'ok'       ? 'bg-pos' :
+    'bg-[#cbd5e1]'
   return (
     <div className={cn(
-      'flex flex-col gap-0 flex-shrink-0 px-4 py-2.5',
-      border && 'border-l border-[#e8eaef]',
+      'flex flex-col gap-1 flex-shrink-0 px-4 py-2.5 min-w-[118px]',
+      border && 'border-l border-[#edeef2]',
     )}>
-      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
-        {label}
-      </span>
-      <span className={cn('text-[13px] font-black tabular-nums leading-none', valueCls)}>
+      <div className="flex items-center gap-1.5">
+        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', dotCls)} />
+        <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] leading-none">
+          {label}
+        </span>
+      </div>
+      <span className={cn('text-[15px] font-black tabular-nums leading-tight', valueCls)}>
         {value}
       </span>
       {sub && (
-        <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
+        <span className="text-[10px] text-[#94a3b8] leading-none">{sub}</span>
       )}
     </div>
   )
 }
 
-// ── ContextRail — Bloomberg-style horizontal status bar shell ─────────────────
-// Wraps a row of ContextReading cells with consistent container styling.
-// Use ContextRailSkeleton during async load.
+// ── ContextRail — clean premium status strip ──────────────────────────────────
+// A row of ContextReading cells in one elevated panel (color-coded status dots).
+// Replaced the cramped Bloomberg strip. Use ContextRailSkeleton during async load.
 
 export function ContextRail({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e8eaef] overflow-x-auto scrollbar-none">
+    <div className="flex items-stretch gap-0 bg-white border border-[#edeef2] rounded-xl shadow-soft overflow-x-auto scrollbar-none">
       {children}
     </div>
   )
@@ -620,6 +628,6 @@ export function ContextRail({ children }: { children: ReactNode }) {
 
 export function ContextRailSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('h-[46px] bg-[#f8fafc]/60 border-b border-[#e8eaef] animate-pulse', className)} />
+    <div className={cn('h-[64px] bg-white border border-[#edeef2] rounded-xl shadow-soft fl-shimmer', className)} />
   )
 }

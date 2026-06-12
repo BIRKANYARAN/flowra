@@ -345,7 +345,7 @@ export default function CustomerDetailPage() {
             Tahsilat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=ozet" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Pipeline →
           </Link>
         </div>

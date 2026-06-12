@@ -27,7 +27,7 @@ const PRIMARY: Tab[] = [
 ]
 
 const SECONDARY: Tab[] = [
-  { href: '/dashboard/commercial?tab=pipeline',  label: 'Teklifler',   emoji: '📝'              },
+  { href: '/dashboard/commercial?tab=ozet',  label: 'Teklifler',   emoji: '📝'              },
   { href: '/dashboard/commercial?tab=customers', label: 'Müşteriler',  emoji: '👥'              },
   { href: '/dashboard/operations',               label: 'Gider & Stok',emoji: '⚙'               },
   { href: '/dashboard/partners',                 label: 'Ortaklar',    emoji: '🤝', minRole: 'admin' },

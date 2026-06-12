@@ -132,7 +132,7 @@ export async function TasksContent({ companyId }: Props) {
         narrative="Kritik görev gecikmeleri tahsilat ve teklif dönüşümü hızını doğrudan etkiler — öncelikli görevleri ticari akışla koordineli takip edin."
         links={[
           { label: 'Tahsilat',    href: '/dashboard/commercial?tab=collections' },
-          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=pipeline' },
+          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=ozet' },
         ]}
       />
     </div>

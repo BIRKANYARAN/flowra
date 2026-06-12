@@ -266,7 +266,7 @@ export function ProformaDetailClient({
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <Link
-            href="/dashboard/commercial?tab=proformas"
+            href="/dashboard/commercial?tab=teklifler"
             className="text-sm text-[#94a3b8] hover:text-[#334155] mb-1 inline-block"
           >
             ← Proformalar

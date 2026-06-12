@@ -208,7 +208,7 @@ export async function ProformasContent({ companyId }: Props) {
               {decided} karar verilen tekliften sadece {convertedCount} tanesi satışa dönmüş. Fiyatlandırma veya takip sürecini gözden geçirin.
             </div>
           </div>
-          <Link href="/dashboard/commercial?tab=pipeline" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 whitespace-nowrap ${winRate < 15 ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'}`}>
+          <Link href="/dashboard/commercial?tab=ozet" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 whitespace-nowrap ${winRate < 15 ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'}`}>
             Pipeline →
           </Link>
         </div>
@@ -277,7 +277,7 @@ export async function ProformasContent({ companyId }: Props) {
         <p className="text-xs text-[#94a3b8]">{list.length} proforma kaydı</p>
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/commercial?tab=pipeline"
+            href="/dashboard/commercial?tab=ozet"
             className="inline-flex items-center gap-1.5 border border-[#e8eaef] text-[#64748b] px-3.5 py-2 rounded text-xs font-semibold hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
           >
             Pipeline →
@@ -348,7 +348,7 @@ export async function ProformasContent({ companyId }: Props) {
       <NarrativeFooter
         narrative="Teklif → Satış → Tahsilat zinciri kapanmadan nakit etkisi olmaz — dönüşüm hızını takip edin."
         links={[
-          { label: 'Satış Hattı', href: '/dashboard/commercial?tab=pipeline' },
+          { label: 'Satış Hattı', href: '/dashboard/commercial?tab=ozet' },
           { label: 'Satışlar', href: '/dashboard/commercial?tab=sales' },
           { label: 'Tahsilat', href: '/dashboard/commercial?tab=collections' },
         ]}

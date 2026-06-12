@@ -422,7 +422,7 @@ export async function KomutaContent({ companyId }: Props) {
       {/* Quick action shortcuts */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Proforma Oluştur', href: '/dashboard/commercial?tab=proformas', icon: '📋' },
+          { label: 'Proforma Oluştur', href: '/dashboard/commercial?tab=teklifler', icon: '📋' },
           { label: 'Gider Ekle',       href: '/dashboard/operations?tab=expenses',  icon: '💸' },
           { label: 'Stok Güncelle',    href: '/dashboard/operations?tab=catalog',   icon: '📦' },
           { label: 'Müşteri Listesi',  href: '/dashboard/commercial?tab=customers', icon: '👥' },

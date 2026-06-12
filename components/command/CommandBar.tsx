@@ -43,7 +43,7 @@ const STATIC_CMDS: Cmd[] = [
   { id: 'op-eq',    grp: 'Operasyonlar', label: 'Ortak eşitlemesini çalıştır',       sub: 'Waterfall · Normalize · Pay dengesi',     href: '/dashboard/partners?tab=waterfall',             kind: 'op' },
   { id: 'op-per',   grp: 'Operasyonlar', label: 'Dönem kapanışı kontrol et',         sub: 'Checklist · Mizan · Dönem durumu',        href: '/dashboard/cfo/period-close',                   kind: 'op' },
   { id: 'op-stk',   grp: 'Operasyonlar', label: 'Stok kritiklerini gör',             sub: 'Kritik seviye · FIFO · Değerleme',        href: '/dashboard/operations?tab=stock',               kind: 'op' },
-  { id: 'op-pro',   grp: 'Operasyonlar', label: 'Açık proformaları gözden geçir',    sub: 'Onay bekleyen · Dönüşüm oranı',           href: '/dashboard/commercial?tab=proformas',           kind: 'op' },
+  { id: 'op-pro',   grp: 'Operasyonlar', label: 'Açık proformaları gözden geçir',    sub: 'Onay bekleyen · Dönüşüm oranı',           href: '/dashboard/commercial?tab=teklifler',           kind: 'op' },
   { id: 'op-bal',   grp: 'Operasyonlar', label: 'Bilanço pozisyonunu gör',           sub: 'Varlıklar · Yükümlülükler · Özsermaye',  href: '/dashboard/finance?tab=balance',                kind: 'op' },
 
   // ── Oluştur — creation commands ───────────────────────────────────────────

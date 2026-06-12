@@ -247,12 +247,14 @@ describe('findNavItem + isKnownNavHref', () => {
 // ── Tab contracts ─────────────────────────────────────────────────────────────
 
 describe('Tab contracts — canonical key sets', () => {
-  it('COMMERCIAL_TABS has 4 tabs (proformas co-located into pipeline)', () => {
-    expect(COMMERCIAL_TABS.length).toBe(4)
+  it('COMMERCIAL_TABS has 5 tabs (Özet summary + Teklifler promoted to own tab)', () => {
+    expect(COMMERCIAL_TABS.length).toBe(5)
     const keys = COMMERCIAL_TABS.map(t => t.key)
-    expect(keys).toContain('pipeline')
+    expect(keys[0]).toBe('ozet')
+    expect(keys).toContain('teklifler')
     expect(keys).toContain('collections')
     expect(keys).toContain('customers')
+    expect(keys).not.toContain('pipeline')
     expect(keys).not.toContain('proformas')
   })
 
