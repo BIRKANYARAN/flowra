@@ -11,6 +11,7 @@ export * from './registry'
 export * from './normalize'
 export * from './bank-statement'
 export * from './reconcile'
+export * from './reconcile-names'
 export type { AccountingConnector, SyncWindow, Page } from './accounting-connector'
 export type { BankConnector } from './bank-connector'
 

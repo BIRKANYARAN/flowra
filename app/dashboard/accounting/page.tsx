@@ -60,6 +60,7 @@ const GROUPS: Group[] = [
       { href: '/dashboard/accounting/integrations',   icon: '🔌', title: 'Bağlanabilir Sistemler',   desc: 'Logo · Mikro · Paraşüt · Uyumsoft · Bizim Hesap · banka — fatura/cari/tahsilat okuma (yakında)' },
       { href: '/dashboard/accounting/bank-reconcile',    icon: '🏦', title: 'Banka Ekstresi Mutabakatı', desc: 'Ekstre yükle → Flowra tahsilat/ödemeleriyle otomatik eşleştir (önizleme · kayıt yok)' },
       { href: '/dashboard/accounting/invoice-reconcile', icon: '🧾', title: 'Fatura Mutabakatı',         desc: 'Muhasebe fatura listesi → Flowra satışlarıyla eşleştir, eksik faturaları bul (önizleme)' },
+      { href: '/dashboard/accounting/cari-reconcile',    icon: '👥', title: 'Cari Mutabakatı',           desc: 'Muhasebe cari listesi → Flowra müşterileriyle isim bazında eşleştir, eksik carileri bul (önizleme)' },
     ],
   },
 ]
