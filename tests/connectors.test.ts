@@ -45,8 +45,12 @@ describe('connector factory — skeletons throw until configured', () => {
     expect((await c.healthCheck()).ok).toBe(false)
   })
 
-  it('unknown/un-adaptered provider throws NotConfiguredError', () => {
-    expect(() => createAccountingConnector('logo')).toThrow(NotConfiguredError)
+  it('un-adaptered providers return a skeleton whose list*() throws', async () => {
+    const logo = createAccountingConnector('logo')
+    expect(logo.provider).toBe('logo')
+    await expect(logo.listInvoices()).rejects.toBeInstanceOf(NotConfiguredError)
+    await expect(logo.listCustomers()).rejects.toBeInstanceOf(NotConfiguredError)
+    expect((await logo.healthCheck()).ok).toBe(false)
   })
 })
 

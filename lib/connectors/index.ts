@@ -16,20 +16,16 @@ export type { BankConnector } from './bank-connector'
 
 import type { AccountingConnector } from './accounting-connector'
 import type { AccountingProviderId } from './types'
-import { NotConfiguredError } from './types'
 import { ParasutConnector } from './adapters/parasut'
+import { SkeletonAccountingConnector } from './adapters/skeleton'
 
 /**
- * Resolve an accounting connector for a provider. Currently every provider is a
+ * Resolve an accounting connector for a provider. Every provider is currently a
  * skeleton (no live wiring) — calling any list*() method throws NotConfiguredError.
- * A future wired adapter would receive the company's stored credentials here.
+ * Paraşüt has its own skeleton carrying the OAuth wiring notes; the rest use the
+ * generic skeleton until their bespoke adapter is built. A wired adapter would
+ * receive the company's stored credentials here.
  */
 export function createAccountingConnector(id: AccountingProviderId): AccountingConnector {
-  switch (id) {
-    case 'parasut':
-      return new ParasutConnector()
-    // logo / mikro / uyumsoft / bizimhesap adapters land here as they're built.
-    default:
-      throw new NotConfiguredError(id, 'bu sağlayıcı için adaptör henüz eklenmedi')
-  }
+  return id === 'parasut' ? new ParasutConnector() : new SkeletonAccountingConnector(id)
 }
