@@ -12,8 +12,9 @@ import {
   normalizeInvoiceToExpense,
   normalizeExpense,
   normalizeBankTransaction,
+  normalizeCollection,
 } from '@/lib/connectors'
-import type { ExternalInvoice, ExternalParty, ExternalExpense, ExternalBankTransaction } from '@/lib/connectors'
+import type { ExternalInvoice, ExternalParty, ExternalExpense, ExternalBankTransaction, ExternalCollection } from '@/lib/connectors'
 
 describe('connector provenance + registry', () => {
   it('connectorSource tags records with the provider', () => {
@@ -108,6 +109,18 @@ describe('normalize — entities carry provenance + canonical shape', () => {
     expect(e.title).toBe('Ofis kirası')
     expect(e.category).toBe('rent')
     expect(e.provenance.source).toBe('connector:logo')
+  })
+
+  it('collection normalizes to a positive payment with provenance', () => {
+    const c: ExternalCollection = {
+      external_id: 'c1', invoice_external_id: 'i9', party_name: ' XYZ ', date: '2026-06-07', currency: 'TRY', amount: -1200, method: 'havale',
+    }
+    const n = normalizeCollection(c, 'parasut')
+    expect(n.amount).toBe(1200)            // magnitude
+    expect(n.invoice_external_id).toBe('i9')
+    expect(n.party_name).toBe('XYZ')
+    expect(n.method).toBe('havale')
+    expect(n.provenance.source).toBe('connector:parasut')
   })
 
   it('bank transaction keeps signed amount + provenance', () => {

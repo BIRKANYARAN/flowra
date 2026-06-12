@@ -130,9 +130,30 @@ export default function BankReconcileClient() {
               </div>
             )}
 
+            {/* Unmatched book entries — recorded in Flowra but not seen on the statement */}
+            {result.unmatchedBook.length > 0 && (
+              <div className="border border-[#e8eaef] rounded-lg overflow-hidden">
+                <div className="px-3 py-2 bg-info-light text-[10px] font-black uppercase tracking-widest text-info-text">
+                  Flowra'da var, bankada yok — {result.unmatchedBook.length} kayıt
+                </div>
+                <table className="w-full text-xs">
+                  <tbody className="divide-y divide-[#f1f5f9]">
+                    {result.unmatchedBook.slice(0, 30).map(b => (
+                      <tr key={b.id}>
+                        <td className="px-3 py-1.5 text-[#94a3b8] tabular-nums w-24">{b.date}</td>
+                        <td className="px-3 py-1.5 text-[#334155] truncate max-w-[260px]">{b.label || '—'}</td>
+                        <td className={`px-3 py-1.5 text-right tabular-nums font-semibold ${b.amount < 0 ? 'text-neg' : 'text-pos-text'}`}>₺{fmt(b.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <p className="text-[10px] text-[#94a3b8]">
-              Eşleşmeyen banka hareketleri = Flowra'ya henüz girilmemiş tahsilat/ödeme olabilir. Bu önizleme hiçbir
-              şey kaydetmez; otomatik içe alma, banka connector'ı + saklama tablosu geldiğinde açılacak.
+              <strong>Bankada var, Flowra'da yok</strong> = girilmemiş tahsilat/ödeme olabilir.
+              <strong> Flowra'da var, bankada yok</strong> = kaydı var ama banka hareketine henüz yansımamış. Bu
+              önizleme hiçbir şey kaydetmez; otomatik içe alma, banka connector'ı + saklama tablosu geldiğinde açılacak.
             </p>
           </>
         )}

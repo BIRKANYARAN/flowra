@@ -15,6 +15,7 @@ import {
   type ExternalExpense,
   type ExternalParty,
   type ExternalBankTransaction,
+  type ExternalCollection,
 } from './types'
 
 // ── Canonical (Flowra-shaped) outputs ─────────────────────────────────────────
@@ -48,6 +49,16 @@ export interface NormalizedExpense {
   expense_date:  string
   vendor_name:   string | null
   provenance:    Provenance
+}
+
+export interface NormalizedCollection {
+  invoice_external_id: string | null   // links to the source invoice when exposed
+  party_name:   string | null
+  date:         string                 // YYYY-MM-DD
+  amount:       number                 // native currency, positive
+  currency:     string
+  method:       string | null          // havale · nakit · kredi karti …
+  provenance:   Provenance
 }
 
 export interface NormalizedBankLine {
@@ -152,6 +163,18 @@ export function normalizeExpense(e: ExternalExpense, provider: ProviderId): Norm
     expense_date: ymd(e.expense_date),
     vendor_name:  clean(e.party?.name),
     provenance:   prov(provider, e.external_id, e.updated_at),
+  }
+}
+
+export function normalizeCollection(c: ExternalCollection, provider: ProviderId): NormalizedCollection {
+  return {
+    invoice_external_id: clean(c.invoice_external_id),
+    party_name:  clean(c.party_name),
+    date:        ymd(c.date),
+    amount:      Math.abs(round2(Number(c.amount) || 0)),
+    currency:    c.currency || 'TRY',
+    method:      clean(c.method),
+    provenance:  prov(provider, c.external_id, c.updated_at),
   }
 }
 
