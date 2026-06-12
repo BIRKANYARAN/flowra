@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { cache } from 'react'
 import { ProformaInvoice } from '@/components/pdf/ProformaInvoice'
 import { PublicActions } from './PublicActions'
 import { loadPublicProformaBundle } from '@/lib/public-proforma'
@@ -11,12 +12,26 @@ function str(v: unknown): string | null {
   return null
 }
 
-export default async function PublicProformaPage({ params }: { params: { id: string } }) {
-  const { id }   = params
-  const bundle = await loadPublicProformaBundle(id).catch(err => {
+// Request-deduped bundle load (shared by generateMetadata + the page → one query).
+const getBundle = cache((id: string) =>
+  loadPublicProformaBundle(id).catch(err => {
     console.error('[public proforma] fetch error:', err instanceof Error ? err.message : String(err))
     return null
-  })
+  }),
+)
+
+// Customer-facing tab title + link preview shows the SELLER's company, not "Flowra"
+// (absolute title bypasses the root "%s · Flowra" template — white-label for the buyer).
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const bundle  = await getBundle(params.id)
+  const cs      = bundle?.proforma?.company_snapshot as { name?: unknown } | null | undefined
+  const company = str(cs?.name) ?? str((bundle?.settings as { company_name?: unknown } | null)?.company_name)
+  return { title: { absolute: company ? `Proforma — ${company}` : 'Proforma' } }
+}
+
+export default async function PublicProformaPage({ params }: { params: { id: string } }) {
+  const { id }   = params
+  const bundle = await getBundle(id)
 
   if (!bundle) {
     return (
