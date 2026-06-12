@@ -1,6 +1,22 @@
 # Migration Status
 
-All migrations have been applied to the production database.
+## ⏳ PENDING prod application (needs DB credentials — not applicable autonomously)
+
+| File | Description | Impact until applied |
+|------|-------------|----------------------|
+| 20260610000001_product_cost_entries.sql | Per-product manual cost entries (catalog cost-entry UI → /api/cost-entries) | Viewing a product's cost entries returns empty (degrades gracefully via isMissingSchemaError; was a 500 before the guard). Folded into both canonical installs already, so fresh installs include it. |
+
+**To apply (you, with prod DB access):**
+```
+psql "$PROD_CONN" -v ON_ERROR_STOP=1 -f supabase/migrations/20260610000001_product_cost_entries.sql
+```
+Additive + idempotent (CREATE … IF NOT EXISTS, RLS + anon-revoke). Verify columns match /api/cost-entries.
+
+> All other migration-/foundation-SQL-defined tables were verified present in prod
+> on 2026-06-08 (detection: every CREATE TABLE vs `to_regclass`). The remaining
+> ~17 referenced-but-missing tables are GENUINE UNIMPLEMENTED orphans (no writer/UI;
+> degrade with no 500) — building them is a product decision, not a pending migration.
+> Could not re-probe prod this pass (REST root returns 401 with the anon key).
 
 ## Applied — 2026-05-26
 
