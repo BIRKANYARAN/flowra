@@ -339,7 +339,7 @@ export async function PipelineContent({ companyId }: Props) {
           </div>
 
           {/* Metrics strip */}
-          <div className="border-t border-[#e8eaef] grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9]">
+          <div className="border-t border-[#e8eaef] grid grid-cols-2 sm:grid-cols-4">
             {[
               {
                 label: 'Açık Pipeline',

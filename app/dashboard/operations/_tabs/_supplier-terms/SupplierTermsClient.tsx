@@ -243,7 +243,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
+      <div className="grid grid-cols-3 border-b border-[#e8eaef]">
         {/* Health score */}
         <div className="px-4 py-3 text-center">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">

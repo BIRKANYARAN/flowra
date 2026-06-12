@@ -10,7 +10,7 @@ export function GlToolsAndReports() {
         <div className="px-4 py-2.5 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">GL Araçları</span>
         </div>
-        <div className="grid grid-cols-5 divide-x divide-[#f1f5f9]">
+        <div className="grid grid-cols-5">
           {[
             { href: '/dashboard/cfo/trial-balance',        title: 'Mizan',              desc: 'Hesap kodları ve bakiyeler',        tag: 'TB' },
             { href: '/dashboard/cfo/period-close',         title: 'Dönem Kapanışı',     desc: 'Kapat ve kilitle',                  tag: 'PC' },
@@ -35,7 +35,7 @@ export function GlToolsAndReports() {
         <div className="px-4 py-2.5 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Finansal Raporlar</span>
         </div>
-        <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">
+        <div className="grid grid-cols-4">
           {[
             { href: '/dashboard/reports/income-statement', title: 'Gelir Tablosu',      desc: 'P&L — Brüt kâr, net kâr' },
             { href: '/dashboard/reports/balance-sheet',    title: 'Bilanço',            desc: 'Aktif = Pasif + Özkaynak' },
@@ -49,7 +49,7 @@ export function GlToolsAndReports() {
             </Link>
           ))}
         </div>
-        <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-t border-[#f1f5f9]">
+        <div className="grid grid-cols-3 border-t border-[#f1f5f9]">
           {[
             { href: '/dashboard/cfo/tax/kdv',       title: 'KDV Özeti',          desc: 'Hesaplanan − İndirilecek' },
             { href: '/dashboard/cfo/tax/corporate', title: 'Kurumlar Vergisi',   desc: 'Geçici vergi takvimi' },

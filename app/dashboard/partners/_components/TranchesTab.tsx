@@ -427,7 +427,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 <div className="px-4 py-2 border-b border-[#f1f5f9] bg-[#f8fafc]/60">
                   <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Faiz Yükü Özeti</div>
                 </div>
-                <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
+                <div className="grid grid-cols-3">
                   <div className="px-4 py-3">
                     <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kalan Ana Para</div>
                     <div className="text-base font-extrabold tabular-nums text-warn-text">{fmt(totalPrincipal)}</div>

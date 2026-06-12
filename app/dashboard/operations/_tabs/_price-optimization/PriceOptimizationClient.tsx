@@ -143,7 +143,7 @@ export function PriceOptimizationClient() {
       </div>
 
       {/* Summary KPI strip */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#f1f5f9]">
+      <div className="grid grid-cols-3 border-b border-[#f1f5f9]">
         {[
           {
             label: 'Ort. İskonto Oranı',

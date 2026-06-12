@@ -343,7 +343,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
               Gelir Bütçesi
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-0 divide-x divide-[#f1f5f9] px-0">
+          <div className="grid grid-cols-4 gap-0 px-0">
             {/* Budget */}
             <div className="px-4 py-3">
               <div className="text-[10px] text-[#94a3b8] mb-0.5">Bütçe Hedefi</div>

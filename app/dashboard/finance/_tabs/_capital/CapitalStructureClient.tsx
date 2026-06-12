@@ -240,7 +240,7 @@ export function CapitalStructureClient({ companyId }: Props) {
           </span>
           <Badge config={dscrBadge} />
         </div>
-        <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
+        <div className="grid grid-cols-3">
           <div className="px-4 py-3 text-center">
             <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">Yıllık Anapara</div>
             <div className="text-base font-bold tabular-nums text-[#0f172a]">{fmtTRY(ds.annual_principal)}</div>
@@ -351,7 +351,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             Borçlanma Maliyeti
           </span>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-[#f1f5f9] sm:grid-cols-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3">
           <div className="px-4 py-3">
             <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Ağırlıklı Ort. Borç Maliyeti (WACD)

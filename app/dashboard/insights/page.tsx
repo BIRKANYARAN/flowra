@@ -547,7 +547,7 @@ export default async function InsightsPage() {
       </div>
 
       {/* ── Footer bağlantılar ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+      <div className="grid grid-cols-3 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {[
           { href: '/dashboard/finance?tab=risks',  title: 'Risk Analizi',    desc: 'Alacak yaşlandırma · HHI' },
           { href: '/dashboard/finance?tab=pnl',    title: 'P&L Detayı',      desc: 'Gelir tablosu · Marjlar' },

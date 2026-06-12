@@ -260,7 +260,7 @@ export function FxExposureClient({ companyId }: Props) {
             Senaryo Analizi — TRY Değer Kaybı
           </span>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
+        <div className="grid grid-cols-3">
           {[
             { label: 'TRY %10 Değer Kaybı', loss: scenarios.depreciation_10pct_loss },
             { label: 'TRY %20 Değer Kaybı', loss: scenarios.depreciation_20pct_loss },
