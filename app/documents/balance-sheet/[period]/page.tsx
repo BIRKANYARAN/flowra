@@ -185,6 +185,12 @@ function LiabEquitySection({ bs }: { bs: BalanceSheet }) {
 
 interface PageParams { period: string }
 
+export async function generateMetadata({ params }: { params: Promise<PageParams> }) {
+  const { period } = await params
+  const label = /^\d{4}-\d{2}$/.test(period) ? periodLabel(period) : period
+  return { title: `Bilanço — ${label}`, robots: { index: false, follow: false } }
+}
+
 export default async function BalanceSheetDocPage({ params }: { params: Promise<PageParams> }) {
   const { period } = await params
 
