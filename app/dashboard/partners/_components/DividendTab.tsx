@@ -224,7 +224,7 @@ export function DividendTab() {
                 ].map((card, i) => (
                   <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
                     <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                    <div className={`text-base font-black tabular-nums ${card.tone}`}>{card.value}</div>
+                    <div className={`text-base font-extrabold tabular-nums ${card.tone}`}>{card.value}</div>
                   </div>
                 ))}
               </div>
@@ -373,7 +373,7 @@ export function DividendTab() {
                 </div>
                 <div className="text-right shrink-0">
                   {item.payload.gross_dividend_try != null && (
-                    <div className="text-sm font-black tabular-nums text-[#0f172a]">
+                    <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">
                       {fmtTRY(item.payload.gross_dividend_try)}
                     </div>
                   )}

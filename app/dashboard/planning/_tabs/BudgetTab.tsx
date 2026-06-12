@@ -109,7 +109,7 @@ function YtdValueBlock({ cell, label }: { cell: VarianceCell; label: string }): 
     <div className="text-right">
       <div className="text-[9px] font-semibold text-[#94a3b8] mb-0.5">{label}</div>
       {cell.actual !== null && (
-        <div className="text-xs font-black tabular-nums text-[#0f172a]">{fmtTRY(cell.actual)}</div>
+        <div className="text-xs font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(cell.actual)}</div>
       )}
       {cell.budget !== null && (
         <div className="text-[9px] tabular-nums text-[#64748b]">B: {fmtTRY(cell.budget)}</div>
@@ -237,7 +237,7 @@ function VarianceAnalysisPanel(): JSX.Element {
             YTD Gelir Varyansı
           </div>
           {report.ytd_revenue_variance_pct !== null ? (
-            <div className={`text-sm font-black tabular-nums ${
+            <div className={`text-sm font-extrabold tabular-nums ${
               report.ytd_revenue_variance_pct >= 0 ? 'text-pos-text' : 'text-neg-text'
             }`}>
               {report.ytd_revenue_variance_pct >= 0 ? '+' : ''}
@@ -255,7 +255,7 @@ function VarianceAnalysisPanel(): JSX.Element {
             YTD Gider Varyansı
           </div>
           {report.ytd_expense_variance_pct !== null ? (
-            <div className={`text-sm font-black tabular-nums ${
+            <div className={`text-sm font-extrabold tabular-nums ${
               report.ytd_expense_variance_pct <= 0 ? 'text-pos-text' : 'text-neg-text'
             }`}>
               {report.ytd_expense_variance_pct >= 0 ? '+' : ''}
@@ -273,7 +273,7 @@ function VarianceAnalysisPanel(): JSX.Element {
             Tahmin Doğruluğu
           </div>
           {report.forecast_accuracy_score !== null ? (
-            <div className={`text-sm font-black tabular-nums ${
+            <div className={`text-sm font-extrabold tabular-nums ${
               report.forecast_accuracy_score >= 90 ? 'text-pos-text'
               : report.forecast_accuracy_score >= 70 ? 'text-warn-text'
               : 'text-neg-text'
@@ -498,7 +498,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Gelir
           </div>
-          <div className="text-xl font-black tabular-nums text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
             {fmtTRY(report.ytd_revenue_actual)}
           </div>
           {report.ytd_revenue_budget !== null && (
@@ -525,7 +525,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Gider
           </div>
-          <div className="text-xl font-black tabular-nums text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
             {fmtTRY(report.ytd_expense_actual)}
           </div>
           {report.ytd_expense_budget !== null && (
@@ -552,7 +552,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Brüt Kâr
           </div>
-          <div className={`text-xl font-black tabular-nums ${
+          <div className={`text-xl font-extrabold tabular-nums ${
             report.ytd_gross_profit_actual >= 0 ? 'text-pos-text' : 'text-neg-text'
           }`}>
             {fmtTRY(report.ytd_gross_profit_actual)}

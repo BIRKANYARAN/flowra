@@ -146,7 +146,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
               {result.recommended === s.key && (
                 <div className="text-[8px] font-bold text-brand-light mb-1.5 uppercase tracking-wide">★ Önerilen</div>
               )}
-              <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${s.text}`}>
                 <span className="text-[#cbd5e1] text-sm font-normal mr-0.5">₺</span>
                 {fmtK(Math.abs(s.data.total_net))}
                 {s.data.total_net < 0 && <span className="text-sm ml-1 font-normal">(−)</span>}
@@ -210,7 +210,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
                     <td className="px-4 py-2 text-right tabular-nums text-[#64748b]">
                       {m.tax > 0 ? `₺${fmtK(m.tax)}` : '—'}
                     </td>
-                    <td className={`px-4 py-2 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+                    <td className={`px-4 py-2 text-right tabular-nums font-extrabold ${m.net_income >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                       {m.net_income < 0 ? '−' : ''}₺{fmtK(Math.abs(m.net_income))}
                     </td>
                     <td className={`px-4 py-2 text-right tabular-nums text-[9px] font-semibold ${

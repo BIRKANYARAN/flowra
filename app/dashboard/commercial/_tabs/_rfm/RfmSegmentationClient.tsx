@@ -94,7 +94,7 @@ function KpiCards({ report }: { report: RfmSegmentationReport }) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {card.label}
           </div>
-          <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>
             {card.value}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -137,7 +137,7 @@ function SegmentDistribution({ report }: { report: RfmSegmentationReport }) {
                 />
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[11px] font-black tabular-nums text-[#334155] w-5 text-right">
+                <span className="text-[11px] font-extrabold tabular-nums text-[#334155] w-5 text-right">
                   {count}
                 </span>
                 <span className="text-[10px] text-[#94a3b8] w-12 text-right tabular-nums">
@@ -250,7 +250,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-center">
-                    <span className="inline-block bg-[#f1f5f9] text-[#334155] text-[11px] font-black tabular-nums px-2 py-0.5 rounded font-mono">
+                    <span className="inline-block bg-[#f1f5f9] text-[#334155] text-[11px] font-extrabold tabular-nums px-2 py-0.5 rounded font-mono">
                       {c.rfm_code}
                     </span>
                   </td>
@@ -262,7 +262,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right">
-                    <span className="text-[11px] font-black tabular-nums text-brand">
+                    <span className="text-[11px] font-extrabold tabular-nums text-brand">
                       {fmtTRY(c.total_spend)}
                     </span>
                   </td>
@@ -351,7 +351,7 @@ function HighValueFocus({ report }: { report: RfmSegmentationReport }) {
                 />
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] font-black tabular-nums text-brand w-20 text-right">
+                <span className="text-[10px] font-extrabold tabular-nums text-brand w-20 text-right">
                   {fmtTRY(c.total_spend)}
                 </span>
                 <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>

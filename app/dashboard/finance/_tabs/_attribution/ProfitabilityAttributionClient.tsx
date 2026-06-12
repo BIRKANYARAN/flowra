@@ -103,7 +103,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Genel Brüt Marj
         </div>
-        <div className={`text-lg font-black tabular-nums ${
+        <div className={`text-lg font-extrabold tabular-nums ${
           overall_margin_pct !== null && overall_margin_pct >= 0 ? 'text-pos-text' : 'text-neg'
         }`}>
           {overall_margin_pct !== null ? fmtPct(overall_margin_pct) : '—'}
@@ -115,7 +115,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Gini Katsayısı
         </div>
-        <div className={`text-lg font-black tabular-nums ${giniColor(gini_by_category)}`}>
+        <div className={`text-lg font-extrabold tabular-nums ${giniColor(gini_by_category)}`}>
           {gini_by_category !== null ? gini_by_category.toFixed(2) : '—'}
         </div>
         <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -128,7 +128,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Pareto 80% Kategorisi
         </div>
-        <div className="text-lg font-black tabular-nums text-[#0f172a]">
+        <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
           {summary.pareto_80_category_count}
           <span className="text-[#94a3b8] text-xs font-semibold">
             /{summary.total_categories}
@@ -142,7 +142,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Marj Volatilitesi
         </div>
-        <div className={`text-lg font-black tabular-nums ${
+        <div className={`text-lg font-extrabold tabular-nums ${
           summary.margin_volatility_pct !== null && summary.margin_volatility_pct > 10
             ? 'text-warn-text' : 'text-[#0f172a]'
         }`}>
@@ -276,7 +276,7 @@ function ProfitDragSection({ drags }: { drags: DragRow[] }) {
             )}
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-xs font-black tabular-nums text-neg">
+            <div className="text-xs font-extrabold tabular-nums text-neg">
               {drag.margin_pct !== null ? fmtPct(drag.margin_pct) : 'Bilinmiyor'}
             </div>
             {drag.drag_magnitude !== null && (

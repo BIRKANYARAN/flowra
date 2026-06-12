@@ -153,7 +153,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               </span>
             </div>
 
-            <div className={`text-2xl font-black tabular-nums leading-none mb-1 ${kdvAmountColor(kdv.status, kdv.obligation_status)}`}>
+            <div className={`text-2xl font-extrabold tabular-nums leading-none mb-1 ${kdvAmountColor(kdv.status, kdv.obligation_status)}`}>
               {kdv.kdv_payable !== 0
                 ? fmtTRY(Math.abs(kdv.kdv_payable))
                 : '₺0'
@@ -190,7 +190,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               </span>
             </div>
 
-            <div className={`text-2xl font-black tabular-nums leading-none mb-1 ${
+            <div className={`text-2xl font-extrabold tabular-nums leading-none mb-1 ${
               gecici.obligation_status === 'overdue' ? 'text-neg' :
               gecici.estimated_tax > 0 ? 'text-warn-text' :
               'text-[#64748b]'
@@ -256,7 +256,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                   </div>
                   <div className="shrink-0 text-right">
                     {ob.estimated_amount !== null && ob.estimated_amount > 0 ? (
-                      <span className={`text-sm font-black tabular-nums ${
+                      <span className={`text-sm font-extrabold tabular-nums ${
                         isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'
                       }`}>
                         {fmtTRY(ob.estimated_amount)}
@@ -293,7 +293,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                   <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                     {item.label}
                   </div>
-                  <div className={`text-sm font-black tabular-nums ${item.cls}`}>
+                  <div className={`text-sm font-extrabold tabular-nums ${item.cls}`}>
                     {fmtTRY(item.value)}
                   </div>
                 </div>

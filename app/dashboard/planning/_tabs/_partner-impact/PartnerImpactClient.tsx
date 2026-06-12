@@ -151,7 +151,7 @@ export function PartnerImpactClient({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Nakit Bakiye</div>
-          <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+          <div className={`text-lg font-extrabold tabular-nums ${cashBalance >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(cashBalance)}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">tahsil − ödenen</div>
@@ -159,7 +159,7 @@ export function PartnerImpactClient({
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Dağıtılabilir</div>
-          <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
+          <div className={`text-lg font-extrabold tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">yükümlülükler düşülmüş</div>
@@ -167,7 +167,7 @@ export function PartnerImpactClient({
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Net Gelir (Tahakkuk)</div>
-          <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+          <div className={`text-lg font-extrabold tabular-nums ${netIncome >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(netIncome)}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">vergi sonrası</div>
@@ -175,7 +175,7 @@ export function PartnerImpactClient({
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Ortak Borcu</div>
-          <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+          <div className={`text-lg font-extrabold tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{partnerCount} aktif ortak</div>
@@ -244,7 +244,7 @@ export function PartnerImpactClient({
               </div>
             </div>
             <div className="flex-shrink-0 text-right">
-              <div className={`text-xl font-black tabular-nums ${displayAmount > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${displayAmount > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                 {fmt(displayAmount)}
               </div>
               <div className="text-[9px] text-[#94a3b8]">dağıtılacak</div>
@@ -365,7 +365,7 @@ export function PartnerImpactClient({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="text-sm font-semibold text-[#0f172a]">{e.partner_name}</span>
-                      <span className={`text-sm font-black tabular-nums ${e.loan_balance_try > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+                      <span className={`text-sm font-extrabold tabular-nums ${e.loan_balance_try > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                         {e.loan_balance_try > 0 ? fmt(e.loan_balance_try) : 'Yok'}
                       </span>
                     </div>

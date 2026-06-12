@@ -46,7 +46,7 @@ export function DonutBreakdown({
         </ResponsiveContainer>
         {(centerValue || centerLabel) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            {centerValue && <span className="text-base font-black tabular-nums text-[#0f172a] leading-none">{centerValue}</span>}
+            {centerValue && <span className="text-base font-extrabold tabular-nums text-[#0f172a] leading-none">{centerValue}</span>}
             {centerLabel && <span className="text-[10px] text-[#94a3b8] mt-1 uppercase tracking-wide">{centerLabel}</span>}
           </div>
         )}

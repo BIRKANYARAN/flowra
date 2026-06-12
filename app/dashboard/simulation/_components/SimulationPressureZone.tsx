@@ -111,7 +111,7 @@ export function SimulationPressureZone({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">İlk Kümülatif Kâr</div>
-              <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
                 {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
               </div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Kümülatif nakit pozitife geçer</div>
@@ -120,7 +120,7 @@ export function SimulationPressureZone({
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 {adjustedOutstanding > 0 ? 'Borç Temizlenir' : 'Borç Durumu'}
               </div>
-              <div className={`text-xl font-black tabular-nums ${
+              <div className={`text-xl font-extrabold tabular-nums ${
                 adjustedOutstanding <= 0 ? 'text-pos-text'
                 : adjustedMonthsToClear === null ? 'text-neg'
                 : adjustedMonthsToClear > 24 ? 'text-neg'
@@ -135,7 +135,7 @@ export function SimulationPressureZone({
             </div>
             <div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
-              <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
               </div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Yıl sonu kümülatif nakit</div>
@@ -171,7 +171,7 @@ export function SimulationPressureZone({
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                   Toplam Borç{extraDebtTRY > 0 && <span className="text-warn ml-1">(+senaryo)</span>}
                 </div>
-                <div className="text-lg font-black tabular-nums text-[#1e293b]">
+                <div className="text-lg font-extrabold tabular-nums text-[#1e293b]">
                   {adjustedOutstanding > 0 ? fmtC(toDisplay(adjustedOutstanding), S) : '—'}
                 </div>
                 <div className="text-[10px] text-[#94a3b8]">
@@ -180,14 +180,14 @@ export function SimulationPressureZone({
               </div>
               <div>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Aylık Dağıtım Kapasitesi</div>
-                <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                <div className={`text-lg font-extrabold tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                   {hasInputs ? fmtC(toDisplay(monthlyDistributable), S) : '—'}
                 </div>
                 <div className="text-[10px] text-[#94a3b8]">Vergi sonrası / 12</div>
               </div>
               <div>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
-                <div className={`text-lg font-black tabular-nums ${
+                <div className={`text-lg font-extrabold tabular-nums ${
                   adjustedMonthsToClear === null ? 'text-[#cbd5e1]'
                   : adjustedMonthsToClear > 24 ? 'text-neg'
                   : adjustedMonthsToClear > 12 ? 'text-warn-text'
@@ -201,7 +201,7 @@ export function SimulationPressureZone({
               </div>
               <div>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
-                <div className="text-lg font-black tabular-nums text-[#334155]">
+                <div className="text-lg font-extrabold tabular-nums text-[#334155]">
                   {debtBurden?.summary.partner_count ?? partnerCount}
                 </div>
                 <div className="text-[10px] text-[#94a3b8]">Aktif ortak</div>

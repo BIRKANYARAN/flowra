@@ -179,7 +179,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Stok Devir Hızı
           </div>
-          <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">
+          <div className="text-xl font-extrabold tabular-nums text-[#0f172a] leading-none">
             {turnover.ratio !== null ? turnover.ratio.toFixed(1) + '×' : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">
@@ -192,7 +192,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             DIO (Gün)
           </div>
-          <div className={`text-xl font-black tabular-nums leading-none ${
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${
             turnover.dio_days !== null && turnover.dio_days > 120 ? 'text-neg'
             : turnover.dio_days !== null && turnover.dio_days > 60 ? 'text-warn-text'
             : 'text-[#0f172a]'
@@ -207,7 +207,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ölü Stok Değeri
           </div>
-          <div className={`text-xl font-black tabular-nums leading-none ${
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${
             dead_stock.dead_stock_value > 0 ? 'text-neg' : 'text-[#94a3b8]'
           }`}>
             {fmtTRY(dead_stock.dead_stock_value)}
@@ -222,7 +222,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kritik Stok Sayısı
           </div>
-          <div className={`text-xl font-black tabular-nums leading-none ${
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${
             summary.critical_count > 0 ? 'text-neg' : 'text-[#94a3b8]'
           }`}>
             {summary.critical_count}
@@ -246,7 +246,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <div className="text-[10px] text-[#94a3b8] mb-0.5">Fire Oranı</div>
-            <div className={`text-sm font-black tabular-nums ${
+            <div className={`text-sm font-extrabold tabular-nums ${
               shrinkage.rate_pct !== null && shrinkage.rate_pct > 3 ? 'text-neg'
               : shrinkage.rate_pct !== null && shrinkage.rate_pct > 1 ? 'text-warn-text'
               : 'text-[#334155]'
@@ -256,13 +256,13 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8] mb-0.5">Fire Adedi</div>
-            <div className="text-sm font-black tabular-nums text-[#334155]">
+            <div className="text-sm font-extrabold tabular-nums text-[#334155]">
               {shrinkage.shrinkage_units.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8] mb-0.5">Fire Değeri</div>
-            <div className={`text-sm font-black tabular-nums ${
+            <div className={`text-sm font-extrabold tabular-nums ${
               shrinkage.shrinkage_value > 0 ? 'text-neg' : 'text-[#94a3b8]'
             }`}>
               {fmtTRY(shrinkage.shrinkage_value)}

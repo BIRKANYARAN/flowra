@@ -168,7 +168,7 @@ export function ExpenseForecastPanel() {
               <td className="px-3 py-2 text-right tabular-nums font-bold text-[#334155]">
                 {fmtTRY(report.categories.reduce((s, c) => s + c.last_3m_avg, 0))}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums font-black text-[#0f172a]">
+              <td className="px-3 py-2 text-right tabular-nums font-extrabold text-[#0f172a]">
                 {fmtTRY(report.total_forecast)}
               </td>
               <td colSpan={3} />

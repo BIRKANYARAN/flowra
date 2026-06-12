@@ -135,7 +135,7 @@ export function FifoAuditClient({ companyId }: Props) {
           {audit.grade}
         </div>
         <div>
-          <div className={`text-xl font-black tabular-nums leading-none ${gradeColor(audit.grade)}`}>
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${gradeColor(audit.grade)}`}>
             {audit.integrity_score}<span className="text-sm font-semibold ml-0.5">/ 100</span>
           </div>
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mt-1">

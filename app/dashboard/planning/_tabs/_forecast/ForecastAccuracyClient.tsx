@@ -215,7 +215,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             MAPE
           </div>
-          <div className={`text-2xl font-black tabular-nums ${accuracyColor(stats.accuracy_class)}`}>
+          <div className={`text-2xl font-extrabold tabular-nums ${accuracyColor(stats.accuracy_class)}`}>
             {mapeDisplay}
           </div>
           <div className="text-[10px] text-[#64748b]">
@@ -228,7 +228,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             İsabet Oranı
           </div>
-          <div className="text-2xl font-black tabular-nums text-[#0f172a]">
+          <div className="text-2xl font-extrabold tabular-nums text-[#0f172a]">
             {hitRateDisplay}
           </div>
           <div className="text-[10px] text-[#64748b]">±10% tolerans</div>
@@ -239,7 +239,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             Yanlılık
           </div>
-          <div className={`text-2xl font-black tabular-nums ${biasColor(stats.bias_class)}`}>
+          <div className={`text-2xl font-extrabold tabular-nums ${biasColor(stats.bias_class)}`}>
             {biasDisplay}
           </div>
           <div className="text-[10px] text-[#64748b]">
@@ -348,7 +348,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#94a3b8] mb-0.5">
             Toplam Tahmin
           </div>
-          <div className="font-black tabular-nums text-[#334155]">
+          <div className="font-extrabold tabular-nums text-[#334155]">
             {fmtTRY(summary.total_forecast)}
           </div>
         </div>
@@ -356,7 +356,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#94a3b8] mb-0.5">
             Toplam Gerçekleşen
           </div>
-          <div className="font-black tabular-nums text-[#334155]">
+          <div className="font-extrabold tabular-nums text-[#334155]">
             {fmtTRY(summary.total_actual)}
           </div>
         </div>
@@ -364,7 +364,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#94a3b8] mb-0.5">
             Toplam Sapma
           </div>
-          <div className={`font-black tabular-nums ${
+          <div className={`font-extrabold tabular-nums ${
             summary.total_error > 0
               ? 'text-warn-text'
               : summary.total_error < 0

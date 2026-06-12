@@ -63,7 +63,7 @@ function AccuracyBar({ score }: { score: number | null }) {
       <div className="flex-1 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
         <div className={cn('h-full rounded-full', color)} style={{ width: `${score}%` }} />
       </div>
-      <span className={cn('text-[10px] font-black tabular-nums', textColor)}>{score.toFixed(0)}</span>
+      <span className={cn('text-[10px] font-extrabold tabular-nums', textColor)}>{score.toFixed(0)}</span>
     </div>
   )
 }
@@ -238,7 +238,7 @@ function SummaryStrip({ variances }: { variances: ScenarioVariance[] }) {
       {kpis.map(k => (
         <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
-          <div className={cn('text-xl font-black tabular-nums leading-none', k.color)}>{k.value}</div>
+          <div className={cn('text-xl font-extrabold tabular-nums leading-none', k.color)}>{k.value}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{k.sub}</div>
         </div>
       ))}

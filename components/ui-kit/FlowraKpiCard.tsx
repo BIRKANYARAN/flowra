@@ -53,7 +53,7 @@ export function FlowraKpiCard({
       <div className="leading-none mt-0.5">
         {rawValue ? (
           <span className={cn(
-            'text-[22px] font-black tabular-nums leading-none',
+            'text-[22px] font-extrabold tabular-nums leading-none',
             resolvedTone === 'negative' ? 'text-neg' : 'text-[#0f172a]',
           )}>
             {rawValue}

@@ -221,7 +221,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
             Personel Maliyet Oranı
           </div>
           <div className="text-[10px] text-[#94a3b8]">Bu ay / Ciro</div>
-          <div className="text-lg font-black tabular-nums text-[#0f172a] mt-1">
+          <div className="text-lg font-extrabold tabular-nums text-[#0f172a] mt-1">
             {currentRatio !== null ? fmtPct(currentRatio) : '—'}
           </div>
         </div>
@@ -232,7 +232,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
             Aylık Personel Maliyeti
           </div>
           <div className="text-[10px] text-[#94a3b8]">Toplam (maaş+SGK+huzur)</div>
-          <div className="text-lg font-black tabular-nums text-neg mt-1">
+          <div className="text-lg font-extrabold tabular-nums text-neg mt-1">
             {fmtTRY(cm.total_personnel_cost)}
           </div>
         </div>
@@ -304,19 +304,19 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <div className="text-[10px] text-[#94a3b8]">YTD Toplam</div>
-            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
               {fmtTRY(report.ytd.total_personnel_cost)}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8]">Aylık Ortalama</div>
-            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
               {fmtTRY(report.ytd.avg_monthly_cost)}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8]">YTD Maliyet Oranı</div>
-            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
               {report.ytd.personnel_cost_ratio_pct !== null
                 ? fmtPct(report.ytd.personnel_cost_ratio_pct)
                 : '—'}

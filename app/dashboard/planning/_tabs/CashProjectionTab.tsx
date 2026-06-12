@@ -150,7 +150,7 @@ export async function CashProjectionTab({ companyId }: Props) {
         ] as const).map(s => (
           <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">{s.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
+            <div className={`text-xl font-extrabold tabular-nums leading-none ${s.text}`}>
               <span className="text-[#cbd5e1] text-sm font-normal mr-0.5">₺</span>
               {fmtK(Math.abs(s.summary.endCash))}
               {s.summary.endCash < 0 && <span className="text-sm ml-1 font-normal">(−)</span>}
@@ -222,7 +222,7 @@ export async function CashProjectionTab({ companyId }: Props) {
                   <td className={`px-3 py-2 text-right tabular-nums font-semibold ${m.net >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {m.net >= 0 ? '+' : '−'}₺{fmtK(Math.abs(m.net))}
                   </td>
-                  <td className={`px-4 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+                  <td className={`px-4 py-2 text-right tabular-nums font-extrabold ${m.cash >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                     {m.cash < 0 ? '−' : ''}₺{fmtK(Math.abs(m.cash))}
                   </td>
                 </tr>
@@ -260,7 +260,7 @@ function Metric({ label, value, sub, color }: { label: string; value: string; su
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-black tabular-nums leading-none ${color}`}>{value}</div>
+      <div className={`text-xl font-extrabold tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-[#94a3b8] mt-1">{sub}</div>
     </div>
   )

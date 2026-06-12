@@ -34,7 +34,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
                 </div>
                 <div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">Net Kâr</div>
-                  <div className={`text-xs font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
+                  <div className={`text-xs font-extrabold tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
                 </div>
               </div>
             </div>
@@ -104,7 +104,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
                           </div>
                           <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
                         </div>
-                        <div className={`text-xs font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
+                        <div className={`text-xs font-extrabold tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
                       </div>
                     )
                   })}

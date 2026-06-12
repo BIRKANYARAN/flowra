@@ -108,19 +108,19 @@ export function GecikmeHesaplayiciClient() {
           }`}>
             <div className="text-center">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Gecikme Süresi</div>
-              <div className={`text-xl font-black tabular-nums ${result.days > 0 ? 'text-neg' : 'text-pos-text'}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${result.days > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {result.days} gün
               </div>
             </div>
             <div className="text-center border-x border-[#e8eaef]">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Gecikme Faizi</div>
-              <div className={`text-xl font-black tabular-nums ${result.faiz > 0 ? 'text-neg' : 'text-pos-text'}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${result.faiz > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {formatTRY(result.faiz)}
               </div>
             </div>
             <div className="text-center">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Ödeme</div>
-              <div className="text-xl font-black tabular-nums text-warn-text">
+              <div className="text-xl font-extrabold tabular-nums text-warn-text">
                 {formatTRY(result.toplam)}
               </div>
             </div>

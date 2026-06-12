@@ -73,7 +73,7 @@ function MarginCell({ pct }: { pct: number | null }) {
     : 'text-neg'
 
   return (
-    <span className={`text-sm font-black tabular-nums leading-none ${color}`}>
+    <span className={`text-sm font-extrabold tabular-nums leading-none ${color}`}>
       {fmtPct(pct)}
     </span>
   )
@@ -132,7 +132,7 @@ function SegmentTable({ segments, totalRevenue }: SegmentTableProps) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <div className="text-sm font-black tabular-nums text-brand leading-none">
+                  <div className="text-sm font-extrabold tabular-nums text-brand leading-none">
                     {fmtTRY(seg.revenue)}
                   </div>
                 </td>

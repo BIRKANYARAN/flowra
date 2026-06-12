@@ -225,11 +225,11 @@ export default function ReconciliationPage() {
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
-              <div className={`text-xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
+              <div className={`text-xl font-extrabold tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
               <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
-              <div className={`text-xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
+              <div className={`text-xl font-extrabold tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
               <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>

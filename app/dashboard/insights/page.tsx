@@ -337,7 +337,7 @@ export default async function InsightsPage() {
           <div>
             <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Durum Özeti — {period}</p>
             <div className="flex items-center gap-3">
-              <span className={`text-3xl font-black tabular-nums ${statusCfg.cls}`}>{situation.composite}</span>
+              <span className={`text-3xl font-extrabold tabular-nums ${statusCfg.cls}`}>{situation.composite}</span>
               <div>
                 <span className={`inline-block text-[0.65rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.cls}`}>
                   {statusCfg.label}
@@ -479,7 +479,7 @@ export default async function InsightsPage() {
                     <p className="text-[0.6rem] mt-0.5 opacity-70">{r.message}</p>
                   </div>
                   {r.total_overdue > 0 && (
-                    <span className="text-xs font-black tabular-nums shrink-0">{fmt(r.total_overdue)}</span>
+                    <span className="text-xs font-extrabold tabular-nums shrink-0">{fmt(r.total_overdue)}</span>
                   )}
                 </div>
               )
@@ -523,7 +523,7 @@ export default async function InsightsPage() {
                       </span>
                       <span className="ml-2 text-xs font-bold text-[#0f172a]">{catLabel(g.expense_type)}</span>
                     </div>
-                    <span className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(g.amount_try)}</span>
+                    <span className="text-sm font-extrabold tabular-nums text-[#0f172a]">{fmt(g.amount_try)}</span>
                   </div>
                   <p className="text-[0.65rem] text-[#475569] mb-2">{g.message}</p>
                   <div className="flex flex-wrap gap-2">

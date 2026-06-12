@@ -330,7 +330,7 @@ export async function StockContent({ companyId, userId }: Props) {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
@@ -415,7 +415,7 @@ export async function StockContent({ companyId, userId }: Props) {
             ].map(b => (
               <div key={b.label} className="px-4 py-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{b.label}</div>
-                <div className={`text-base font-black tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
+                <div className={`text-base font-extrabold tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
               </div>
             ))}
           </div>
@@ -504,13 +504,13 @@ export async function StockContent({ companyId, userId }: Props) {
                     <div className="flex items-center gap-4 text-right">
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Miktar</div>
-                        <div className="text-sm font-black tabular-nums text-[#1e293b]">
+                        <div className="text-sm font-extrabold tabular-nums text-[#1e293b]">
                           {totalQty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {product.unit}
                         </div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Lot Değeri</div>
-                        <div className="text-sm font-black tabular-nums text-brand">{fmtTRY(productValue)}</div>
+                        <div className="text-sm font-extrabold tabular-nums text-brand">{fmtTRY(productValue)}</div>
                       </div>
                     </div>
                   </div>

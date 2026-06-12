@@ -66,7 +66,7 @@ function MetricCard({
         {label}
       </div>
       <div className="flex items-end gap-1.5">
-        <span className={`text-xl font-black tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>
+        <span className={`text-xl font-extrabold tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>
           {value}
         </span>
         {trend && <TrendArrow trend={trend} />}
@@ -158,7 +158,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
           <div className="text-[0.65rem] font-bold uppercase tracking-wider opacity-60 mb-0.5">
             Nakit Dönüşüm Döngüsü (CCC)
           </div>
-          <div className="text-3xl font-black tabular-nums">
+          <div className="text-3xl font-extrabold tabular-nums">
             {metrics.ccc_days !== null ? `${Math.round(metrics.ccc_days)} gün` : '—'}
           </div>
           {metrics.prior_ccc_days !== null && (

@@ -132,7 +132,7 @@ export function ProductProfitabilityWaterfall() {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
           </div>
         ))}
       </div>
@@ -195,7 +195,7 @@ export function ProductProfitabilityWaterfall() {
                   <td className={`px-4 py-2 text-right tabular-nums font-semibold ${marginColor(p.gross_margin_pct)}`}>
                     {fmtPct(p.gross_margin_pct)}
                   </td>
-                  <td className={`px-4 py-2 text-right tabular-nums font-black text-sm ${cmColor}`}>
+                  <td className={`px-4 py-2 text-right tabular-nums font-extrabold text-sm ${cmColor}`}>
                     {fmtTRY(p.contribution_margin)}
                   </td>
                   <td className={`px-4 py-2 text-right tabular-nums font-semibold ${cmColor}`}>

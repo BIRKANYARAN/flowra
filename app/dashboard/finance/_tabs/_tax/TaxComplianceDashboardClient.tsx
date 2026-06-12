@@ -183,7 +183,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1 text-center">
               Uyum Skoru
             </div>
-            <div className={`text-5xl font-black tabular-nums leading-none ${scoreColor(dashboard.compliance_score)}`}>
+            <div className={`text-5xl font-extrabold tabular-nums leading-none ${scoreColor(dashboard.compliance_score)}`}>
               {dashboard.compliance_score}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1">/ 100</div>
@@ -204,7 +204,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
                   } — {fmtDate(next.due_date)}
                 </div>
                 {next.amount_try !== null && (
-                  <div className="text-sm font-black tabular-nums text-warn-text mt-1">
+                  <div className="text-sm font-extrabold tabular-nums text-warn-text mt-1">
                     {fmtTRY(next.amount_try)}
                   </div>
                 )}
@@ -218,19 +218,19 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
           <div className="p-4 space-y-2">
             <div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Bekleyen</div>
-              <div className="text-base font-black tabular-nums text-warn-text">
+              <div className="text-base font-extrabold tabular-nums text-warn-text">
                 {fmtTRY(dashboard.total_pending_try)}
               </div>
             </div>
             <div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">YTD KDV Ödenen</div>
-              <div className="text-sm font-black tabular-nums text-[#1e293b]">
+              <div className="text-sm font-extrabold tabular-nums text-[#1e293b]">
                 {fmtTRY(dashboard.kdv_ytd_paid_try)}
               </div>
             </div>
             <div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">KV Karşılık</div>
-              <div className="text-sm font-black tabular-nums text-[#1e293b]">
+              <div className="text-sm font-extrabold tabular-nums text-[#1e293b]">
                 {fmtTRY(dashboard.corporate_tax_provision_try)}
               </div>
             </div>

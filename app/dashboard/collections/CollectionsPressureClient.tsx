@@ -406,7 +406,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
 
         {/* Amount + date */}
         <div className="text-right shrink-0">
-          <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmtTRY(remaining, 0)}</div>
+          <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(remaining, 0)}</div>
           {hasPartial && (
             <div className="text-[10px] text-[#94a3b8] tabular-nums">{fmtTRY(row.total_try, 0)} toplam</div>
           )}

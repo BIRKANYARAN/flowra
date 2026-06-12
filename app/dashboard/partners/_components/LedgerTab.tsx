@@ -37,7 +37,7 @@ export function LedgerTab({
             ].map(c => (
               <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
-                <div className="text-lg font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
+                <div className="text-lg font-extrabold tabular-nums text-[#0f172a] leading-none">{c.value}</div>
               </div>
             ))}
           </div>

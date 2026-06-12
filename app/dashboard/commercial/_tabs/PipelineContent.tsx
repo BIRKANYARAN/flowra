@@ -42,10 +42,6 @@ function serverFmt(n: number): string {
   return `${sign}₺${Math.abs(n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Taslak', sent: 'Gönderildi', accepted: 'Onaylandı',
-  rejected: 'Reddedildi', converted: 'Satışa Döndü',
-}
 type ProformaWithFx = Proforma & { fx_try?: number | null }
 
 interface Props { companyId: string }
@@ -183,7 +179,7 @@ export async function PipelineContent({ companyId }: Props) {
         </div>
 
         {/* KPI Tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-2 px-1 py-1 border-b border-[#f1f5f9]">
           {[
             {
               label: 'Toplam Proforma',
@@ -212,7 +208,7 @@ export async function PipelineContent({ companyId }: Props) {
           ].map((tile, i) => (
             <div key={tile.label} className="px-3 py-2.5">
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{tile.label}</div>
-              <div className={`text-xl font-black tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">{tile.sub}</div>
             </div>
           ))}
@@ -229,21 +225,9 @@ export async function PipelineContent({ companyId }: Props) {
               { key: 'converted', label: 'Dönüştürüldü',   cls: 'bg-brand-subtle text-brand' },
               { key: 'rejected',  label: 'Süresi Geçmiş',  cls: 'bg-neg-light text-neg' },
             ].map(s => (
-              <div key={s.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded ${s.cls}`}>
-                <span className="text-[10px] font-bold">{s.label}</span>
-                <span className="text-[10px] font-black tabular-nums">({pfByStatus[s.key] ?? 0})</span>
-              </div>
-            ))}
-          </div>
-          {/* Swimlane flow indicator */}
-          <div className="flex items-center gap-1 mt-2 overflow-x-auto">
-            {(['draft', 'sent', 'accepted', 'converted'] as const).map((key, idx) => (
-              <div key={key} className="flex items-center gap-1 shrink-0">
-                {idx > 0 && <span className="text-[#cbd5e1] text-xs">→</span>}
-                <div className="text-center">
-                  <div className="text-[9px] text-[#94a3b8] font-semibold">{STATUS_LABEL[key]}</div>
-                  <div className="text-sm font-black text-[#1e293b] tabular-nums">{pfByStatus[key] ?? 0}</div>
-                </div>
+              <div key={s.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md ${s.cls}`}>
+                <span className="text-[11px] font-semibold">{s.label}</span>
+                <span className="text-[11px] font-bold tabular-nums">{pfByStatus[s.key] ?? 0}</span>
               </div>
             ))}
           </div>
@@ -382,7 +366,7 @@ export async function PipelineContent({ companyId }: Props) {
             ].map(card => (
               <div key={card.label} className="px-3 py-2.5">
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{card.label}</div>
-                <div className={`text-sm font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className={`text-sm font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               </div>
             ))}
           </div>
@@ -399,7 +383,7 @@ export async function PipelineContent({ companyId }: Props) {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}

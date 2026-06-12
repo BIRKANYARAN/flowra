@@ -91,7 +91,7 @@ function KpiCard({ label, value, sub, color = 'text-[#0f172a]' }: {
   return (
     <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 flex-1 min-w-0">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-sm font-black tabular-nums ${color}`}>{value}</div>
+      <div className={`text-sm font-extrabold tabular-nums ${color}`}>{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )

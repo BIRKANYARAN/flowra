@@ -107,7 +107,7 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
         <div className="font-black text-base leading-tight mb-2">{label}</div>
-        <div className="text-2xl font-black tabular-nums leading-none mb-1">{fmt(value)}</div>
+        <div className="text-2xl font-extrabold tabular-nums leading-none mb-1">{fmt(value)}</div>
         <div className="text-xs opacity-70">{count} kayıt{sub ? ` · ${sub}` : ''}</div>
         <div className={`text-[10px] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity ${selected ? '!opacity-100' : ''}`}>
           {selected ? '▲ Gizle' : '▼ Detay'}
@@ -154,7 +154,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
         <tfoot>
           <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]" colSpan={3}>Toplam FIFO maliyet</td>
-            <td className="px-4 py-2 text-right font-black tabular-nums text-[#0f172a]">{fmt(total)}</td>
+            <td className="px-4 py-2 text-right font-extrabold tabular-nums text-[#0f172a]">{fmt(total)}</td>
             <td />
           </tr>
         </tfoot>
@@ -238,7 +238,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
         <tfoot>
           <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]">Toplam</td>
-            <td className="px-4 py-2 text-right font-black tabular-nums text-brand">{fmt(total)}</td>
+            <td className="px-4 py-2 text-right font-extrabold tabular-nums text-brand">{fmt(total)}</td>
             <td colSpan={2} />
           </tr>
         </tfoot>
@@ -318,15 +318,15 @@ function KarPanel({ sales }: { sales: Sale[] }) {
       <div className="flex gap-3 px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
           <span className="text-xs text-[#64748b]">Ciro</span>
-          <span className="text-xs font-black tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
+          <span className="text-xs font-extrabold tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
         </div>
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
           <span className="text-xs text-[#64748b]">SMM</span>
-          <span className="text-xs font-black tabular-nums text-neg">{fmt(totalCogs)}</span>
+          <span className="text-xs font-extrabold tabular-nums text-neg">{fmt(totalCogs)}</span>
         </div>
         <div className={`flex items-center gap-1.5 rounded px-3 py-1.5 ${grossProfit >= 0 ? 'bg-pos-light' : 'bg-neg-light'}`}>
           <span className="text-xs text-[#64748b]">Brüt Kâr</span>
-          <span className={`text-xs font-black tabular-nums ${grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(grossProfit)}</span>
+          <span className={`text-xs font-extrabold tabular-nums ${grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(grossProfit)}</span>
           <span className="text-[10px] text-[#94a3b8]">%{margin.toFixed(1)}</span>
         </div>
       </div>
@@ -473,7 +473,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
             ].map(c => (
               <button key={c.label} onClick={() => c.stage && toggle(c.stage)}
                 className="focus:outline-none group" type="button">
-                <div className={`text-2xl font-black tabular-nums ${c.color} group-hover:underline`}>
+                <div className={`text-2xl font-extrabold tabular-nums ${c.color} group-hover:underline`}>
                   {`%${((c.count / proformas.length) * 100).toFixed(0)}`}
                 </div>
                 <div className="text-[11px] text-[#94a3b8] mt-0.5">{c.label}</div>

@@ -236,7 +236,7 @@ function KpiCard({ label, value, sub, highlight = false }: { label: string; valu
   return (
     <div className={cn('rounded border px-4 py-3', highlight ? 'bg-neg-light border-neg-light' : 'bg-white border-[#e8eaef]')}>
       <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', highlight ? 'text-neg-text' : 'text-[#94a3b8]')}>{label}</div>
-      <div className={cn('text-xl font-black tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
+      <div className={cn('text-xl font-extrabold tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
       {sub && <div className={cn('text-[10px] mt-0.5', highlight ? 'text-neg' : 'text-[#94a3b8]')}>{sub}</div>}
     </div>
   )

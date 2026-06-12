@@ -335,7 +335,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-[#334155]">Kurumlar Vergisi Oranı</span>
-              <span className="text-xs font-black tabular-nums text-[#0f172a]">%{taxRateOverride}</span>
+              <span className="text-xs font-extrabold tabular-nums text-[#0f172a]">%{taxRateOverride}</span>
             </div>
             <input
               type="range" min={0} max={40} step={1}
@@ -560,7 +560,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                       <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-[#e8eaef] bg-[#f8fafc]/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                         <div className="text-[9px] font-semibold text-[#64748b]">{row.label}</div>
                         {vals.map((v, i) => (
-                          <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded py-0.5 ${
+                          <div key={i} className={`text-center text-[10px] font-extrabold tabular-nums rounded py-0.5 ${
                             i === best
                               ? row.higherIsBetter
                                 ? 'text-pos-text bg-pos-light'
@@ -577,7 +577,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     <div className="grid gap-1 px-3 py-2 items-center" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                       <div className="text-[9px] font-semibold text-[#64748b]">Runway</div>
                       {computed.map((r, i) => (
-                        <div key={i} className={`text-center text-[10px] font-black tabular-nums ${r.runwayMonths === null ? 'text-pos-text' : r.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
+                        <div key={i} className={`text-center text-[10px] font-extrabold tabular-nums ${r.runwayMonths === null ? 'text-pos-text' : r.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                           {r.runwayMonths === null ? '∞' : `${r.runwayMonths.toFixed(1)}ay`}
                         </div>
                       ))}
@@ -622,13 +622,13 @@ export function WhatIfClient({ period, baseline }: Props) {
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt Marj</div>
-              <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
+              <div className={`text-lg font-extrabold tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">KDV Net</div>
-              <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
+              <div className={`text-lg font-extrabold tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
               </div>
               <div className="text-[9px] text-[#94a3b8] mt-0.5">{result.vatNet > 0 ? 'ödenecek' : 'devreden'}</div>
@@ -643,12 +643,12 @@ export function WhatIfClient({ period, baseline }: Props) {
             <div className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-[#64748b]">Tahsil edilen (bu ay)</span>
-                <span className="text-[11px] font-black tabular-nums text-[#1e293b]">₺{fmtFull(result.cashCollected)}</span>
+                <span className="text-[11px] font-extrabold tabular-nums text-[#1e293b]">₺{fmtFull(result.cashCollected)}</span>
               </div>
               {result.runwayMonths !== null && (
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-[#64748b]">Tahmini runway</span>
-                  <span className={`text-[11px] font-black tabular-nums ${result.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
+                  <span className={`text-[11px] font-extrabold tabular-nums ${result.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                     {result.runwayMonths.toFixed(1)} ay
                   </span>
                 </div>
@@ -656,7 +656,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               <div className="border-t border-[#f1f5f9] pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-[#64748b]">Dağıtılabilir (brüt)</span>
-                  <span className={`text-[11px] font-black tabular-nums ${result.distributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
+                  <span className={`text-[11px] font-extrabold tabular-nums ${result.distributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
                     {result.distributable > 0 ? `₺${fmtFull(result.distributable)}` : '—'}
                   </span>
                 </div>
@@ -668,7 +668,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-[10px] font-semibold text-[#334155]">Net Dağıtım</span>
-                  <span className={`text-[12px] font-black tabular-nums ${result.netDistrib > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
+                  <span className={`text-[12px] font-extrabold tabular-nums ${result.netDistrib > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
                     {result.netDistrib > 0 ? `₺${fmtFull(result.netDistrib)}` : '—'}
                   </span>
                 </div>
@@ -745,7 +745,7 @@ function SliderRow({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-[#334155]">{label}</span>
-        <span className={`text-xs font-black tabular-nums ${valueColor}`}>{display}</span>
+        <span className={`text-xs font-extrabold tabular-nums ${valueColor}`}>{display}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step}

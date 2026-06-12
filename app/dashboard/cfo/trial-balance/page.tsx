@@ -148,7 +148,7 @@ export default function TrialBalancePage() {
                   </div>
                 </div>
                 {c.amount != null && (
-                  <div className="text-xs font-black tabular-nums text-neg shrink-0">{fmt(c.amount)}</div>
+                  <div className="text-xs font-extrabold tabular-nums text-neg shrink-0">{fmt(c.amount)}</div>
                 )}
               </div>
             ))}
@@ -161,17 +161,17 @@ export default function TrialBalancePage() {
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Borç</div>
-            <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
+            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
           </div>
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Alacak</div>
-            <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
+            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
           </div>
           <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'}`}>
             <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-pos-text' : 'text-neg'}`}>
               {tb.is_balanced ? 'Dengeli' : 'Dengesiz'}
             </div>
-            <div className={`text-xl font-black tabular-nums ${tb.is_balanced ? 'text-pos-text' : 'text-neg-text'}`}>
+            <div className={`text-xl font-extrabold tabular-nums ${tb.is_balanced ? 'text-pos-text' : 'text-neg-text'}`}>
               {tb.is_balanced ? '✓ Tamam' : fmt(tb.imbalance_try) + ' fark'}
             </div>
           </div>

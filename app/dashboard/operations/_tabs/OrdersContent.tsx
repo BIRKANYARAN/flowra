@@ -188,7 +188,7 @@ export function OrdersContent(_props: Props) {
         ].map(s => (
           <div key={s.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{s.label}</div>
-            <div className={`text-xl font-black tabular-nums ${s.cls}`}>{s.value}</div>
+            <div className={`text-xl font-extrabold tabular-nums ${s.cls}`}>{s.value}</div>
           </div>
         ))}
       </div>

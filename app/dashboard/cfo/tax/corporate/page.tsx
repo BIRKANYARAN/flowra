@@ -81,7 +81,7 @@ function KpiCard({
   return (
     <div className="flex flex-col gap-0.5 px-4 py-3 border-r border-[#e8eaef] last:border-r-0">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
-      <div className={`text-lg font-black tabular-nums leading-tight ${valueColor}`}>{value}</div>
+      <div className={`text-lg font-extrabold tabular-nums leading-tight ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )

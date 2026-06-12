@@ -81,18 +81,18 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Ort. Güvenilirlik</div>
-            <div className="font-black tabular-nums text-[#0f172a]">{report.avg_reliability_score}/100</div>
+            <div className="font-extrabold tabular-nums text-[#0f172a]">{report.avg_reliability_score}/100</div>
           </div>
           {report.excellent_count > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Mükemmel</div>
-              <div className="font-black tabular-nums text-[#15803d]">{report.excellent_count} müşteri</div>
+              <div className="font-extrabold tabular-nums text-[#15803d]">{report.excellent_count} müşteri</div>
             </div>
           )}
           {report.unreliable_count > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Güvenilmez</div>
-              <div className="font-black tabular-nums text-neg">{report.unreliable_count} müşteri</div>
+              <div className="font-extrabold tabular-nums text-neg">{report.unreliable_count} müşteri</div>
             </div>
           )}
         </div>
@@ -296,12 +296,12 @@ export async function CollectionsContent({ companyId }: Props) {
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-                <div className="font-black tabular-nums text-[#0f172a]">{fmt(priorityReport.total_outstanding_try)}</div>
+                <div className="font-extrabold tabular-nums text-[#0f172a]">{fmt(priorityReport.total_outstanding_try)}</div>
               </div>
               {priorityReport.priority_outstanding_try > 0 && (
                 <div className="text-right">
                   <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Öncelikli (Acil+Kritik)</div>
-                  <div className="font-black tabular-nums text-neg">{fmt(priorityReport.priority_outstanding_try)}</div>
+                  <div className="font-extrabold tabular-nums text-neg">{fmt(priorityReport.priority_outstanding_try)}</div>
                 </div>
               )}
             </div>
@@ -367,7 +367,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
                   {/* Amount */}
                   <div className="text-right shrink-0">
-                    <div className={`font-black tabular-nums text-sm ${
+                    <div className={`font-extrabold tabular-nums text-sm ${
                       r.urgency === 'critical' ? 'text-neg' :
                       r.urgency === 'urgent'   ? 'text-warn-text' : 'text-[#0f172a]'
                     }`}>{fmt(r.outstanding_try)}</div>
@@ -400,12 +400,12 @@ export async function CollectionsContent({ companyId }: Props) {
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-                <div className="font-black tabular-nums text-[#0f172a]">{fmt(heatmapReport.total_outstanding_try)}</div>
+                <div className="font-extrabold tabular-nums text-[#0f172a]">{fmt(heatmapReport.total_outstanding_try)}</div>
               </div>
               {heatmapReport.critical_outstanding_try > 0 && (
                 <div className="text-right">
                   <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Kritik (61+ Gün)</div>
-                  <div className="font-black tabular-nums text-neg">{fmt(heatmapReport.critical_outstanding_try)}</div>
+                  <div className="font-extrabold tabular-nums text-neg">{fmt(heatmapReport.critical_outstanding_try)}</div>
                 </div>
               )}
             </div>

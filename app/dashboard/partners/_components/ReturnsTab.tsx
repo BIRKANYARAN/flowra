@@ -38,7 +38,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className={`text-lg font-black tabular-nums ${r.roi_to_date_pct >= 100 ? 'text-pos-text' : r.roi_to_date_pct >= 50 ? 'text-warn-text' : 'text-neg'}`}>
+                      <div className={`text-lg font-extrabold tabular-nums ${r.roi_to_date_pct >= 100 ? 'text-pos-text' : r.roi_to_date_pct >= 50 ? 'text-warn-text' : 'text-neg'}`}>
                         {fmtPct(r.roi_to_date_pct)}
                       </div>
                       <div className="text-[10px] text-[#94a3b8]">ROI</div>

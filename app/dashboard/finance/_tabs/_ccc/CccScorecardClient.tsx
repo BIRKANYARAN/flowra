@@ -89,7 +89,7 @@ function ScoreBar({
             Kıyaslama: {benchmarkDays}g
           </span>
           {currentDays !== null && (
-            <span className={`font-black tabular-nums ${
+            <span className={`font-extrabold tabular-nums ${
               currentDays > benchmarkDays ? 'text-orange-600' : 'text-green-600'
             }`}>
               {currentDays.toFixed(0)}g
@@ -268,7 +268,7 @@ export function CccScorecardClient({ companyId }: Props) {
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Nakit Dönüşüm Verimliliği
             </div>
-            <div className="text-3xl font-black tabular-nums text-[#0f172a]">
+            <div className="text-3xl font-extrabold tabular-nums text-[#0f172a]">
               {report.overall_efficiency_score}
               <span className="text-base font-semibold text-[#94a3b8] ml-1">/ 100</span>
             </div>
@@ -296,7 +296,7 @@ export function CccScorecardClient({ companyId }: Props) {
               <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-0.5">
                 Kıyaslama vs
               </div>
-              <div className={`text-xl font-black tabular-nums ${
+              <div className={`text-xl font-extrabold tabular-nums ${
                 cp.benchmark_delta <= 0 ? 'text-green-700' : 'text-orange-700'
               }`}>
                 {cp.benchmark_delta > 0

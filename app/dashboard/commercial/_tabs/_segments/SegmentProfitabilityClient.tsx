@@ -141,7 +141,7 @@ function OverviewStrip({ report }: OverviewProps) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {card.label}
           </div>
-          <div className={`text-base font-black tabular-nums leading-none truncate ${card.color}`}>
+          <div className={`text-base font-extrabold tabular-nums leading-none truncate ${card.color}`}>
             {card.value}
           </div>
           {card.sub && (
@@ -205,7 +205,7 @@ function SegmentTable({ segments, showGrowth }: SegmentTableProps) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <div className="text-sm font-black tabular-nums text-brand leading-none">
+                  <div className="text-sm font-extrabold tabular-nums text-brand leading-none">
                     {fmtTRY(seg.revenue_try)}
                   </div>
                   <div className="text-[9px] text-[#94a3b8] mt-0.5 tabular-nums">
@@ -226,7 +226,7 @@ function SegmentTable({ segments, showGrowth }: SegmentTableProps) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <span className={`text-sm font-black tabular-nums leading-none ${
+                  <span className={`text-sm font-extrabold tabular-nums leading-none ${
                     seg.gross_margin_pct >= 40
                       ? 'text-yellow-700'
                       : seg.gross_margin_pct >= 25

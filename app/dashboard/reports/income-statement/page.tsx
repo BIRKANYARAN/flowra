@@ -193,7 +193,7 @@ export default function IncomeStatementPage() {
           <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-pos-light bg-pos-light' : 'border-neg-light bg-neg-light'}`}>
             <div className="flex items-center justify-between">
               <span className="text-sm font-black text-[#0f172a]">Dönem Net Kârı</span>
-              <span className={`text-xl font-black tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <span className={`text-xl font-extrabold tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(pnl.net_after_tax_try)}
               </span>
             </div>

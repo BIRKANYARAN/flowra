@@ -257,7 +257,7 @@ export function TrialBalanceTab() {
         ].map(k => (
           <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
-            <div className={`text-xs font-black tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
+            <div className={`text-xs font-extrabold tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
               {fmtTRY(k.value)}
             </div>
           </div>

@@ -140,7 +140,7 @@ export function SupplierAnalyticsPanel() {
                 {CONCENTRATION_LABELS[card.badge]}
               </span>
             ) : (
-              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>
                 {card.value}
               </div>
             )}

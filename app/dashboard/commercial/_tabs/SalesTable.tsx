@@ -409,7 +409,7 @@ export function SalesTable({ rows }: Props) {
           ].map(card => (
             <div key={card.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-extrabold tabular-nums ${card.color}`}>{card.value}</div>
             </div>
           ))}
         </div>

@@ -86,7 +86,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
         <div className="text-right">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Pozisyon</div>
           <div className={[
-            'text-base font-black tabular-nums',
+            'text-base font-extrabold tabular-nums',
             acc.net_position_try >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
           ].join(' ')}>
             {fmtTRY(acc.net_position_try)}
@@ -390,7 +390,7 @@ function CapitalCommitmentSection() {
           <div className={`text-[0.65rem] font-bold uppercase tracking-wider ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
             Eksik Taahhüt
           </div>
-          <div className={`text-sm font-black tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
+          <div className={`text-sm font-extrabold tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
             {fmtTRY(data.total_equity_gap_try)}
           </div>
         </div>
@@ -518,7 +518,7 @@ export function CapitalAccountTab() {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Öz Sermaye</div>
           <div className={[
-            'text-sm font-black tabular-nums mt-1',
+            'text-sm font-extrabold tabular-nums mt-1',
             (total_equity_try - total_partner_debt_try) >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
           ].join(' ')}>
             {fmtTRY(total_equity_try - total_partner_debt_try)}

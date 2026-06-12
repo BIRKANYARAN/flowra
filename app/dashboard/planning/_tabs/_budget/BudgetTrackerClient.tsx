@@ -287,7 +287,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Bütçe Sağlığı
             </div>
-            <div className={`text-4xl font-black tabular-nums ${scoreColor(report.budget_health_score)}`}>
+            <div className={`text-4xl font-extrabold tabular-nums ${scoreColor(report.budget_health_score)}`}>
               {report.budget_health_score}
             </div>
             <div className="text-[10px] text-[#94a3b8]">/100</div>
@@ -347,21 +347,21 @@ export function BudgetTrackerClient({ companyId }: Props) {
             {/* Budget */}
             <div className="px-4 py-3">
               <div className="text-[10px] text-[#94a3b8] mb-0.5">Bütçe Hedefi</div>
-              <div className="text-sm font-black tabular-nums text-[#0f172a]">
+              <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">
                 {fmtTRY(report.revenue_adherence.budget_try)}
               </div>
             </div>
             {/* Actual */}
             <div className="px-4 py-3">
               <div className="text-[10px] text-[#94a3b8] mb-0.5">Gerçekleşen</div>
-              <div className="text-sm font-black tabular-nums text-[#0f172a]">
+              <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">
                 {fmtTRY(report.revenue_adherence.actual_try)}
               </div>
             </div>
             {/* Variance */}
             <div className="px-4 py-3">
               <div className="text-[10px] text-[#94a3b8] mb-0.5">Varyans</div>
-              <div className={`text-sm font-black tabular-nums ${
+              <div className={`text-sm font-extrabold tabular-nums ${
                 report.revenue_adherence.variance_try >= 0 ? 'text-pos-text' : 'text-neg-text'
               }`}>
                 {report.revenue_adherence.variance_pct !== null
@@ -462,7 +462,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
             Yılbaşından Bu Yana Bütçe Yürüyüşü
           </div>
           <div className="flex items-center gap-3">
-            <div className={`text-xl font-black tabular-nums ${
+            <div className={`text-xl font-extrabold tabular-nums ${
               ytdPacingPct >= 95 && ytdPacingPct <= 110 ? 'text-pos-text'
               : ytdPacingPct < 80 || ytdPacingPct > 120 ? 'text-neg-text'
               : 'text-warn-text'

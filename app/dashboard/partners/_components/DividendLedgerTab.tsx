@@ -43,7 +43,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
   return (
     <div className="flex flex-col gap-0.5 p-3">
       <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
-      <div className={`text-base font-black tabular-nums ${tone ?? 'text-[#0f172a]'}`}>{value}</div>
+      <div className={`text-base font-extrabold tabular-nums ${tone ?? 'text-[#0f172a]'}`}>{value}</div>
     </div>
   )
 }
@@ -131,7 +131,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
       <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
         <div className="px-3 py-2.5">
           <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt</div>
-          <div className="text-xs font-black tabular-nums text-[#0f172a] mt-0.5">
+          <div className="text-xs font-extrabold tabular-nums text-[#0f172a] mt-0.5">
             {fmtTRY(summary.total_gross_dividends_try)}
           </div>
         </div>
@@ -143,7 +143,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
         </div>
         <div className="px-3 py-2.5">
           <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</div>
-          <div className="text-xs font-black tabular-nums text-pos-text mt-0.5">
+          <div className="text-xs font-extrabold tabular-nums text-pos-text mt-0.5">
             {fmtTRY(summary.total_net_dividends_try)}
           </div>
         </div>

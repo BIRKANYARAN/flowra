@@ -166,7 +166,7 @@ function MarginSummary({ statement }: { statement: IncomeStatement }) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             {m.label}
           </div>
-          <div className={`text-sm font-black tabular-nums ${
+          <div className={`text-sm font-extrabold tabular-nums ${
             m.label === 'Efektif Vergi'
               ? 'text-[#64748b]'
               : m.ok

@@ -51,9 +51,9 @@ export const TOKENS = {
   heroSuper: 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1',
 
   // Typography
-  valueXl:  'text-xl font-black tabular-nums leading-none',
-  value2xl: 'text-[22px] font-black tabular-nums leading-none',
-  valueSm:  'text-sm font-black tabular-nums',
+  valueXl:  'text-xl font-extrabold tabular-nums leading-none',
+  value2xl: 'text-[22px] font-extrabold tabular-nums leading-none',
+  valueSm:  'text-sm font-extrabold tabular-nums',
   mono:     'font-mono tabular-nums',
 
   // Status colors
@@ -604,7 +604,7 @@ export function ContextReading({
           {label}
         </span>
       </div>
-      <span className={cn('text-[15px] font-black tabular-nums leading-tight', valueCls)}>
+      <span className={cn('text-[15px] font-extrabold tabular-nums leading-tight', valueCls)}>
         {value}
       </span>
       {sub && (

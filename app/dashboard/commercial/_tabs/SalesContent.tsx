@@ -172,7 +172,7 @@ export async function SalesContent({ companyId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
             </div>
           ))}
@@ -248,27 +248,27 @@ export async function SalesContent({ companyId }: Props) {
             <div className="flex flex-wrap gap-4 items-center">
               <div>
                 <span className="text-[10px] text-[#94a3b8]">Toplam Ciro</span>
-                <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(attribution.total_revenue_try)}</div>
+                <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">{fmt(attribution.total_revenue_try)}</div>
               </div>
               {attribution.top3_customer_pct !== null && (
                 <div>
                   <span className="text-[10px] text-[#94a3b8]">İlk 3 Müşteri</span>
-                  <div className="text-lg font-black tabular-nums text-[#0f172a]">%{attribution.top3_customer_pct.toFixed(1)}</div>
+                  <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">%{attribution.top3_customer_pct.toFixed(1)}</div>
                 </div>
               )}
               {attribution.top3_product_pct !== null && attribution.by_product.length > 0 && (
                 <div>
                   <span className="text-[10px] text-[#94a3b8]">İlk 3 Ürün</span>
-                  <div className="text-lg font-black tabular-nums text-[#0f172a]">%{attribution.top3_product_pct.toFixed(1)}</div>
+                  <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">%{attribution.top3_product_pct.toFixed(1)}</div>
                 </div>
               )}
               <div>
                 <span className="text-[10px] text-[#94a3b8]">Yeni Müşteri Cirosu</span>
-                <div className="text-lg font-black tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
+                <div className="text-lg font-extrabold tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
               </div>
               <div>
                 <span className="text-[10px] text-[#94a3b8]">Mevcut Müşteri Cirosu</span>
-                <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
+                <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
               </div>
             </div>
           </div>
@@ -337,7 +337,7 @@ export async function SalesContent({ companyId }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[#f0fdf4] rounded p-3">
                     <div className="text-[10px] text-[#94a3b8] mb-0.5">Yeni Müşteri</div>
-                    <div className="text-base font-black tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
+                    <div className="text-base font-extrabold tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
                     {attribution.total_revenue_try > 0 && (
                       <div className="text-[10px] text-[#94a3b8]">
                         %{((attribution.new_customer_revenue_try / attribution.total_revenue_try) * 100).toFixed(1)}
@@ -346,7 +346,7 @@ export async function SalesContent({ companyId }: Props) {
                   </div>
                   <div className="bg-[#f8fafc] rounded p-3">
                     <div className="text-[10px] text-[#94a3b8] mb-0.5">Mevcut Müşteri</div>
-                    <div className="text-base font-black tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
+                    <div className="text-base font-extrabold tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
                     {attribution.total_revenue_try > 0 && (
                       <div className="text-[10px] text-[#94a3b8]">
                         %{((attribution.returning_customer_revenue_try / attribution.total_revenue_try) * 100).toFixed(1)}

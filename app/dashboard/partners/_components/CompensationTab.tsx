@@ -304,7 +304,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
           <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]')}>
             Bu Ay Ödenen
           </div>
-          <div className={cn('text-sm font-black tabular-nums mt-1', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]')}>
+          <div className={cn('text-sm font-extrabold tabular-nums mt-1', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]')}>
             {fmtTRY(thisMonthPaid)}
           </div>
           <div className="text-[0.65rem] text-[#94a3b8]">

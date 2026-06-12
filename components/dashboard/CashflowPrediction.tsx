@@ -12,7 +12,7 @@ import type { CashFlowPrediction } from '@/lib/services/cashflow/cashflow-predic
 
 function CashValue({ value }: { value: number }) {
   const tone = value > 0 ? 'text-pos-text' : value < 0 ? 'text-neg' : 'text-[#94a3b8]'
-  return <span className={cn('font-black tabular-nums', tone)}>{fmtTRY(value)}</span>
+  return <span className={cn('font-extrabold tabular-nums', tone)}>{fmtTRY(value)}</span>
 }
 
 function RunwayBadge({ months }: { months: number | null }) {
@@ -177,7 +177,7 @@ export function CashflowPrediction(_props: Props) {
                 <td className={cn('px-4 py-2.5 text-right font-mono font-bold tabular-nums', period.net_try >= 0 ? 'text-[#334155]' : 'text-neg')}>
                   {fmtTRY(period.net_try)}
                 </td>
-                <td className={cn('px-4 py-2.5 text-right font-black tabular-nums', period.ending_cash_base_try < 0 ? 'text-neg-text' : 'text-[#0f172a]')}>
+                <td className={cn('px-4 py-2.5 text-right font-extrabold tabular-nums', period.ending_cash_base_try < 0 ? 'text-neg-text' : 'text-[#0f172a]')}>
                   {fmtTRY(period.ending_cash_base_try)}
                 </td>
               </tr>

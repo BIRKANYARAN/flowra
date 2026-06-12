@@ -126,7 +126,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             </div>
             <div className="bg-[#0f172a] text-white rounded px-4 py-3 flex justify-between mt-1">
               <span className="font-bold text-sm">TOPLAM</span>
-              <span className="font-black tabular-nums">{fmtMoney(s.total, s.currency)}</span>
+              <span className="font-extrabold tabular-nums">{fmtMoney(s.total, s.currency)}</span>
             </div>
             {s.currency !== 'TRY' && (
               <div className="flex justify-between text-xs text-[#64748b] pt-1">
@@ -144,17 +144,17 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-xs text-[#94a3b8] mb-1">Maliyet</div>
-            <div className="text-lg font-black tabular-nums text-[#64748b]">{fmt(s.total_cost)}</div>
+            <div className="text-lg font-extrabold tabular-nums text-[#64748b]">{fmt(s.total_cost)}</div>
           </div>
           <div>
             <div className="text-xs text-[#94a3b8] mb-1">Nominal Kâr</div>
-            <div className={`text-lg font-black tabular-nums ${s.nominal_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+            <div className={`text-lg font-extrabold tabular-nums ${s.nominal_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmt(s.nominal_profit)}
             </div>
           </div>
           <div>
             <div className="text-xs text-[#94a3b8] mb-1">Reel Kâr</div>
-            <div className={`text-lg font-black tabular-nums ${s.real_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+            <div className={`text-lg font-extrabold tabular-nums ${s.real_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmt(s.real_profit)}
             </div>
             {s.interest_rate > 0 && (

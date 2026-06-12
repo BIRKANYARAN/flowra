@@ -182,7 +182,7 @@ export function CashForecastClient({ companyId }: Props) {
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {kpi.label}
             </div>
-            <div className={`text-lg font-black tabular-nums leading-none ${kpi.tone}`}>
+            <div className={`text-lg font-extrabold tabular-nums leading-none ${kpi.tone}`}>
               {kpi.value}
             </div>
           </div>
@@ -238,7 +238,7 @@ export function CashForecastClient({ companyId }: Props) {
                   <td className={`px-4 py-2 text-right font-mono font-bold tabular-nums ${row.net >= 0 ? 'text-[#334155]' : 'text-red-600'}`}>
                     {fmtTRY(row.net)}
                   </td>
-                  <td className={`px-4 py-2 text-right font-black tabular-nums ${cashCls}`}>
+                  <td className={`px-4 py-2 text-right font-extrabold tabular-nums ${cashCls}`}>
                     {fmtTRY(row.closing_cash)}
                   </td>
                 </tr>

@@ -129,7 +129,7 @@ export function CashSensitivityClient({ companyId }: Props) {
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                   {item.label}
                 </div>
-                <div className={`text-base font-black tabular-nums leading-none ${item.tone}`}>
+                <div className={`text-base font-extrabold tabular-nums leading-none ${item.tone}`}>
                   {item.value}
                 </div>
               </div>

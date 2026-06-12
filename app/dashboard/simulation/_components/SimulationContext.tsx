@@ -124,7 +124,7 @@ export async function SimulationContext({ companyId }: Props) {
             <div key={kpi.label}
               className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 hover:border-[#e8eaef] transition-colors">
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{kpi.label}</div>
-              <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-[#0f172a]'}`}>
+              <div className={`text-base font-extrabold tabular-nums leading-none ${colors[kpi.tone] ?? 'text-[#0f172a]'}`}>
                 {kpi.value}
               </div>
               <div className="text-[9px] text-[#94a3b8] mt-0.5 leading-tight">{kpi.sub}</div>

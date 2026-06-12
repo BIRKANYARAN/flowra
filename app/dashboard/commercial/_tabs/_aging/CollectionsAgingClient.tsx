@@ -122,7 +122,7 @@ function BucketBar({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between text-[10px]">
         <span className="text-[#64748b] font-medium">{cfg.label}</span>
-        <span className={`font-black tabular-nums ${cfg.textColor}`}>
+        <span className={`font-extrabold tabular-nums ${cfg.textColor}`}>
           {show ? fmtPct(pct) : '—'}
         </span>
       </div>
@@ -206,18 +206,18 @@ export default function CollectionsAgingClient({ companyId }: Props) {
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-            <div className="font-black tabular-nums text-[#0f172a]">{fmtTRY(total)}</div>
+            <div className="font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(total)}</div>
           </div>
           {dso !== null && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">DSO</div>
-              <div className="font-black tabular-nums text-[#0f172a]">{dso} gün</div>
+              <div className="font-extrabold tabular-nums text-[#0f172a]">{dso} gün</div>
             </div>
           )}
           {aging_summary.concentration.critical_pct > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Kritik (%)</div>
-              <div className="font-black tabular-nums text-neg">
+              <div className="font-extrabold tabular-nums text-neg">
                 {fmtPct(aging_summary.concentration.critical_pct)}
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
 
                 {/* Amount */}
                 <div className="text-right shrink-0">
-                  <div className="font-black tabular-nums text-sm text-[#0f172a]">{fmtTRY(action.amount)}</div>
+                  <div className="font-extrabold tabular-nums text-sm text-[#0f172a]">{fmtTRY(action.amount)}</div>
                 </div>
               </div>
             ))}

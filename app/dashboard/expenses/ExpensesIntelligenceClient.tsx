@@ -393,7 +393,7 @@ export default function ExpensesIntelligenceClient({
                     <span className="text-[10px] text-[#94a3b8]">{item.expense_date}</span>
                   </div>
                 </div>
-                <div className="text-xs font-black tabular-nums text-warn-text shrink-0">
+                <div className="text-xs font-extrabold tabular-nums text-warn-text shrink-0">
                   {fmtTRYLocal(item.amount_try)}
                 </div>
                 {item.workflow_instance && (

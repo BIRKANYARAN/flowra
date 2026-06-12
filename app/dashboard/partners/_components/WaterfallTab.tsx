@@ -166,7 +166,7 @@ function AllocationBar({ waterfall, totalDebt }: { waterfall: WaterfallData; tot
                       {isCovered ? 'Nakit yeterli' : 'Kısmi'}
                     </span>
                   </div>
-                  <span className={`font-black tabular-nums ${PARTNER_COLORS_TEXT[idx % PARTNER_COLORS_TEXT.length]}`}>
+                  <span className={`font-extrabold tabular-nums ${PARTNER_COLORS_TEXT[idx % PARTNER_COLORS_TEXT.length]}`}>
                     {fmt(t.remaining_principal_try)}
                     <span className="text-[#94a3b8] font-medium"> · %{(share * 100).toFixed(0)}</span>
                   </span>
@@ -207,13 +207,13 @@ export function WaterfallTab({
             <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
               <div className="px-4 py-3">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Mevcut Nakit</div>
-                <div className="text-xl font-black tabular-nums text-[#0f172a]">
+                <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
                   {fmt(waterfall.available_cash_try)}
                 </div>
               </div>
               <div className="px-4 py-3">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-warn mb-1">Toplam Ortak Borcu</div>
-                <div className={`text-xl font-black tabular-nums ${totalDebt > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+                <div className={`text-xl font-extrabold tabular-nums ${totalDebt > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                   {fmt(totalDebt)}
                 </div>
                 {totalDebt > 0 && waterfall.available_cash_try > 0 && (
@@ -229,7 +229,7 @@ export function WaterfallTab({
                 <div className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${
                   waterfall.remaining_after_debt >= 0 ? 'text-pos-text' : 'text-neg'
                 }`}>Borç Sonrası Kalan</div>
-                <div className={`text-xl font-black tabular-nums ${
+                <div className={`text-xl font-extrabold tabular-nums ${
                   waterfall.remaining_after_debt >= 0 ? 'text-pos-text' : 'text-neg'
                 }`}>
                   {fmt(waterfall.remaining_after_debt)}
@@ -412,7 +412,7 @@ export function WaterfallTab({
                       </div>
                       <div className="text-xs font-semibold text-[#1e293b]">{step.description}</div>
                     </div>
-                    <div className="text-xs font-black tabular-nums text-brand">{fmt(step.allocated_try)}</div>
+                    <div className="text-xs font-extrabold tabular-nums text-brand">{fmt(step.allocated_try)}</div>
                   </div>
                 ))}
                 {waterfall.remaining_after_debt > 0 && (
@@ -423,7 +423,7 @@ export function WaterfallTab({
                       </div>
                       <div className="text-xs font-semibold text-pos-text">Dağıtılabilir nakit (temettü için)</div>
                     </div>
-                    <div className="text-xs font-black tabular-nums text-pos-text">{fmt(waterfall.remaining_after_debt)}</div>
+                    <div className="text-xs font-extrabold tabular-nums text-pos-text">{fmt(waterfall.remaining_after_debt)}</div>
                   </div>
                 )}
               </div>

@@ -62,7 +62,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(report.total_outstanding_try)}</div>
+          <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">{fmt(report.total_outstanding_try)}</div>
           {report.critical_try > 0 && (
             <div className="text-[10px] font-semibold text-[#991b1b]">
               {fmt(report.critical_try)} kritik (%{criticalPct.toFixed(0)} &gt;30 gün)
@@ -102,7 +102,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
             })}
             <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
               <td className="px-3 py-1.5 font-black text-[#0f172a]">Toplam</td>
-              <td className="px-3 py-1.5 text-right font-mono font-black tabular-nums text-[#0f172a]">
+              <td className="px-3 py-1.5 text-right font-mono font-extrabold tabular-nums text-[#0f172a]">
                 {fmt(report.total_outstanding_try)}
               </td>
               <td className="px-3 py-1.5 text-right font-semibold text-[#64748b]">{report.total_count}</td>

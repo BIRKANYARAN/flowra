@@ -35,7 +35,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-lg font-black tabular-nums leading-tight ${
+      <div className={`text-lg font-extrabold tabular-nums leading-tight ${
         tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}

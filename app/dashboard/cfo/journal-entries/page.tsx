@@ -171,8 +171,8 @@ export default async function JournalEntriesPage() {
                       ))}
                       <tr className="border-t border-[#e8eaef] bg-[#f8fafc]">
                         <td colSpan={2} className="px-4 py-1.5 text-xs font-black text-[#64748b] uppercase tracking-wide">Toplam</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-info-text">{fmtTRY(totalDebit)}</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-pos-text">{fmtTRY(totalCredit)}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-extrabold text-info-text">{fmtTRY(totalDebit)}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-extrabold text-pos-text">{fmtTRY(totalCredit)}</td>
                       </tr>
                     </tbody>
                   </table>

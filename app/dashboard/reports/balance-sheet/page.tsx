@@ -171,7 +171,7 @@ export default function BalanceSheetPage() {
             <div className="px-4 py-3 bg-info-light border-b border-info-light">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-info-text">Varlıklar</span>
-                <span className="text-sm font-black tabular-nums text-info-text">{fmt(bs.assets.total_assets_try)}</span>
+                <span className="text-sm font-extrabold tabular-nums text-info-text">{fmt(bs.assets.total_assets_try)}</span>
               </div>
             </div>
             <Section title="Dönen Varlıklar" />
@@ -201,7 +201,7 @@ export default function BalanceSheetPage() {
               <div className="px-4 py-3 bg-warn-light border-b border-warn/10">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-warn">Kaynaklar</span>
-                  <span className="text-sm font-black tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
+                  <span className="text-sm font-extrabold tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
                 </div>
               </div>
               <Section title="Kısa Vadeli" />
@@ -229,7 +229,7 @@ export default function BalanceSheetPage() {
               <div className="px-4 py-3 bg-pos-light border-b border-pos-light">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-pos-text">Özkaynak</span>
-                  <span className="text-sm font-black tabular-nums text-pos-text">{fmt(bs.equity.total_equity_try)}</span>
+                  <span className="text-sm font-extrabold tabular-nums text-pos-text">{fmt(bs.equity.total_equity_try)}</span>
                 </div>
               </div>
               <div className="px-4">

@@ -158,7 +158,7 @@ function SupplierRow({ s }: { s: SupplierProfile }) {
         {s.avg_days_to_pay !== null ? `${s.avg_days_to_pay} gün` : '—'}
       </td>
       <td className="px-3 py-2.5 text-right">
-        <span className={`text-xs font-black tabular-nums ${scoreTextColor(s.payment_score)}`}>
+        <span className={`text-xs font-extrabold tabular-nums ${scoreTextColor(s.payment_score)}`}>
           {s.payment_score}
         </span>
       </td>
@@ -252,7 +252,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             DPO (Ort. Ödeme)
           </div>
-          <div className="text-xl font-black tabular-nums text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
             {summary.overall_dpo !== null ? `${summary.overall_dpo} gün` : '—'}
           </div>
         </div>
@@ -260,7 +260,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Bekleyen
           </div>
-          <div className={`text-xl font-black tabular-nums ${summary.total_outstanding_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-extrabold tabular-nums ${summary.total_outstanding_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
             {summary.total_outstanding_try > 0 ? fmtTRY(summary.total_outstanding_try) : '—'}
           </div>
         </div>
@@ -268,7 +268,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ödeme Skoru
           </div>
-          <div className={`text-xl font-black tabular-nums ${scoreTextColor(summary.overall_payment_score)}`}>
+          <div className={`text-xl font-extrabold tabular-nums ${scoreTextColor(summary.overall_payment_score)}`}>
             {summary.overall_payment_score}
           </div>
         </div>
@@ -280,7 +280,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
           <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Genel Ödeme Skoru
           </span>
-          <span className={`text-xs font-black tabular-nums ${scoreTextColor(summary.overall_payment_score)}`}>
+          <span className={`text-xs font-extrabold tabular-nums ${scoreTextColor(summary.overall_payment_score)}`}>
             {summary.overall_payment_score} / 100
           </span>
         </div>

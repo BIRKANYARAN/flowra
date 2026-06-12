@@ -105,7 +105,7 @@ function KpiTile({
   return (
     <div className={`bg-white border border-[#e8eaef] border-l-4 ${accentCls} rounded px-4 py-4 shadow-sm`}>
       <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className="text-2xl font-black tabular-nums text-[#0f172a] mb-1">
+      <div className="text-2xl font-extrabold tabular-nums text-[#0f172a] mb-1">
         {fmtPct(value)}
       </div>
       <div className="text-[10px] text-[#94a3b8]">

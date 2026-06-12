@@ -223,7 +223,7 @@ export function StatCard({ label, value, sub, accent }: {
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-brand-light' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
-      <div className={`text-2xl font-black tabular-nums ${accent ? 'text-brand' : 'text-[#0f172a]'}`}>
+      <div className={`text-2xl font-extrabold tabular-nums ${accent ? 'text-brand' : 'text-[#0f172a]'}`}>
         {value}
       </div>
       {sub && <div className="text-xs text-[#94a3b8] mt-1">{sub}</div>}

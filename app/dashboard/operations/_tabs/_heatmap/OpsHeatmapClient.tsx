@@ -77,7 +77,7 @@ function StatCard({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.63rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
+      <div className={`text-lg font-extrabold tabular-nums leading-none ${color}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
     </div>
   )
@@ -223,7 +223,7 @@ function WeekTable({ weeks }: { weeks: OpsHeatmapReport['weeks'] }) {
             {weeks.map(w => (
               <tr key={w.week_start} className="hover:bg-[#f8fafc]">
                 <td className="px-3 py-2 font-bold text-[#334155]">{w.week_label}</td>
-                <td className="px-3 py-2 text-right font-black tabular-nums text-[#0f172a]">
+                <td className="px-3 py-2 text-right font-extrabold tabular-nums text-[#0f172a]">
                   {fmtTRY(w.total_revenue)}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-[#64748b]">

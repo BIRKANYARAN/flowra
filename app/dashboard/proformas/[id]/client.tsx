@@ -459,7 +459,7 @@ export function ProformaDetailClient({
                 </span>
                 <div className="text-right">
                   <div className="text-xs text-[#94a3b8]">Satış Tutarı</div>
-                  <div className="text-2xl font-black tabular-nums">{S}{Number.isFinite(modalTotal) ? modalTotal.toFixed(2) : '0.00'}</div>
+                  <div className="text-2xl font-extrabold tabular-nums">{S}{Number.isFinite(modalTotal) ? modalTotal.toFixed(2) : '0.00'}</div>
                 </div>
               </div>
 

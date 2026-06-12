@@ -187,7 +187,7 @@ export default function CustomerConcentrationClient() {
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
               HHI Skoru <InfoTip k="HHI" />
             </div>
-            <div className={`text-4xl font-black tabular-nums leading-none ${levelCfg.color}`}>
+            <div className={`text-4xl font-extrabold tabular-nums leading-none ${levelCfg.color}`}>
               {Math.round(report.hhi).toLocaleString('tr-TR')}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1">
@@ -242,7 +242,7 @@ export default function CustomerConcentrationClient() {
               <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 {m.label}
               </div>
-              <div className="text-sm font-black tabular-nums text-[#1e293b] leading-none">
+              <div className="text-sm font-extrabold tabular-nums text-[#1e293b] leading-none">
                 {m.value}
               </div>
             </div>

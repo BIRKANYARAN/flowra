@@ -71,7 +71,7 @@ function BridgeRow({
     return (
       <div className={`flex items-center justify-between gap-3 py-2 ${borderCls}`}>
         <span className="text-[11px] font-black text-[#0f172a]">{label}</span>
-        <span className={`text-sm font-black tabular-nums ${v >= 0 ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
+        <span className={`text-sm font-extrabold tabular-nums ${v >= 0 ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
           {fmtTRY(v, 0)}
         </span>
       </div>
@@ -290,7 +290,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
             <div className="text-[10px] text-[#94a3b8] mt-1.5">Birincil Etken</div>
           </div>
           <div>
-            <div className="text-2xl font-black tabular-nums text-[#0f172a]">
+            <div className="text-2xl font-extrabold tabular-nums text-[#0f172a]">
               {bridge.total_ebitda_change >= 0 ? '+' : ''}{fmtTRY(bridge.total_ebitda_change, 0)}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1">FAVÖK Değişimi</div>

@@ -164,7 +164,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         {/* HHI score */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">HHI Skoru</div>
-          <div className={`text-xl font-black tabular-nums leading-none ${hhiTextColor(report.concentration_level)}`}>
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${hhiTextColor(report.concentration_level)}`}>
             {report.hhi.toLocaleString('tr-TR')}
           </div>
           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide mt-1 ${LEVEL_BADGE[report.concentration_level]}`}>
@@ -175,7 +175,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         {/* Total spend */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Alım</div>
-          <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums leading-none text-[#0f172a]">
             {fmtTRY(report.total_spend_try)}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">{report.total_vendors} tedarikçi</div>
@@ -184,7 +184,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         {/* Pareto-80 */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Pareto 80</div>
-          <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums leading-none text-[#0f172a]">
             {report.pareto_80_count}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">
@@ -195,7 +195,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         {/* Top-3 share */}
         <div className="p-3">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">İlk 3 Pay</div>
-          <div className={`text-xl font-black tabular-nums leading-none ${report.top_3_spend_pct > 60 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
+          <div className={`text-xl font-extrabold tabular-nums leading-none ${report.top_3_spend_pct > 60 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
             %{report.top_3_spend_pct.toFixed(0)}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">en büyük 3 tedarikçi</div>

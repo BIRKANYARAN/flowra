@@ -387,7 +387,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             ].map(c => (
               <div key={c.label} className="text-center">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-                <div className={`text-sm font-black tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
+                <div className={`text-sm font-extrabold tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
                 {c.label === 'Net KDV' && (
                   <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-warn' : 'text-pos-text'}`}>
                     {netVat > 0 ? '⬆ Ödenecek' : netVat < 0 ? '⬇ Devir' : 'Sıfır'}
@@ -412,7 +412,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             <div key={k.label} className={`bg-white border border-l-4 border-[#e8eaef] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{k.label}</div>
               <div className="text-[10px] text-[#94a3b8]">{k.sub}</div>
-              <div className="text-lg font-black tabular-nums text-[#0f172a] mt-1">{k.value}</div>
+              <div className="text-lg font-extrabold tabular-nums text-[#0f172a] mt-1">{k.value}</div>
             </div>
           ))}
         </div>

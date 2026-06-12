@@ -101,7 +101,7 @@ function GaugeBar({
     <div className={`border rounded px-4 py-3 ${colorClass}`}>
       <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1">{label}</div>
       <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-2xl font-black tabular-nums leading-none">{value}</span>
+        <span className="text-2xl font-extrabold tabular-nums leading-none">{value}</span>
         <span className="text-xs font-semibold opacity-70">{statusLabel}</span>
       </div>
       <div className="h-1.5 bg-white/40 rounded-full overflow-hidden">
@@ -247,7 +247,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
             Kovenan Risk Skoru
           </div>
           <div className="flex items-baseline gap-2 mb-1.5">
-            <span className="text-2xl font-black tabular-nums leading-none">
+            <span className="text-2xl font-extrabold tabular-nums leading-none">
               {overall_covenant_risk_score.toFixed(0)}
             </span>
             <span className="text-xs font-semibold opacity-70">/ 100</span>
@@ -274,13 +274,13 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
-          <div className={`text-sm font-black tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
+          <div className={`text-sm font-extrabold tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_net_income_try, 0)}
           </div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD EBITDA</div>
-          <div className={`text-sm font-black tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
+          <div className={`text-sm font-extrabold tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_ebitda_try, 0)}
           </div>
         </div>

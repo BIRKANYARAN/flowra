@@ -187,7 +187,7 @@ export default async function KdvPage({
                 {isPayable ? '⬆ Ödenecek (beyan döneminde)' : '⬇ Sonraki döneme devir'}
               </div>
             </div>
-            <div className={`text-2xl font-black tabular-nums ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
+            <div className={`text-2xl font-extrabold tabular-nums ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
               {fmt(Math.abs(kdv.net_vat_try))}
             </div>
           </div>

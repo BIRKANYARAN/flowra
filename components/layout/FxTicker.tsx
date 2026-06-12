@@ -57,7 +57,7 @@ function TickerPair({ code, rate }: { code: string; rate: number }) {
       <span className="text-[8px] font-bold uppercase tracking-wider text-[#94a3b8]">
         {code}<span className="text-[#cbd5e1]">/TRY</span>
       </span>
-      <span className="text-[11px] font-black tabular-nums text-[#334155]">
+      <span className="text-[11px] font-extrabold tabular-nums text-[#334155]">
         {rate > 0 ? `₺${rate.toFixed(4)}` : '—'}
       </span>
     </div>

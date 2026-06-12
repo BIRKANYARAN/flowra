@@ -109,7 +109,7 @@ export function CashProjectionSection() {
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {chip.label}
             </div>
-            <div className={`text-base font-black tabular-nums leading-none ${chip.tone}`}>
+            <div className={`text-base font-extrabold tabular-nums leading-none ${chip.tone}`}>
               {chip.value}
             </div>
           </div>
@@ -165,7 +165,7 @@ export function CashProjectionSection() {
                   }`}>
                     {fmt(week.net_cash_flow)}
                   </td>
-                  <td className={`px-4 py-2 text-right font-black tabular-nums ${
+                  <td className={`px-4 py-2 text-right font-extrabold tabular-nums ${
                     isNeg ? 'text-neg-text bg-neg-light/40 rounded' : 'text-[#0f172a]'
                   }`}>
                     {fmt(week.cumulative_cash)}
@@ -193,7 +193,7 @@ export function CashProjectionSection() {
           ].map(item => (
             <div key={item.label}>
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</div>
-              <div className={`text-sm font-black tabular-nums leading-none mt-0.5 ${item.tone}`}>
+              <div className={`text-sm font-extrabold tabular-nums leading-none mt-0.5 ${item.tone}`}>
                 {fmt(item.value)}
               </div>
             </div>

@@ -108,7 +108,7 @@ function EarlyPaymentCard({
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{title}</div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-black tabular-nums text-[#0f172a]">
+          <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
             {cost !== null ? `%${cost.toFixed(2)}` : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8]">Yıllık maliyet eşdeğeri</div>
@@ -140,7 +140,7 @@ function VendorRow({ v }: { v: VendorRow }) {
         {fmtTRY(v.total_spend)}
       </td>
       <td className="px-3 py-2.5 text-right">
-        <span className={`text-xs font-black tabular-nums ${healthScoreColor(v.trust_score)}`}>
+        <span className={`text-xs font-extrabold tabular-nums ${healthScoreColor(v.trust_score)}`}>
           {v.trust_score.toFixed(0)}
         </span>
       </td>
@@ -235,7 +235,7 @@ export function SupplierTermsClient({ companyId }: Props) {
             </div>
           </div>
           {healthScore !== null && (
-            <span className={`text-sm font-black tabular-nums ${healthScoreColor(healthScore)}`}>
+            <span className={`text-sm font-extrabold tabular-nums ${healthScoreColor(healthScore)}`}>
               Skor {healthScore.toFixed(0)}/100
             </span>
           )}
@@ -251,7 +251,7 @@ export function SupplierTermsClient({ companyId }: Props) {
           </div>
           {healthScore !== null ? (
             <>
-              <div className={`text-xl font-black tabular-nums ${healthScoreColor(healthScore)}`}>
+              <div className={`text-xl font-extrabold tabular-nums ${healthScoreColor(healthScore)}`}>
                 {healthScore.toFixed(0)}
               </div>
               <div className="mt-1 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
@@ -271,7 +271,7 @@ export function SupplierTermsClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. DPO
           </div>
-          <div className="text-xl font-black tabular-nums text-[#0f172a]">
+          <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
             {cs.avg_dpo !== null ? `${cs.avg_dpo} gün` : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8]">Hedef: 45 gün</div>
@@ -282,7 +282,7 @@ export function SupplierTermsClient({ companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             DPO Fırsatı
           </div>
-          <div className={`text-xl font-black tabular-nums ${cs.total_dpo_opportunity > 0 ? 'text-[#15803d]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-extrabold tabular-nums ${cs.total_dpo_opportunity > 0 ? 'text-[#15803d]' : 'text-[#94a3b8]'}`}>
             {cs.total_dpo_opportunity > 0 ? fmtTRY(cs.total_dpo_opportunity) : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8]">Serbest kalacak nakit</div>

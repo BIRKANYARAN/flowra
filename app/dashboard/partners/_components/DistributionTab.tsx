@@ -233,7 +233,7 @@ export function DistributionTab({
               ].map(row => (
                 <div key={row.label} className={`flex items-center justify-between px-4 py-3 ${row.sign === '=' ? 'bg-[#f8fafc]' : ''}`}>
                   <div className="text-xs text-[#64748b]">{row.label}</div>
-                  <div className={`text-xs font-black tabular-nums font-mono ${row.color}`}>
+                  <div className={`text-xs font-extrabold tabular-nums font-mono ${row.color}`}>
                     {row.sign && row.sign !== '=' ? row.sign + ' ' : ''}{fmt(row.value)}
                   </div>
                 </div>

@@ -826,11 +826,11 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <div className="text-xs text-[#94a3b8] font-semibold uppercase mb-1">Toplam Maliyet</div>
-                      <div className="text-xl font-black tabular-nums text-[#0f172a]">₺{fmt(totalCost)}</div>
+                      <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">₺{fmt(totalCost)}</div>
                     </div>
                     <div>
                       <div className="text-xs text-[#94a3b8] font-semibold uppercase mb-1">Birim Maliyet</div>
-                      <div className="text-xl font-black tabular-nums text-brand">₺{fmt(unitCost)}</div>
+                      <div className="text-xl font-extrabold tabular-nums text-brand">₺{fmt(unitCost)}</div>
                     </div>
                   </div>
                   <button

@@ -181,7 +181,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
           return (
             <div key={s.label} className={`px-4 py-3 ${i === 3 ? 'col-span-2 sm:col-span-1' : ''}`}>
               <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
-              <div className={`text-base font-black tabular-nums leading-tight ${tone}`}>
+              <div className={`text-base font-extrabold tabular-nums leading-tight ${tone}`}>
                 {runwayLabel(months)}
               </div>
               {s.delta && (

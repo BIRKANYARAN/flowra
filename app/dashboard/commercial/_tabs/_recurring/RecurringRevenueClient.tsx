@@ -52,7 +52,7 @@ function KpiCard({
       <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
         {label}
       </div>
-      <div className={`text-lg font-black tabular-nums leading-none ${valueColor}`}>
+      <div className={`text-lg font-extrabold tabular-nums leading-none ${valueColor}`}>
         {value}
       </div>
       {sub && <div className="mt-0.5">{sub}</div>}

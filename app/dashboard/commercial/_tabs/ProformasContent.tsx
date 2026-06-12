@@ -142,7 +142,7 @@ export async function ProformasContent({ companyId }: Props) {
             ].map((card, i) => (
               <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
               </div>
             ))}
@@ -166,7 +166,7 @@ export async function ProformasContent({ companyId }: Props) {
                 return (
                   <div key={step.label} className="flex-1 min-w-0">
                     <div className={`h-7 rounded flex items-center justify-center ${step.color}`}>
-                      <span className={`text-[10px] font-black tabular-nums ${step.textColor}`}>{step.count}</span>
+                      <span className={`text-[10px] font-extrabold tabular-nums ${step.textColor}`}>{step.count}</span>
                     </div>
                     <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor} truncate`}>{step.label}</div>
                   </div>
@@ -188,7 +188,7 @@ export async function ProformasContent({ companyId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
             </div>
           ))}
@@ -252,7 +252,7 @@ export async function ProformasContent({ companyId }: Props) {
                 <div key={step.label} className="flex-1 min-w-0">
                   <div className={`h-8 rounded flex items-center justify-center ${step.color}`}
                     style={{ minWidth: `${widthPct}%` }}>
-                    <span className={`text-[10px] font-black tabular-nums ${step.textColor}`}>{step.count}</span>
+                    <span className={`text-[10px] font-extrabold tabular-nums ${step.textColor}`}>{step.count}</span>
                   </div>
                   <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor}`}>{step.label}</div>
                 </div>

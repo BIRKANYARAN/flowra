@@ -143,7 +143,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
+            <div className={`text-xl font-extrabold tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
         ))}
       </div>
@@ -260,7 +260,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                   <span className="text-base">{section.icon}</span>
                   <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{section.label}</span>
                 </div>
-                <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
+                <div className={`text-lg font-extrabold tabular-nums leading-none ${tone}`}>
                   {fmt(section.value)}
                 </div>
                 <div className="text-[10px] text-[#94a3b8] mt-0.5">{section.sub}</div>
@@ -333,7 +333,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                   <span className="text-sm">{item.icon}</span>
                   <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</span>
                 </div>
-                <div className={`text-base font-black tabular-nums leading-none ${tone}`}>
+                <div className={`text-base font-extrabold tabular-nums leading-none ${tone}`}>
                   {fmt(item.value)}
                 </div>
               </div>
@@ -492,7 +492,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                     <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-[#334155]' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
+                    <td className={`px-4 py-2.5 text-right font-extrabold tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>

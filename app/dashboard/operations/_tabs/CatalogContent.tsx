@@ -149,7 +149,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 truncate" title={card.sub}>{card.sub}</div>
             </div>
           ))}
@@ -192,11 +192,11 @@ export async function CatalogContent({ companyId, userId }: Props) {
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Gelir</div>
-                <div className="font-black tabular-nums text-[#0f172a]">{fmtTRY(marginReport.total_revenue_try)}</div>
+                <div className="font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(marginReport.total_revenue_try)}</div>
               </div>
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Genel Brüt Marj</div>
-                <div className={`font-black tabular-nums ${
+                <div className={`font-extrabold tabular-nums ${
                   marginReport.overall_gross_margin_pct > 40 ? 'text-pos-text' :
                   marginReport.overall_gross_margin_pct > 20 ? 'text-warn-text' : 'text-neg'
                 }`}>%{marginReport.overall_gross_margin_pct.toFixed(1)}</div>
@@ -260,7 +260,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
                       </td>
                       <td className="px-4 py-2 text-right tabular-nums text-[#334155]">{p.units_sold}</td>
                       <td className="px-4 py-2 text-right tabular-nums font-semibold text-[#0f172a]">{fmtTRY(p.revenue_try)}</td>
-                      <td className={`px-4 py-2 text-right tabular-nums font-black ${
+                      <td className={`px-4 py-2 text-right tabular-nums font-extrabold ${
                         p.gross_margin_pct > 40 ? 'text-pos-text' :
                         p.gross_margin_pct > 20 ? 'text-warn-text' : 'text-neg'
                       }`}>%{p.gross_margin_pct.toFixed(1)}</td>

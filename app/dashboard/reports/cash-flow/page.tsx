@@ -70,7 +70,7 @@ function CFSection({ title, total, children }: {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
         <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{title}</span>
-        <span className={`text-sm font-black tabular-nums ${
+        <span className={`text-sm font-extrabold tabular-nums ${
           total > 0 ? 'text-pos-text' : total < 0 ? 'text-neg' : 'text-[#64748b]'
         }`}>{fmt(total)}</span>
       </div>
@@ -240,17 +240,17 @@ export default function CashFlowPage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Net Nakit Değişim</div>
-              <div className={`text-lg font-black tabular-nums ${cf.net_change_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <div className={`text-lg font-extrabold tabular-nums ${cf.net_change_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(cf.net_change_try)}
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Dönem Sonu Nakit</div>
-              <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(cf.closing_balance_try)}</div>
+              <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">{fmt(cf.closing_balance_try)}</div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Faaliyet Nakit</div>
-              <div className={`text-lg font-black tabular-nums ${cf.operating.net_operating_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <div className={`text-lg font-extrabold tabular-nums ${cf.operating.net_operating_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(cf.operating.net_operating_try)}
               </div>
             </div>

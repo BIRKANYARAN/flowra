@@ -72,7 +72,7 @@ export function BeyanTakvimi({ taxCalendar }: { taxCalendar: TaxCalendar | null 
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {ob.estimated_amount_try !== null ? (
-                      <span className={`text-sm font-black tabular-nums ${isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'}`}>
+                      <span className={`text-sm font-extrabold tabular-nums ${isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'}`}>
                         {fmt(ob.estimated_amount_try)}
                       </span>
                     ) : (

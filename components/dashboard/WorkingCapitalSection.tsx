@@ -85,7 +85,7 @@ function MetricChip({
   return (
     <div className={`border rounded px-3 py-2.5 flex flex-col gap-1 ${chipClass}`}>
       <span className="text-[0.6rem] font-bold uppercase tracking-wider opacity-70">{label}</span>
-      <span className="text-sm font-black tabular-nums leading-none">{value}</span>
+      <span className="text-sm font-extrabold tabular-nums leading-none">{value}</span>
     </div>
   )
 }
