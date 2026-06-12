@@ -202,7 +202,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
     expenses: { label: '+ Masraf Ekle', href: '/dashboard/operations?tab=expenses&new=1' },
     catalog:  { label: '+ Yeni Ürün',   href: '/dashboard/operations?tab=catalog&new=1' },
     stock:    null,
-    orders:   null,
+    orders:   { label: '+ Yeni Sipariş', href: '/dashboard/operations?tab=orders&new=1' },
   }
 
   return (

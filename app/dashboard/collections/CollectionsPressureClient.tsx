@@ -4,7 +4,8 @@
 // Sprint 3: replaces the tab-based CollectionsClient with risk-sorted rows,
 // slide-over customer detail panel, and inline action forms.
 
-import { useCallback, useState, useMemo, type ChangeEvent } from 'react'
+import { useCallback, useState, useMemo, useEffect, type ChangeEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { fmtTRY, fmtDateMed as fmtDate } from '@/lib/format'
 
 export interface CollectionRow {
@@ -461,6 +462,14 @@ export default function CollectionsPressureClient({ initialRows }: Props) {
   const [slideRow,  setSlideRow]  = useState<CollectionRow | null>(null)
   const [search,    setSearch]    = useState('')
   const [notes,     setNotes]     = useState<Record<string, string[]>>({})
+
+  // Task-first: open the most urgent receivable's collection panel when reached
+  // via the hero "Tahsilat Kaydet" action (?pay=1). Rows arrive risk-sorted.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('pay') === '1' && rows.length > 0) setSlideRow(rows[0])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // ── Search filter ──────────────────────────────────────────────────────────
   const displayRows = useMemo(() => {

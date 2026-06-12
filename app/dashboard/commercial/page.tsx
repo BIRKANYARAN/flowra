@@ -88,7 +88,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
     ozet:        { label: '+ Yeni Teklif',   href: '/dashboard/proformas/new' },
     teklifler:   { label: '+ Yeni Proforma', href: '/dashboard/proformas/new' },
     sales:       { label: '+ Yeni Satış',    href: '/dashboard/commercial?tab=sales&new=1' },
-    collections: null,
+    collections: { label: 'Tahsilat Kaydet', href: '/dashboard/commercial?tab=collections&pay=1' },
     customers:   { label: '+ Yeni Müşteri',  href: '/dashboard/commercial?tab=customers&new=1' },
   }
 

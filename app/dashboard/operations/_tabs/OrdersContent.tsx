@@ -4,6 +4,7 @@
 // Client component: lists purchase orders, allows status updates + new order form.
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { NarrativeFooter, Skeleton } from '@/components/ds'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
@@ -73,6 +74,10 @@ export function OrdersContent(_props: Props) {
   const [formItems,     setFormItems]     = useState([{ name: '', unit: 'adet', quantity: '1', unit_price: '' }])
   const [formSaving,    setFormSaving]    = useState(false)
   const [formError,     setFormError]     = useState<string | null>(null)
+
+  // Task-first: open the new-order form when reached via the hero action (?new=1)
+  const searchParams = useSearchParams()
+  useEffect(() => { if (searchParams.get('new') === '1') setShowForm(true) }, [searchParams])
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
