@@ -27,8 +27,8 @@ export const ACCOUNTING_PROVIDERS: readonly AccountingProviderMeta[] = [
   {
     id: 'parasut', label: 'Paraşüt', auth: 'oauth2',
     reads: ['invoices', 'expenses', 'customers', 'suppliers', 'collections'],
-    status: 'planned', buildOrder: 1,
-    note: 'Açık OAuth2 REST API — en temiz entegrasyon, ilk hedef.',
+    status: 'beta', buildOrder: 1,
+    note: 'OAuth2 REST adaptörü yazıldı — PARASUT_* env kimlikleri girilince aktif (canlı hesapta doğrulanmalı).',
   },
   {
     id: 'bizimhesap', label: 'Bizim Hesap', auth: 'api_key',

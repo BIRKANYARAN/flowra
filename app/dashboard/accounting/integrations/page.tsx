@@ -8,6 +8,7 @@
 // See docs/architecture/CONNECTOR_LAYER.md.
 
 import { ACCOUNTING_PROVIDERS, BANK_SOURCES, type ConnectorStatus, type AuthModel } from '@/lib/connectors'
+import ParasutTestButton from './ParasutTestButton'
 
 export const metadata = { title: 'Entegrasyonlar' }
 
@@ -65,6 +66,7 @@ export default function IntegrationsPage() {
                     </span>
                   ))}
                 </div>
+                {p.id === 'parasut' && p.status !== 'planned' && <ParasutTestButton />}
               </div>
             )
           })}

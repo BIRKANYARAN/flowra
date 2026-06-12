@@ -161,6 +161,18 @@ last sync cursor, status) drives this. **Schema designed below; not applied (DDL
 > API. The interface is the same; the adapter differs. Bank: start with **statement-file
 > import** (zero integration risk), graduate to open-banking/BaaS APIs later.
 
+### 5a. Activating the live Paraşüt adapter (status: beta)
+The OAuth2 adapter is written (`lib/connectors/adapters/parasut.ts`) with the bug-prone
+JSON:API mapping unit-tested (`parasut-map.ts`). It reads **all credentials from env** — no
+secrets in the repo. To turn it on (you, the owner):
+1. Create a Paraşüt app (Geliştirici → API) → get `client_id` / `client_secret`, complete the
+   OAuth flow once to obtain a `refresh_token`, and note your numeric `company_id`.
+2. Set, server-side only (Vercel env): `PARASUT_COMPANY_ID`, `PARASUT_CLIENT_ID`,
+   `PARASUT_CLIENT_SECRET`, `PARASUT_REFRESH_TOKEN`.
+3. With those present, `createAccountingConnector('parasut')` is live; without them it stays a
+   safe skeleton (NotConfiguredError). **Verify field names against a real company before
+   trusting a sync** — the mapping follows the v4 docs but is untested against live data.
+
 ---
 
 ## 6. Roadmap (the user's 7 steps, grounded + sequenced)
