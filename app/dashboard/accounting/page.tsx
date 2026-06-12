@@ -57,7 +57,8 @@ const GROUPS: Group[] = [
   {
     label: 'Entegrasyonlar',
     tools: [
-      { href: '/dashboard/accounting/integrations', icon: '🔌', title: 'Bağlanabilir Sistemler', desc: 'Logo · Mikro · Paraşüt · Uyumsoft · Bizim Hesap · banka — fatura/cari/tahsilat okuma (yakında)' },
+      { href: '/dashboard/accounting/integrations',   icon: '🔌', title: 'Bağlanabilir Sistemler',   desc: 'Logo · Mikro · Paraşüt · Uyumsoft · Bizim Hesap · banka — fatura/cari/tahsilat okuma (yakında)' },
+      { href: '/dashboard/accounting/bank-reconcile', icon: '🏦', title: 'Banka Ekstresi Mutabakatı', desc: 'Ekstre yükle → Flowra tahsilat/ödemeleriyle otomatik eşleştir (önizleme · kayıt yok)' },
     ],
   },
 ]
