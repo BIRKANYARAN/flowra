@@ -54,6 +54,12 @@ const GROUPS: Group[] = [
       { href: '/dashboard/reports',             icon: '📑', title: 'Biçimli Tablolar',   desc: 'Gelir Tablosu · Bilanço · Nakit Akışı · CSV/Excel export' },
     ],
   },
+  {
+    label: 'Entegrasyonlar',
+    tools: [
+      { href: '/dashboard/accounting/integrations', icon: '🔌', title: 'Bağlanabilir Sistemler', desc: 'Logo · Mikro · Paraşüt · Uyumsoft · Bizim Hesap · banka — fatura/cari/tahsilat okuma (yakında)' },
+    ],
+  },
 ]
 
 export const metadata = { title: 'Muhasebe' }
