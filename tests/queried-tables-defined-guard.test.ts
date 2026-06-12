@@ -89,7 +89,8 @@ const KNOWN_ORPHANS = new Set<string>([
   // product_cost_entries — IMPLEMENTED: folded into canonical install + migration
   //   20260610000001 (per-product landed-cost entries; catalog cost-entry UI). No longer orphan.
   'sale_lines',
-  'sales_targets',
+  // sales_targets — its only querier (commercial sales-target.service) was removed
+  //   in the dead-analytics de-sprawl; no longer queried, so no longer an orphan.
   'tax_obligations',
 ])
 
