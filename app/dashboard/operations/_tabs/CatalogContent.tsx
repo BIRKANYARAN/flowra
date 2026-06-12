@@ -6,6 +6,7 @@ import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Product } from '@/types'
 import CatalogClient from '@/app/dashboard/catalog/CatalogClient'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 import { CatalogCommandBar } from '@/app/dashboard/catalog/_components/CatalogCommandBar'
 import { ProductMarginService } from '@/lib/services/inventory/product-margin.service'
 import type { ProductMarginReport } from '@/lib/services/inventory/product-margin.service'
@@ -182,15 +183,12 @@ export async function CatalogContent({ companyId, userId }: Props) {
         companyId={companyId}
       />
 
-      {/* ── Ürün Karlılığı ────────────────────────────────────────────────────── */}
+      {/* ── Ürün Karlılığı (expand-in-place) ──────────────────────────────────── */}
       {marginReport && marginReport.products.length > 0 && (
+        <DetailSection title="Ürün Karlılığı" subtitle={`FIFO maliyet bazlı brüt marj · ${today.slice(0, 4)} yılı`}>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
           {/* Header strip */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Karlılığı</div>
-              <div className="text-xs text-[#64748b] mt-0.5">FIFO maliyet bazlı brüt marj · {today.slice(0, 4)} yılı</div>
-            </div>
+          <div className="flex items-center justify-end px-4 py-3 border-b border-[#f1f5f9]">
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Gelir</div>
@@ -278,22 +276,29 @@ export async function CatalogContent({ companyId, userId }: Props) {
             </table>
           </div>
         </div>
+        </DetailSection>
       )}
 
-      {/* ── ABC Stok Analizi ─────────────────────────────────────────────────── */}
-      <AbcAnalysisClient companyId={companyId} />
+      {/* ── Katalog analizleri (expand-in-place) ──────────────────────────────── */}
+      <DetailSection title="ABC Stok Analizi" subtitle="Ürünleri ciro katkısına göre A/B/C sınıflandırma">
+        <AbcAnalysisClient companyId={companyId} />
+      </DetailSection>
 
-      {/* ── Sepet Analizi — Çapraz Satış Fırsatları ─────────────────────────── */}
-      <MarketBasketClient companyId={companyId} />
+      <DetailSection title="Sepet Analizi" subtitle="Çapraz satış fırsatları · birlikte alınan ürünler">
+        <MarketBasketClient companyId={companyId} />
+      </DetailSection>
 
-      {/* ── Ürün Kârlılık Şelalesi ────────────────────────────────────────────── */}
-      <ProductProfitabilityWaterfall />
+      <DetailSection title="Ürün Kârlılık Şelalesi" subtitle="Ürün bazlı kâr katkısı dökümü">
+        <ProductProfitabilityWaterfall />
+      </DetailSection>
 
-      {/* ── Fiyat Optimizasyonu ───────────────────────────────────────────────── */}
-      <PriceOptimizationClient />
+      <DetailSection title="Fiyat Optimizasyonu" subtitle="Marj hedefli fiyat öneri analizi">
+        <PriceOptimizationClient />
+      </DetailSection>
 
-      {/* ── Envanter Değerleme ────────────────────────────────────────────────── */}
-      <InventoryValuationClient />
+      <DetailSection title="Envanter Değerleme" subtitle="FIFO bazlı stok değeri ve yaşlandırma">
+        <InventoryValuationClient />
+      </DetailSection>
 
       {/* Cross-navigation */}
       <NarrativeFooter
