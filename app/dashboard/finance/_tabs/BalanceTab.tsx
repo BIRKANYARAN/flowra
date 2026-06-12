@@ -13,6 +13,7 @@ import { GLBalanceSheetService }    from '@/lib/services/ledger/gl-balance-sheet
 import { fmtTRY as fmt }            from '@/lib/format'
 import type { BalanceSheet }        from '@/types/dto'
 import { NarrativeFooter }          from '@/components/ds'
+import { DetailSection }            from '@/components/dashboard/DetailSection'
 import { WorkingCapitalSection }    from '@/components/dashboard/WorkingCapitalSection'
 import { RetainedEarningsClient }   from './_retained/RetainedEarningsClient'
 import { WorkingCapitalOptimizerClient } from './_wc-optimizer/WorkingCapitalOptimizerClient'
@@ -367,6 +368,35 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         )}
       </div>
 
+      {/* ── Bilanço analizleri (expand-in-place) ──────────────────────────────── */}
+      <DetailSection title="Bilanço Oranları" subtitle="Likidite · borç ödeme gücü · verimlilik oranları">
+        <BalanceRatiosClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="Döviz Pozisyonu & Kur Riski" subtitle="Çok para birimli alacak/borç açığı analizi">
+        <FxExposureClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="Sermaye Yapısı & Borç Kapasitesi" subtitle="DSCR · kaldıraç skoru · borç alanı">
+        <CapitalStructureClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="İşletme Sermayesi" subtitle="Nakit dönüş döngüsü · likidite oranları · 12 ay trend">
+        <WorkingCapitalSection />
+      </DetailSection>
+
+      <DetailSection title="CCC Verimlilik Karnesi" subtitle="Bileşik skor · kıyaslama · 6 ay trend">
+        <CccScorecardClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="İşletme Sermayesi Optimizasyonu" subtitle="Nakit etkili aksiyon önerileri">
+        <WorkingCapitalOptimizerClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="Dağıtılmamış Kârlar Hareketi" subtitle="Dönem dönem özkaynak değişimi">
+        <RetainedEarningsClient companyId={companyId} />
+      </DetailSection>
+
       {/* Cross-navigation */}
       <NarrativeFooter
         narrative={`Bilanço tarihi: ${bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.`}
@@ -377,27 +407,6 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
           { label: 'Yönetim Paketi',     href: `/documents/income-statement/${bs.as_of_date.slice(0,7)}` },
         ]}
       />
-
-      {/* Balance Sheet Ratio Analysis — liquidity, solvency, efficiency ratios */}
-      <BalanceRatiosClient companyId={companyId} />
-
-      {/* FX Exposure & Currency Risk Analysis — multi-currency receivables/payables */}
-      <FxExposureClient companyId={companyId} />
-
-      {/* Capital Structure & Debt Capacity Analysis — DSCR, leverage score, debt headroom */}
-      <CapitalStructureClient companyId={companyId} />
-
-      {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
-      <WorkingCapitalSection />
-
-      {/* CCC Efficiency Scorecard — composite score, benchmarks, 6-month trend */}
-      <CccScorecardClient companyId={companyId} />
-
-      {/* Working Capital Optimization — actionable recommendations with cash impact */}
-      <WorkingCapitalOptimizerClient companyId={companyId} />
-
-      {/* Retained Earnings Rollforward — equity movement period by period */}
-      <RetainedEarningsClient companyId={companyId} />
     </div>
   )
 }

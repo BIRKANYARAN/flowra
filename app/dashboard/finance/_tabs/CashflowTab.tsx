@@ -9,6 +9,7 @@
 
 import Link              from 'next/link'
 import { NarrativeFooter } from '@/components/ds'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { CashflowPrediction } from '@/components/dashboard/CashflowPrediction'
@@ -521,17 +522,22 @@ export async function CashflowTab({ userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* Zone 8 — Hazine Yönetimi (Treasury Management) */}
-      <TreasurySection />
+      {/* ── Nakit analizleri (expand-in-place) ────────────────────────────────── */}
+      <DetailSection title="Hazine Yönetimi" subtitle="Nakit pozisyonu ve hazine dağılımı">
+        <TreasurySection />
+      </DetailSection>
 
-      {/* Zone 8.5 — 12-Month Cash Flow Waterfall Projection */}
-      <CashflowWaterfallClient companyId={companyId} />
+      <DetailSection title="12 Aylık Nakit Akış Şelalesi" subtitle="Aylık giriş/çıkış projeksiyonu">
+        <CashflowWaterfallClient companyId={companyId} />
+      </DetailSection>
 
-      {/* Zone 9 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
-      <BurnRateSection />
+      <DetailSection title="Nakit Tüketim Hızı (Burn Rate)" subtitle="Aylık yakım ve runway takibi">
+        <BurnRateSection />
+      </DetailSection>
 
-      {/* Zone 10 — Cash Flow Sensitivity Analysis (Stress Testing) */}
-      <CashSensitivityClient companyId={companyId} />
+      <DetailSection title="Nakit Akış Duyarlılık Analizi" subtitle="Stres testi senaryoları">
+        <CashSensitivityClient companyId={companyId} />
+      </DetailSection>
 
       {/* Cross-link → formal 3-section cash flow statement */}
       <NarrativeFooter
