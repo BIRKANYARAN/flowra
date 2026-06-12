@@ -46,14 +46,6 @@ const STATUS_LABEL: Record<string, string> = {
   draft: 'Taslak', sent: 'Gönderildi', accepted: 'Onaylandı',
   rejected: 'Reddedildi', converted: 'Satışa Döndü',
 }
-const STATUS_COLOR: Record<string, string> = {
-  draft:     'bg-[#f1f5f9] text-[#64748b]',
-  sent:      'bg-info-light text-info-text',
-  accepted:  'bg-pos-light text-pos-text',
-  rejected:  'bg-neg-light text-neg',
-  converted: 'bg-brand-subtle text-brand',
-}
-
 type ProformaWithFx = Proforma & { fx_try?: number | null }
 
 interface Props { companyId: string }
@@ -151,7 +143,6 @@ export async function PipelineContent({ companyId }: Props) {
   const healthBadge = HEALTH_BADGE[pipelineHealth]
   const grossMargin  = totalRevenue > 0 ? ((totalRevenue - totalCogs) / totalRevenue) * 100 : 0
   const unpaidTotal  = sales.filter(s => s.payment_status !== 'paid').reduce((s, r) => s + (Number(r.total_try) || 0), 0)
-  const recentPf     = proformas.slice(0, 5)
 
   // ── Monthly revenue trend + anomaly detection ─────────────────────────────
   const revByMonth = new Map<string, number>()
@@ -258,75 +249,18 @@ export async function PipelineContent({ companyId }: Props) {
           </div>
         </div>
 
-        {/* Proforma List */}
+        {/* Footer — link to the full Teklifler tab (no embedded table dup) */}
         {proformas.length > 0 ? (
-          <div>
-            <div className="px-4 py-2 border-b border-[#f1f5f9]">
-              <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Proforma Listesi</span>
-            </div>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
-                  <th className="text-left px-4 py-2">Müşteri</th>
-                  <th className="text-right px-4 py-2">Tutar</th>
-                  <th className="text-left px-4 py-2">Durum</th>
-                  <th className="text-right px-4 py-2">Oluşturma</th>
-                  <th className="text-right px-4 py-2">İndirim %</th>
-                  <th className="text-right px-4 py-2">Aksiyon</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f8fafc]">
-                {proformas.slice(0, 8).map(p => {
-                  const pfWithFx = p as ProformaWithFx
-                  const tryTotal = (Number(p.total) || 0) * (Number(pfWithFx.fx_try) || 1)
-                  return (
-                    <tr key={p.id} className="hover:bg-[#f8fafc] transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-[#1e293b] max-w-[160px] truncate">
-                        {p.customer_name ?? '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">
-                        {serverFmt(tryTotal)}
-                        {p.currency && p.currency !== 'TRY' && (
-                          <span className="text-[9px] text-[#94a3b8] ml-1">{p.currency}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
-                          {STATUS_LABEL[p.status] ?? p.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-[#94a3b8] tabular-nums">
-                        {p.created_at
-                          ? new Date(p.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })
-                          : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-[#94a3b8]">
-                        —
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link
-                            href={`/dashboard/proformas/${p.id}`}
-                            className="text-[10px] font-bold text-info-text hover:underline whitespace-nowrap"
-                          >
-                            Görüntüle
-                          </Link>
-                          {p.status === 'accepted' && (
-                            <Link
-                              href={`/dashboard/proformas/${p.id}`}
-                              className="text-[10px] font-bold text-brand hover:underline whitespace-nowrap ml-2"
-                            >
-                              Satışa Dönüştür
-                            </Link>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Link
+            href="/dashboard/commercial?tab=teklifler"
+            className="flex items-center justify-between px-4 py-2.5 hover:bg-[#f8fafc] transition-colors group"
+          >
+            <span className="text-[11px] text-[#64748b]">
+              <span className="font-black text-[#1e293b] tabular-nums">{totalPfCount} teklif</span>
+              {' · '}{convertedCount} dönüştürüldü · {pfByStatus.sent + pfByStatus.accepted} açık
+            </span>
+            <span className="text-[11px] font-bold text-brand group-hover:underline shrink-0">Tüm teklifler →</span>
+          </Link>
         ) : (
           <div className="px-4 py-8 text-center">
             <div className="text-[11px] text-[#94a3b8] mb-2.5">Henüz proforma kaydı bulunmuyor.</div>
@@ -349,21 +283,14 @@ export async function PipelineContent({ companyId }: Props) {
         <SalesFlowCommandBar companyId={companyId} />
       </Suspense>
 
-      {/* ── Satış Hunisi ─────────────────────────────────────────────────── */}
+      {/* ── Satış Hunisi (expand-in-place) ───────────────────────────────── */}
       {funnelReport && funnelStages.length > 0 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          {/* Header */}
-          <div className="px-4 py-2.5 border-b border-[#e8eaef] flex items-center justify-between">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-              Satış Hunisi — {funnelReport.analysis_period === 'last_90_days' ? 'Son 90 Gün' : 'Son 30 Gün'}
-            </span>
-            {funnelReport.metrics.overall_conversion_rate > 0 && (
-              <span className="text-[10px] font-bold text-brand">
-                Genel dönüşüm: %{funnelReport.metrics.overall_conversion_rate.toFixed(1)}
-              </span>
-            )}
-          </div>
-
+        <DetailSection
+          title={`Satış Hunisi — ${funnelReport.analysis_period === 'last_90_days' ? 'Son 90 Gün' : 'Son 30 Gün'}`}
+          subtitle={funnelReport.metrics.overall_conversion_rate > 0
+            ? `Genel dönüşüm %${funnelReport.metrics.overall_conversion_rate.toFixed(1)} · darboğaz ve aşama bazlı değer`
+            : 'Darboğaz ve aşama bazlı dönüşüm'}
+        >
           {/* Bottleneck alert */}
           {funnelReport.bottleneck_stage && (
             <div className="px-4 py-2 bg-warn-light border-b border-warn-light">
@@ -458,16 +385,10 @@ export async function PipelineContent({ companyId }: Props) {
               </div>
             ))}
           </div>
-        </div>
+        </DetailSection>
       )}
 
-      <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-          Satış Akışı — {proformas.length} teklif · {sales.length} satış
-        </span>
-      </div>
-
-      {/* KPI Strip */}
+      {/* KPI Strip — headline finansal göstergeler */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
@@ -482,44 +403,6 @@ export async function PipelineContent({ companyId }: Props) {
           </div>
         ))}
       </div>
-
-      {/* Recent proformas */}
-      {recentPf.length > 0 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-2 border-b border-[#e8eaef]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Teklifler</span>
-          </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
-                <th className="text-left px-4 py-2">Müşteri</th>
-                <th className="text-left px-4 py-2">Durum</th>
-                <th className="text-right px-4 py-2">Tutar</th>
-                <th className="text-right px-4 py-2">Tarih</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f1f5f9]">
-              {recentPf.map(p => (
-                <tr key={p.id}>
-                  <td className="px-4 py-2.5 font-medium text-[#1e293b] max-w-[200px] truncate">{p.customer_name ?? '—'}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
-                      {STATUS_LABEL[p.status] ?? p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">
-                    {serverFmt(Number(p.total ?? 0))}
-                    <span className="text-[10px] text-[#94a3b8] ml-1">{p.currency}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-[#94a3b8]">
-                    {p.created_at ? new Date(p.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {/* Revenue anomaly alerts */}
       {revenueAnomalies.length > 0 && (
@@ -546,10 +429,9 @@ export async function PipelineContent({ companyId }: Props) {
         </div>
       )}
 
-      {/* Monthly revenue trend */}
+      {/* Monthly revenue trend (expand-in-place) */}
       {recentMonths.length > 1 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi — Son 6 Ay</div>
+        <DetailSection title="Aylık Ciro Trendi" subtitle="Son 6 ayın gelir hareketi">
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {
               const heightPct = Math.max(4, (m.revenue / maxRevMonth) * 100)
@@ -569,15 +451,17 @@ export async function PipelineContent({ companyId }: Props) {
             <span>En düşük: {serverFmt(Math.min(...recentMonths.map(m => m.revenue)))}</span>
             <span>En yüksek: {serverFmt(Math.max(...recentMonths.map(m => m.revenue)))}</span>
           </div>
-        </div>
+        </DetailSection>
       )}
 
-      {/* Interactive pipeline */}
-      <SalesFlowClient
-        initialProformas={proformas}
-        initialSales={sales}
-        initialStockLots={stockLots}
-      />
+      {/* Interactive pipeline (expand-in-place — teklif → satış akışı) */}
+      <DetailSection title="İnteraktif Satış Akışı" subtitle="Teklif → satış dönüşümü · stok eşleştirme">
+        <SalesFlowClient
+          initialProformas={proformas}
+          initialSales={sales}
+          initialStockLots={stockLots}
+        />
+      </DetailSection>
 
       {/* Cross-navigation */}
       <NarrativeFooter
