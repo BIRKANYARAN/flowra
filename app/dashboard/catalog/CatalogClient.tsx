@@ -492,15 +492,25 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
         {filtered.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
             <div className="text-3xl opacity-50">📦</div>
-            <div className="text-sm text-[#64748b]">
-              {products.length === 0 ? 'Henüz ürün eklenmedi.' : 'Aramayla eşleşen ürün bulunamadı.'}
+            <div className="text-sm font-semibold text-[#334155]">
+              {products.length === 0 ? 'Henüz ürün eklenmedi' : 'Aramayla eşleşen ürün bulunamadı.'}
             </div>
             {products.length === 0 && (
-              <button
-                onClick={() => { resetNp(); setShowCreate(true) }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
-                + İlk ürününü ekle
-              </button>
+              <>
+                <div className="text-xs text-[#94a3b8] max-w-sm -mt-1">Ürünlerini ekle; birim kârlılık, marj ve stok değeri otomatik hesaplansın. Excel listeni “İçe Aktar” ile toplu yükleyebilirsin.</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowImport(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8eaef] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
+                    İçe Aktar
+                  </button>
+                  <button
+                    onClick={() => { resetNp(); setShowCreate(true) }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+                    + İlk ürününü ekle
+                  </button>
+                </div>
+              </>
             )}
           </div>
         ) : (

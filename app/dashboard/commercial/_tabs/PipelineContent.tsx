@@ -263,7 +263,8 @@ export async function PipelineContent({ companyId }: Props) {
           </Link>
         ) : (
           <div className="px-4 py-8 text-center">
-            <div className="text-[11px] text-[#94a3b8] mb-2.5">Henüz proforma kaydı bulunmuyor.</div>
+            <div className="text-sm font-semibold text-[#334155] mb-1">Henüz teklif yok</div>
+            <div className="text-[11px] text-[#94a3b8] mb-3 max-w-sm mx-auto">İlk teklifini oluştur; dönüşüm oranın, boru hattı değerin ve satış hunisi otomatik dolsun.</div>
             <Link
               href="/dashboard/proformas/new"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors shadow-sm"

@@ -417,7 +417,10 @@ export function SalesTable({ rows }: Props) {
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-12 shadow-sm">
-            <p className="text-[#94a3b8] text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
+            <p className="text-[#334155] text-sm font-semibold">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok'}</p>
+            {!isFiltered && (
+              <p className="text-[#94a3b8] text-xs mt-1 max-w-sm mx-auto">İlk satışını kaydet; ciro, tahsilat durumu ve aylık trend otomatik hesaplansın.</p>
+            )}
             {isFiltered ? (
               <button
                 onClick={clearFilters}

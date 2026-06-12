@@ -425,7 +425,7 @@ export default function ExpensesIntelligenceClient({
         <EmptyState
           icon="💸"
           title="Henüz gider eklenmedi"
-          sub="Gider eklemek için butona tıklayın."
+          sub="İlk giderini ekle; kategori dağılımı, aylık yakım hızı ve nakit etkisi otomatik hesaplansın."
           action={<FlowraButton variant="primary" onClick={() => setShowAddSlider(true)}>+ Masraf Ekle</FlowraButton>}
         />
       ) : (
