@@ -4,6 +4,7 @@
 import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 import InvoiceAgingClient from './_aging/InvoiceAgingClient'
 import CollectionsAgingClient from './_aging/CollectionsAgingClient'
 import CollectionsPressureClient, { type CollectionRow } from '@/app/dashboard/collections/CollectionsPressureClient'
@@ -76,11 +77,7 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Davranışı</div>
-          <div className="text-xs text-[#64748b] mt-0.5">Son 12 ay müşteri ödeme güvenilirlik profili</div>
-        </div>
+      <div className="flex items-center justify-end px-4 py-3 border-b border-[#f1f5f9]">
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Ort. Güvenilirlik</div>
@@ -260,11 +257,26 @@ export async function CollectionsContent({ companyId }: Props) {
 
   return (
     <div className="max-w-5xl space-y-3">
-      {/* ── Collections Aging Heatmap & Recovery Probability ─────────────────── */}
-      <CollectionsAgingClient companyId={companyId} />
-
-      {/* ── Invoice Aging Tracker ─────────────────────────────────────────────── */}
-      <InvoiceAgingClient companyId={companyId} />
+      {/* ── Pressure Summary (headline — açık alacak özeti) ───────────────────── */}
+      {grandTotal > 0 && (
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm flex flex-wrap gap-x-4 gap-y-1 items-center text-xs">
+          <span className="font-bold text-[#0f172a]">{fmt(grandTotal)} açık alacak</span>
+          <span className="text-[#94a3b8]">·</span>
+          <span className="text-[#334155]">{totalCount} fatura</span>
+          {criticalTotal > 0 && (
+            <>
+              <span className="text-[#94a3b8]">·</span>
+              <span className="font-bold text-neg">{fmt(criticalTotal)} kritik (60+ gün)</span>
+            </>
+          )}
+          {nearDueTotal > 0 && (
+            <>
+              <span className="text-[#94a3b8]">·</span>
+              <span className="font-semibold text-warn-text">{fmt(nearDueTotal)} vadesi &lt;30 gün</span>
+            </>
+          )}
+        </div>
+      )}
 
       <ObservationRail context="collections" maxItems={3} />
 
@@ -368,38 +380,23 @@ export async function CollectionsContent({ companyId }: Props) {
         </div>
       )}
 
-      {/* ── Pressure Summary Strip ─────────────────────────────────────────────── */}
-      {grandTotal > 0 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm flex flex-wrap gap-x-4 gap-y-1 items-center text-xs">
-          <span className="font-bold text-[#0f172a]">{fmt(grandTotal)} açık alacak</span>
-          <span className="text-[#94a3b8]">·</span>
-          <span className="text-[#334155]">{totalCount} fatura</span>
-          {criticalTotal > 0 && (
-            <>
-              <span className="text-[#94a3b8]">·</span>
-              <span className="font-bold text-neg">{fmt(criticalTotal)} kritik (60+ gün)</span>
-            </>
-          )}
-          {nearDueTotal > 0 && (
-            <>
-              <span className="text-[#94a3b8]">·</span>
-              <span className="font-semibold text-warn-text">{fmt(nearDueTotal)} vadesi &lt;30 gün</span>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── Risk-sorted pressure rows (client) ────────────────────────────────── */}
+      {/* ── Risk-sorted pressure rows (client — iş yüzeyi) ────────────────────── */}
       <CollectionsPressureClient initialRows={initialRows} />
 
-      {/* ── Alacak Yaş Haritası ───────────────────────────────────────────────── */}
+      {/* ── Yaşlandırma analizleri (expand-in-place) ──────────────────────────── */}
+      <DetailSection title="Alacak Yaşlandırma & Tahsilat Olasılığı" subtitle="Yaş kovası ısı haritası · geri kazanım olasılığı">
+        <CollectionsAgingClient companyId={companyId} />
+      </DetailSection>
+
+      <DetailSection title="Fatura Yaşlandırma" subtitle="Fatura bazlı vade ve gecikme takibi">
+        <InvoiceAgingClient companyId={companyId} />
+      </DetailSection>
+
+      {/* ── Alacak Yaş Haritası (expand-in-place) ─────────────────────────────── */}
       {heatmapReport && heatmapReport.total_outstanding_try > 0 && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Alacak Yaş Haritası</div>
-              <div className="text-xs text-[#64748b] mt-0.5">Müşteri × yaşlandırma kovası dağılımı</div>
-            </div>
+        <DetailSection title="Alacak Yaş Haritası" subtitle="Müşteri × yaşlandırma kovası dağılımı · risk skoru">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
+          <div className="flex items-center justify-end px-4 py-3 border-b border-[#f1f5f9]">
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
@@ -467,12 +464,15 @@ export async function CollectionsContent({ companyId }: Props) {
             </table>
           </div>
           <div className="px-4 py-2 text-[10px] text-[#94a3b8]">Risk skoru 0-100; yüksek = acil tahsilat önceliği</div>
-        </div>
+          </div>
+        </DetailSection>
       )}
 
-      {/* ── Ödeme Davranışı ───────────────────────────────────────────────────── */}
+      {/* ── Ödeme Davranışı (expand-in-place) ─────────────────────────────────── */}
       {paymentBehaviorReport && paymentBehaviorReport.profiles.some(p => p.paid_count > 0 || p.outstanding_count > 0) && (
-        <PaymentBehaviorSection report={paymentBehaviorReport} />
+        <DetailSection title="Ödeme Davranışı" subtitle="Son 12 ay müşteri ödeme güvenilirlik profili">
+          <PaymentBehaviorSection report={paymentBehaviorReport} />
+        </DetailSection>
       )}
 
       {/* Cross-navigation */}
