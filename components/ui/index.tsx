@@ -11,12 +11,12 @@ export function cn(...args: unknown[]) { return twMerge(clsx(args)) }
 
 /* ── Btn (CVA-driven, replaces the original hand-rolled version) ─────────── */
 const btn = cva(
-  'inline-flex items-center justify-center gap-2 font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
-        primary:   'bg-brand-light hover:bg-brand text-white shadow-sm',
-        secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e8eaef]',
+        primary:   'bg-brand-light hover:bg-brand text-white shadow-sm hover:shadow',
+        secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e8eaef] hover:border-[#d8dce4]',
         ghost:     'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc]',
         danger:    'bg-neg-light hover:bg-neg-light text-neg-text border border-neg-light',
         success:   'bg-pos hover:bg-pos text-white',
