@@ -34,6 +34,7 @@ import {
 import { lastNMonths, kdvPositionLabel, geciciStatus, nextGeciciDue } from './_tax/helpers'
 import { BeyanTakvimi } from './_tax/BeyanTakvimi'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -148,16 +149,20 @@ export async function TaxTab({ userId, companyId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* Client islands are each isolated in an ErrorBoundary so a single island's
-          render error degrades to a local fallback instead of blanking the whole tab. */}
-      {/* ── Vergi Uyum Takvimi (client island — TanStack Query) ─────────────── */}
-      <ErrorBoundary label="tax-compliance"><TaxComplianceClient companyId={companyId} /></ErrorBoundary>
+      {/* Compliance/calendar islands fold into expand-in-place sections so the tab
+          leads with the core tax position (Vergi Rezervi + KDV); each island stays
+          isolated in an ErrorBoundary. */}
+      <DetailSection title="Vergi Uyum Takvimi" subtitle="Yaklaşan beyan ve ödeme yükümlülükleri">
+        <ErrorBoundary label="tax-compliance"><TaxComplianceClient companyId={companyId} /></ErrorBoundary>
+      </DetailSection>
 
-      {/* ── Vergi Uyum Paneli (client island — TanStack Query) ───────────────── */}
-      <ErrorBoundary label="tax-compliance-dashboard"><TaxComplianceDashboardClient companyId={companyId} /></ErrorBoundary>
+      <DetailSection title="Vergi Uyum Paneli" subtitle="Uyum durumu ve risk göstergeleri">
+        <ErrorBoundary label="tax-compliance-dashboard"><TaxComplianceDashboardClient companyId={companyId} /></ErrorBoundary>
+      </DetailSection>
 
-      {/* ── Vergi Takvimi (client island — TanStack Query) ───────────────────── */}
-      <ErrorBoundary label="tax-calendar"><TaxCalendarClient companyId={companyId} /></ErrorBoundary>
+      <DetailSection title="Vergi Takvimi" subtitle="Aylık beyan/ödeme takvimi görünümü">
+        <ErrorBoundary label="tax-calendar"><TaxCalendarClient companyId={companyId} /></ErrorBoundary>
+      </DetailSection>
 
       {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
