@@ -69,6 +69,24 @@ function staticDashboardHrefs(): Set<string> {
   return out
 }
 
+// Template-literal /dashboard links, normalized to route SHAPES (${…} → :id). Catches
+// the dynamic blind spot — e.g. a row link to /dashboard/commercial/proformas/${id}
+// whose base route doesn't exist (a 404 only when data is present).
+function dynamicDashboardShapes(): Set<string> {
+  const out = new Set<string>()
+  const re = /`(\/dashboard\/[^`]*\$\{[^`]*)`/g
+  for (const dir of ['app', 'components', 'lib']) {
+    for (const f of walk(resolve(ROOT, dir))) {
+      const txt = readFileSync(f, 'utf8')
+      for (const m of txt.matchAll(re)) {
+        const shape = m[1].split(/[?#]/)[0].replace(/\$\{[^}]*\}/g, ':id').replace(/\/$/, '')
+        out.add(shape)
+      }
+    }
+  }
+  return out
+}
+
 // Hrefs intentionally exempt (e.g. external-ish or known dynamic patterns). Keep tiny.
 const ALLOWLIST = new Set<string>([])
 
@@ -76,6 +94,8 @@ describe('dashboard link integrity', () => {
   const pages     = pageRoutes()
   const redirects = redirectKeys()
   const hrefs     = staticDashboardHrefs()
+
+  const dynamic = dynamicDashboardShapes()
 
   function resolves(link: string): boolean {
     if (link === '/dashboard' || ALLOWLIST.has(link)) return true
@@ -85,6 +105,21 @@ describe('dashboard link integrity', () => {
     return pages.has(asId)
   }
 
+  // Segment-wise resolve for dynamic SHAPES (:id may sit in any segment, e.g.
+  // /dashboard/periods/:id/wizard). Matches a page route if same length and every
+  // segment is equal or a wildcard on either side; also accepts a page-route prefix.
+  function resolvesShape(shape: string): boolean {
+    if (ALLOWLIST.has(shape)) return true
+    if (pages.has(shape) || redirects.has(shape)) return true
+    const sr = shape.split('/')
+    for (const p of pages) {
+      const pr = p.split('/')
+      if (pr.length === sr.length && pr.every((seg, i) => seg === sr[i] || seg === ':id' || sr[i] === ':id')) return true
+      if (p !== '/dashboard' && shape.startsWith(p + '/')) return true
+    }
+    return false
+  }
+
   it('parsing sanity — found routes and links', () => {
     expect(pages.size).toBeGreaterThan(20)
     expect(hrefs.size).toBeGreaterThan(10)
@@ -92,6 +127,11 @@ describe('dashboard link integrity', () => {
 
   it('every static /dashboard href resolves to a page route or redirect', () => {
     const broken = [...hrefs].filter(l => !resolves(l))
+    expect(broken).toEqual([])
+  })
+
+  it('every dynamic /dashboard link shape resolves to a route', () => {
+    const broken = [...dynamic].filter(s => !resolvesShape(s))
     expect(broken).toEqual([])
   })
 })
