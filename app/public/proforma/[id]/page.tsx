@@ -26,7 +26,15 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   const bundle  = await getBundle(params.id)
   const cs      = bundle?.proforma?.company_snapshot as { name?: unknown } | null | undefined
   const company = str(cs?.name) ?? str((bundle?.settings as { company_name?: unknown } | null)?.company_name)
-  return { title: { absolute: company ? `Proforma — ${company}` : 'Proforma' } }
+  const title   = company ? `Proforma — ${company}` : 'Proforma'
+  const desc    = company ? `${company} tarafından hazırlanan proforma teklifi.` : 'Proforma teklifi.'
+  return {
+    title: { absolute: title },
+    description: desc,
+    // Link preview when the customer forwards the URL (WhatsApp / e-mail).
+    openGraph: { title, description: desc, type: 'website' },
+    robots: { index: false, follow: false }, // a private customer document — keep out of search
+  }
 }
 
 export default async function PublicProformaPage({ params }: { params: { id: string } }) {
