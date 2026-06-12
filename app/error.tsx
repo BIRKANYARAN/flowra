@@ -75,12 +75,12 @@ export default function RootError({
         <button
           onClick={reset}
           style={{
-            backgroundColor: '#4f46e5', color: '#ffffff', border: 'none',
+            backgroundColor: '#5b21b6', color: '#ffffff', border: 'none',
             padding: '10px 28px', borderRadius: '12px', fontSize: '14px',
             fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
           }}
-          onMouseOver={e => { (e.target as HTMLButtonElement).style.backgroundColor = '#4338ca' }}
-          onMouseOut={e =>  { (e.target as HTMLButtonElement).style.backgroundColor = '#4f46e5' }}
+          onMouseOver={e => { (e.target as HTMLButtonElement).style.backgroundColor = '#4c1d95' }}
+          onMouseOut={e =>  { (e.target as HTMLButtonElement).style.backgroundColor = '#5b21b6' }}
         >
           Tekrar Dene
         </button>
