@@ -99,7 +99,7 @@ export default function BalanceSheetPage() {
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Bilanço</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Bilanço</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Varlıklar = Kaynaklar + Özkaynak</p>
         </div>
         <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export default function BalanceSheetPage() {
 
       {/* Print header */}
       <div className="hidden print:block mb-4">
-        <h1 className="text-2xl font-black">Bilanço</h1>
+        <h1 className="text-2xl font-bold">Bilanço</h1>
         <p className="text-sm text-[#64748b]">{asOf} itibarıyla</p>
       </div>
 

@@ -59,7 +59,7 @@ export default function EmailSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">E-posta Bildirimleri</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">E-posta Bildirimleri</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Günlük uyarı özeti · Resend API entegrasyonu</p>
         </div>
         <Link href="/dashboard/settings" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">

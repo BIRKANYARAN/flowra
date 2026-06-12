@@ -89,7 +89,7 @@ export default async function KdvPage({
       <div className="flex flex-col gap-4 max-w-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">KDV Özeti</h1>
+            <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">KDV Özeti</h1>
             <p className="text-xs text-[#94a3b8] mt-0.5">Hesaplanan KDV − İndirilecek KDV = Net KDV</p>
           </div>
           <Link href="/dashboard/finance?tab=cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← CFO Cockpit</Link>
@@ -115,7 +115,7 @@ export default async function KdvPage({
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">KDV Özeti</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">KDV Özeti</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             {kdv.period_label} · Hesaplanan KDV − İndirilecek KDV = Net KDV
           </p>
@@ -128,7 +128,7 @@ export default async function KdvPage({
 
       {/* ── Print header ───────────────────────────────────────────────────── */}
       <div className="hidden print:block mb-4">
-        <h1 className="text-2xl font-black">KDV Beyan Özeti</h1>
+        <h1 className="text-2xl font-bold">KDV Beyan Özeti</h1>
         <p className="text-sm text-[#64748b]">{from} — {to}</p>
       </div>
 

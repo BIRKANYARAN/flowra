@@ -62,7 +62,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/dashboard/commercial?tab=sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-1 inline-block">← Satışlar</Link>
-          <h1 className="text-2xl font-black">{s.customer_name}</h1>
+          <h1 className="text-2xl font-bold">{s.customer_name}</h1>
           <p className="text-sm text-[#94a3b8] mt-0.5">{fmtDate(s.sale_date || s.created_at)}</p>
         </div>
         {s.proforma_no && s.proforma_id && s.proforma_exists ? (

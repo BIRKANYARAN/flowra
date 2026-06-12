@@ -150,7 +150,7 @@ export default async function HealthReportPage() {
             <div className="text-[10px] uppercase tracking-widest font-black text-[#94a3b8] mb-1">
               Mali Sağlık Raporu
             </div>
-            <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">{r.company_name}</h1>
+            <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">{r.company_name}</h1>
             <p className="text-xs text-[#94a3b8] mt-1">
               {r.period_label} · {today} · {r.generated_by}
             </p>

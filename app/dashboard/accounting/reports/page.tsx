@@ -49,7 +49,7 @@ export default async function AccountingReportsPage() {
       <div>
         <Link href="/dashboard/accounting" className="text-[11px] text-[#94a3b8] hover:text-brand-light font-semibold">← Muhasebe</Link>
         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1 mt-1">Muhasebe Merkezi</div>
-        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">Raporlama Paketi</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">Raporlama Paketi</h1>
         <p className="text-sm text-[#94a3b8] mt-1">Aylık CFO paketi · biçimli tablolar · mizan · yönetim paketi</p>
       </div>
       <Suspense fallback={<div className="fl-shimmer rounded-lg h-48" />}>

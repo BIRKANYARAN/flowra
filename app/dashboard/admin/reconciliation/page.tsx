@@ -101,7 +101,7 @@ export default async function ReconciliationHubPage() {
               <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-widest mb-1">
                 Yönetim · Kurumsal Kayıtlar
               </p>
-              <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">
+              <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">
                 Ortak Mutabakat Dosyaları
               </h1>
               <p className="text-sm text-[#64748b] mt-1">

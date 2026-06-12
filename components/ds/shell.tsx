@@ -46,7 +46,7 @@ export const TOKENS = {
   pageLabel: 'text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5',
 
   // Page hero title
-  heroTitle: 'text-2xl font-black tracking-tight text-[#0f172a] leading-tight',
+  heroTitle: 'text-2xl font-bold tracking-tight text-[#0f172a] leading-tight',
   heroSub:   'text-sm text-[#94a3b8] mt-1',
   heroSuper: 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1',
 

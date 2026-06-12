@@ -145,7 +145,7 @@ const DIMENSION_LABELS: Record<keyof DimensionScores, string> = {
 
 function GradeBadge({ grade, size = 'md' }: { grade: RiskGrade; size?: 'sm' | 'md' | 'lg' }) {
   const sizeClass = size === 'lg'
-    ? 'text-2xl font-black w-10 h-10'
+    ? 'text-2xl font-bold w-10 h-10'
     : size === 'sm'
     ? 'text-xs font-bold w-6 h-6'
     : 'text-base font-black w-8 h-8'

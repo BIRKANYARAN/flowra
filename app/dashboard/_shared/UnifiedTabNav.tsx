@@ -41,12 +41,12 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
       href={`${basePath}?tab=${tab.key}`}
       aria-current={isActive ? 'page' : undefined}
       className={`
-        relative flex items-center gap-1.5 px-3 py-2.5 text-[13px]
-        transition-colors duration-150 whitespace-nowrap flex-shrink-0 rounded-t-md
+        relative flex items-center gap-1.5 px-4 py-3 text-sm
+        transition-colors duration-150 whitespace-nowrap flex-shrink-0 -mb-px
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset
         ${isActive
           ? 'text-[#0f172a] font-semibold'
-          : 'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc] font-medium'
+          : 'text-[#64748b] hover:text-[#0f172a] font-medium'
         }
       `}
     >
@@ -68,7 +68,7 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
       {isActive && (
         <span
           aria-hidden
-          className="flowra-tab-underline absolute left-1.5 right-1.5 -bottom-px h-[2px] rounded-full bg-brand"
+          className="flowra-tab-underline absolute left-0 right-0 bottom-0 h-[2px] bg-brand"
         />
       )}
     </Link>

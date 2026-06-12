@@ -100,7 +100,7 @@ export default function ReportsHubPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Finansal Raporlar</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Finansal Raporlar</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Tüm tablolar ve PDF indirme</p>
         </div>
         <button

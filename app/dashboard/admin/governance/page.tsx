@@ -447,7 +447,7 @@ export default function GovernancePage() {
           <div className="flex items-center gap-2">
             <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-[#64748b]">← Yönetim</Link>
           </div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight mt-1">Ortak Yönetişim Sistemi</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight mt-1">Ortak Yönetişim Sistemi</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             Aylık finansal özet, ortak bakiye doğrulama ve resmi onay kaydı
           </p>

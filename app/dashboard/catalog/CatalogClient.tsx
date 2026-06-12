@@ -350,7 +350,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black">Katalog</h1>
+          <h1 className="text-2xl font-bold">Katalog</h1>
           <p className="text-sm text-[#64748b] mt-0.5">
             {filtered.length} / {products.length} ürün
           </p>

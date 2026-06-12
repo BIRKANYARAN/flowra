@@ -104,7 +104,7 @@ export default function NewPartnerPage() {
           ← Ortaklar
         </Link>
         <span className="text-[#e2e8f0]">/</span>
-        <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Yeni Ortak</h1>
+        <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Yeni Ortak</h1>
       </div>
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}

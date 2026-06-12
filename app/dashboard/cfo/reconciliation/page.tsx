@@ -143,7 +143,7 @@ export default function ReconciliationPage() {
       {/* Header */}
       <div className="flex items-center justify-between" data-print-hide>
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">GL Mutabakat</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">GL Mutabakat</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             GL hesap bakiyeleri · Operasyonel tablo karşılaştırması
             {lastRun && <span className="ml-1 text-[#cbd5e1]">· {lastRun} itibarıyla</span>}
@@ -178,7 +178,7 @@ export default function ReconciliationPage() {
       {/* Print-only header */}
       <div className="hidden print:block mb-2">
         <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-black">Flowra — CFO Raporu</div>
-        <h1 className="text-2xl font-black text-[#0f172a]">GL Mutabakat Raporu</h1>
+        <h1 className="text-2xl font-bold text-[#0f172a]">GL Mutabakat Raporu</h1>
         <p className="text-xs text-[#64748b] mt-0.5">
           {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })} itibarıyla
         </p>

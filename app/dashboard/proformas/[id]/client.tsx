@@ -272,7 +272,7 @@ export function ProformaDetailClient({
             ← Proformalar
           </Link>
           <div className="flex items-center gap-3 flex-wrap mt-0.5">
-            <h1 className="text-2xl font-black">{no}</h1>
+            <h1 className="text-2xl font-bold">{no}</h1>
             <span className="text-xs text-[#94a3b8] bg-[#f1f5f9] px-2 py-1 rounded font-bold">
               {currency}
             </span>

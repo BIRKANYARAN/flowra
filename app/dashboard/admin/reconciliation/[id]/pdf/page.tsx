@@ -110,7 +110,7 @@ export default function ReconciliationPdfPage({
               Mutabakat Dosyası
             </p>
           </div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">
             PDF İndir
           </h1>
           <p className="text-sm text-[#64748b] mt-1">

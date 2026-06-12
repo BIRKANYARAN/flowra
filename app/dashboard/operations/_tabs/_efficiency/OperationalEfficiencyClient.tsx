@@ -65,7 +65,7 @@ function ScoreRing({ score }: { score: number }) {
 
   return (
     <div className="flex flex-col items-center justify-center w-24 h-24 rounded-full border-4" style={{ borderColor: color }}>
-      <span className="text-2xl font-black" style={{ color }}>{score}</span>
+      <span className="text-2xl font-bold" style={{ color }}>{score}</span>
       <span className="text-[10px] text-[#64748b] font-semibold">/100</span>
     </div>
   )

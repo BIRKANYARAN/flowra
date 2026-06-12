@@ -252,7 +252,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             Trend
           </div>
-          <div className={`text-2xl font-black ${trendColor(stats.improvement_trend)}`}>
+          <div className={`text-2xl font-bold ${trendColor(stats.improvement_trend)}`}>
             {stats.improvement_trend === 'improving'
               ? '↑'
               : stats.improvement_trend === 'deteriorating'

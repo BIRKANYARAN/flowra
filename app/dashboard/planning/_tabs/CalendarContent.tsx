@@ -297,7 +297,7 @@ export function CalendarContent({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e8eaef]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Etkinlik</div>
-            <div className="text-2xl font-black text-[#0f172a] mt-1">{report.total_events}</div>
+            <div className="text-2xl font-bold text-[#0f172a] mt-1">{report.total_events}</div>
           </div>
           <div className={[
             'rounded-lg p-3 border',
@@ -310,13 +310,13 @@ export function CalendarContent({ companyId }: Props) {
               report.overdue_events > 0 ? 'text-red-400' : 'text-[#94a3b8]',
             ].join(' ')}>Gecikmiş</div>
             <div className={[
-              'text-2xl font-black mt-1',
+              'text-2xl font-bold mt-1',
               report.overdue_events > 0 ? 'text-red-600' : 'text-[#0f172a]',
             ].join(' ')}>{report.overdue_events}</div>
           </div>
           <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e8eaef]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">30 Günde Yaklaşan</div>
-            <div className="text-2xl font-black text-[#0f172a] mt-1">{report.upcoming_30d.length}</div>
+            <div className="text-2xl font-bold text-[#0f172a] mt-1">{report.upcoming_30d.length}</div>
           </div>
         </div>
       )}

@@ -87,7 +87,7 @@ export default async function WorkflowsPage() {
       <div className="max-w-3xl space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
+            <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
           </div>
           <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ← Yönetim
@@ -109,7 +109,7 @@ export default async function WorkflowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             {workflows.length} işlem onay bekliyor
           </p>

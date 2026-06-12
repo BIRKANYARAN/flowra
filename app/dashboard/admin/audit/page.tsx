@@ -167,7 +167,7 @@ export default function AdminAuditPage() {
     <div className="max-w-5xl">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-black">Denetim Kaydı</h1>
+        <h1 className="text-2xl font-bold">Denetim Kaydı</h1>
         <p className="text-sm text-[#64748b] mt-0.5">
           Şirketteki tüm işlem geçmişi · {total.toLocaleString('tr-TR')} kayıt
         </p>

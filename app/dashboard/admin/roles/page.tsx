@@ -49,7 +49,7 @@ export default async function RolesPage() {
       <div>
         <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-[#64748b]">← Yönetim</Link>
         <div className="flex items-center gap-3 mt-1">
-          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Yetkilendirme</h1>
+          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">Yetkilendirme</h1>
           <Link href="/dashboard/admin/users"
             className="text-xs text-brand-light font-semibold hover:text-brand">
             Ekip Yönetimi →

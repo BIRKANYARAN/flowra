@@ -177,7 +177,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-[#64748b]">← Yönetim</Link>
-          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] mt-1">Ekip Yönetimi</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] mt-1">Ekip Yönetimi</h1>
           <p className="text-sm text-[#64748b] mt-0.5">
             {activeMembers.length} aktif üye
             {pendingMembers.length > 0 ? `, ${pendingMembers.length} bekleyen davet` : ''}

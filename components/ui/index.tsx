@@ -194,7 +194,7 @@ export function Money({
     normal: 'text-sm font-semibold',
     strong: 'text-sm font-bold',
     xl:     'text-lg font-black',
-    kpi:    'text-2xl font-black tracking-tight',
+    kpi:    'text-2xl font-bold tracking-tight',
   }[emphasis]
   const toneCls = {
     neutral:  'text-[#0f172a]',

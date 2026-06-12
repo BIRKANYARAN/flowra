@@ -319,7 +319,7 @@ export default function BankReconciliationPage() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">CFO · Finans</div>
-          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">Banka Ekstresi Mutabakatı</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">Banka Ekstresi Mutabakatı</h1>
           <p className="text-sm text-[#94a3b8] mt-1">Banka hareketlerini Flowra satış ve gider ödemeleriyle karşılaştır</p>
         </div>
         <div className="flex items-center gap-2">
