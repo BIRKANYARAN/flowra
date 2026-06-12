@@ -191,13 +191,15 @@ export async function PipelineContent({ companyId }: Props) {
               label: 'Dönüşüm Oranı',
               value: `%${conversionRate.toFixed(0)}`,
               sub:   `${convertedCount} / ${totalPfCount}`,
-              color: conversionRate >= 30 ? 'text-pos-text' : conversionRate >= 15 ? 'text-warn-text' : 'text-neg',
+              // Signal-only: green when genuinely healthy, otherwise neutral ink —
+              // don't alarm-red a conversion rate (red is for money lost).
+              color: totalPfCount > 0 && conversionRate >= 30 ? 'text-pos-text' : 'text-[#0f172a]',
             },
             {
               label: 'Ort. Teklif Tutarı',
               value: avgDealSize > 0 ? serverFmt(avgDealSize) : '—',
               sub:   'teklif başına',
-              color: 'text-info-text',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'Toplam Boru Hattı',
@@ -343,7 +345,7 @@ export async function PipelineContent({ companyId }: Props) {
                 label: 'Açık Pipeline',
                 value: funnelReport.open_pipeline_value_try > 0
                   ? serverFmt(funnelReport.open_pipeline_value_try) : '—',
-                color: 'text-info-text',
+                color: 'text-[#0f172a]',
               },
               {
                 label: 'Ağırlıklı Pipeline',
@@ -377,7 +379,7 @@ export async function PipelineContent({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
-          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-info-text' },
+          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-[#0f172a]' },
           { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} tahsilat bekliyor` : 'tahsilat tamamlandı', color: 'text-[#0f172a]' },
           { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue <= 0 ? 'veri yok' : totalCogs > 0 ? `%${grossMargin.toFixed(1)} marj` : 'maliyet girilmedi', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
