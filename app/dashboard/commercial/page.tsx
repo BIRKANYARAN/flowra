@@ -12,6 +12,7 @@ import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { COMMERCIAL_TABS } from '@/lib/nav-config'
 import { CommercialContextBar } from './_shared/CommercialContextBar'
+import { HubHeroAction, type HeroAction } from '@/components/dashboard/HubHeroAction'
 
 function TabSkeleton() {
   return (
@@ -82,17 +83,28 @@ export default async function CommercialPage({ searchParams }: PageProps) {
     ozet: 'Satış Özeti', teklifler: 'Teklifler', sales: 'Satışlar',
     collections: 'Tahsilatlar', customers: 'Müşteriler',
   }
+  // Per-tab primary action surfaced in the hero (top), not buried in the table.
+  const tabActions: Record<string, HeroAction | null> = {
+    ozet:        { label: '+ Yeni Teklif',   href: '/dashboard/proformas/new' },
+    teklifler:   { label: '+ Yeni Proforma', href: '/dashboard/proformas/new' },
+    sales:       { label: '+ Yeni Satış',    href: '/dashboard/commercial?tab=sales&new=1' },
+    collections: null,
+    customers:   { label: '+ Yeni Müşteri',  href: '/dashboard/commercial?tab=customers&new=1' },
+  }
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl">
 
       {/* PAGE HERO */}
-      <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ticari Akış Merkezi</div>
-        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
-          {tabTitles[activeTab] ?? 'Ticari Akış'}
-        </h1>
-        <p className="text-xs text-[#94a3b8] mt-0.5">{tabSubtitles[activeTab] ?? ''}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ticari Akış Merkezi</div>
+          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
+            {tabTitles[activeTab] ?? 'Ticari Akış'}
+          </h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">{tabSubtitles[activeTab] ?? ''}</p>
+        </div>
+        <HubHeroAction action={tabActions[activeTab]} />
       </div>
 
       {/* Sticky tab nav + context bar */}

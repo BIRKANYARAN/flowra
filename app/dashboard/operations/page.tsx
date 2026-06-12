@@ -12,6 +12,7 @@ import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { OPERATIONS_TABS } from '@/lib/nav-config'
 import { OperationsContextBar } from './_shared/OperationsContextBar'
+import { HubHeroAction, type HeroAction } from '@/components/dashboard/HubHeroAction'
 import { KomutaContent }  from './_tabs/KomutaContent'
 import { ExpensesContent } from './_tabs/ExpensesContent'
 import { CatalogContent }  from './_tabs/CatalogContent'
@@ -195,17 +196,28 @@ export default async function OperationsPage({ searchParams }: PageProps) {
     stock:    'Stok durumu · FIFO değerleme · Kritik seviyeler',
     orders:   'Sipariş takibi · Tedarikçi süreçleri · Teslimat durumu',
   }
+  // Per-tab primary action surfaced in the hero (top), not buried in the table.
+  const opActions: Record<string, HeroAction | null> = {
+    komuta:   null,
+    expenses: { label: '+ Masraf Ekle', href: '/dashboard/operations?tab=expenses&new=1' },
+    catalog:  { label: '+ Yeni Ürün',   href: '/dashboard/operations?tab=catalog&new=1' },
+    stock:    null,
+    orders:   null,
+  }
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl">
 
       {/* PAGE HERO */}
-      <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Operasyon Merkezi</div>
-        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
-          {opTitles[activeTab] ?? 'Operasyon'}
-        </h1>
-        <p className="text-sm text-[#94a3b8] mt-1">{opSubs[activeTab] ?? ''}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Operasyon Merkezi</div>
+          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
+            {opTitles[activeTab] ?? 'Operasyon'}
+          </h1>
+          <p className="text-sm text-[#94a3b8] mt-1">{opSubs[activeTab] ?? ''}</p>
+        </div>
+        <HubHeroAction action={opActions[activeTab]} />
       </div>
 
       {/* Sticky tab nav + context bar */}
