@@ -62,7 +62,7 @@ export function SupplierPerformancePanel() {
   if (loading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Performansı
         </div>
         <div className="text-xs text-[#94a3b8]">Yükleniyor…</div>
@@ -73,7 +73,7 @@ export function SupplierPerformancePanel() {
   if (error || !report) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Performansı
         </div>
         <div className="text-xs text-[#94a3b8]">{error ?? 'Veri bulunamadı'}</div>
@@ -88,7 +88,7 @@ export function SupplierPerformancePanel() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Tedarikçi Performansı
         </span>
         <span className="text-[9px] text-[#94a3b8]">{report.as_of_date} itibarıyla · Son 12 ay</span>
@@ -134,7 +134,7 @@ export function SupplierPerformancePanel() {
               i % 3 < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''
             } ${i < 3 ? 'border-b border-[#e8eaef]' : ''}`}
           >
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {card.label}
             </div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>
@@ -147,7 +147,7 @@ export function SupplierPerformancePanel() {
       {/* ── Portfolio fulfillment ──────────────────────────────────────────── */}
       {report.avg_portfolio_fulfillment_pct !== null && (
         <div className="flex items-center gap-3 bg-[#f8fafc] rounded px-3 py-2">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Ortalama Portföy Karşılama Oranı
           </span>
           <span className={`text-sm font-black tabular-nums ${
@@ -165,19 +165,19 @@ export function SupplierPerformancePanel() {
       {/* ── Supplier performance table ─────────────────────────────────────── */}
       {top8.length > 0 && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             Tedarikçi Performans Tablosu
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
-                  <th className="text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Derece</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Karşılama</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Zamanında</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Ort. Teslimat</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Son Sipariş</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
+                  <th className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Derece</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Karşılama</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Zamanında</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Ort. Teslimat</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pl-2">Son Sipariş</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
@@ -187,7 +187,7 @@ export function SupplierPerformancePanel() {
                       {sup.supplier_name}
                     </td>
                     <td className="py-1.5 px-2 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${GRADE_COLORS[sup.performance_grade]}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${GRADE_COLORS[sup.performance_grade]}`}>
                         {GRADE_LABELS[sup.performance_grade]}
                       </span>
                     </td>

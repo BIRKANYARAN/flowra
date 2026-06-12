@@ -235,7 +235,7 @@ function StatusBadge({ status }: { status: ReconciliationReport['reconciliation_
 function KpiCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
     <div className={cn('rounded border px-4 py-3', highlight ? 'bg-neg-light border-neg-light' : 'bg-white border-[#e8eaef]')}>
-      <div className={cn('text-[0.65rem] font-black uppercase tracking-widest', highlight ? 'text-neg-text' : 'text-[#94a3b8]')}>{label}</div>
+      <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', highlight ? 'text-neg-text' : 'text-[#94a3b8]')}>{label}</div>
       <div className={cn('text-xl font-black tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
       {sub && <div className={cn('text-[10px] mt-0.5', highlight ? 'text-neg' : 'text-[#94a3b8]')}>{sub}</div>}
     </div>
@@ -318,7 +318,7 @@ export default function BankReconciliationPage() {
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">CFO · Finans</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">CFO · Finans</div>
           <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">Banka Ekstresi Mutabakatı</h1>
           <p className="text-sm text-[#94a3b8] mt-1">Banka hareketlerini Flowra satış ve gider ödemeleriyle karşılaştır</p>
         </div>
@@ -337,7 +337,7 @@ export default function BankReconciliationPage() {
 
       {/* ── 1. Period Selector ────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Seçimi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Dönem Seçimi</div>
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-semibold text-[#64748b]">Başlangıç</label>
@@ -396,7 +396,7 @@ export default function BankReconciliationPage() {
         <>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Özeti</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem Özeti</span>
               <StatusBadge status={report.reconciliation_status} />
             </div>
             <div className="text-[10px] text-[#94a3b8]">
@@ -430,7 +430,7 @@ export default function BankReconciliationPage() {
           {/* Flowra vs Bank summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Gelirler (Satışlar)</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Flowra Gelirler (Satışlar)</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
                 <span className="font-mono font-semibold text-[#334155] tabular-nums">{fmtTRY(report.flowra_inflows_try)}</span>
@@ -441,7 +441,7 @@ export default function BankReconciliationPage() {
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Giderler</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Flowra Giderler</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
                 <span className="font-mono font-semibold text-[#334155] tabular-nums">{fmtTRY(report.flowra_outflows_try)}</span>
@@ -454,13 +454,13 @@ export default function BankReconciliationPage() {
           </div>
 
           {/* ── 3. Matching Workbench ────────────────────────────────────────── */}
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Eşleştirme Tezgahı</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eşleştirme Tezgahı</div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left: Bank lines */}
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-                <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Banka Satırları
                 </span>
                 <span className="text-[10px] text-[#94a3b8]">
@@ -548,7 +548,7 @@ export default function BankReconciliationPage() {
             {/* Right: Unmatched Flowra records */}
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-                <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Eşleşmemiş Flowra Kayıtları
                 </span>
                 <span className="text-[10px] text-[#94a3b8]">
@@ -566,7 +566,7 @@ export default function BankReconciliationPage() {
                   {report.unmatched_flowra_inflows.length > 0 && (
                     <>
                       <div className="px-4 py-2 bg-[#f8fafc]">
-                        <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Satış Ödemeleri</span>
+                        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Satış Ödemeleri</span>
                       </div>
                       {report.unmatched_flowra_inflows.map(inflow => (
                         <div key={inflow.id} className="px-4 py-3 hover:bg-[#f8fafc]/60">
@@ -595,7 +595,7 @@ export default function BankReconciliationPage() {
                   {report.unmatched_flowra_outflows.length > 0 && (
                     <>
                       <div className="px-4 py-2 bg-[#f8fafc]">
-                        <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Gider Ödemeleri</span>
+                        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Gider Ödemeleri</span>
                       </div>
                       {report.unmatched_flowra_outflows.map(outflow => (
                         <div key={outflow.id} className="px-4 py-3 hover:bg-[#f8fafc]/60">

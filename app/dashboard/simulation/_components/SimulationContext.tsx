@@ -64,7 +64,7 @@ export async function SimulationContext({ companyId }: Props) {
 
       {/* ── Context header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2">
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
           Mevcut Finansal Durum
         </span>
         <span className="text-[9px] text-[#cbd5e1]">·</span>
@@ -123,7 +123,7 @@ export async function SimulationContext({ companyId }: Props) {
           return (
             <div key={kpi.label}
               className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 hover:border-[#e8eaef] transition-colors">
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{kpi.label}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{kpi.label}</div>
               <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-[#0f172a]'}`}>
                 {kpi.value}
               </div>
@@ -143,7 +143,7 @@ export async function SimulationContext({ companyId }: Props) {
             : 'bg-[#f8fafc] border-[#e8eaef]'
         }`}>
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#64748b]">
               Başabaş Noktası
             </span>
             <span className="text-sm font-black text-[#0f172a] tabular-nums">

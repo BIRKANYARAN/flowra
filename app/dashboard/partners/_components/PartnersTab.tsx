@@ -69,7 +69,7 @@ export function PartnersTab({
             { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           ].map(c => (
             <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-              <div className={`text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
+              <div className={`text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
               <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
           ))}
@@ -161,17 +161,17 @@ export function PartnersTab({
                     </div>
                     <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-right shrink-0">
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bakiye</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Bakiye</div>
                         <div className={`text-xs font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                           {fmt(b?.partner_balance_try ?? 0)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtılan</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dağıtılan</div>
                         <div className="text-xs font-black tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Sermaye</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Sermaye</div>
                         <div className="text-xs font-black tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ export function PartnersTab({
 
                   {expandedTxId === p.id && (
                     <div className="mt-3 pt-3 border-t border-[#e8eaef]">
-                      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">İşlem Geçmişi</div>
+                      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">İşlem Geçmişi</div>
                       {loadingTxId === p.id ? (
                         <div className="py-3 text-xs text-[#94a3b8]">Yükleniyor...</div>
                       ) : !partnerTxs[p.id] || partnerTxs[p.id].length === 0 ? (

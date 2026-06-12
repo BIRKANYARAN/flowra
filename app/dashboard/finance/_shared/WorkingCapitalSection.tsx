@@ -41,7 +41,7 @@ function CccGradeBadge({ grade }: { grade: WorkingCapitalMetrics['ccc_grade'] })
     poor:      'Zayıf',
   }
   return (
-    <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded border ${map[grade]}`}>
+    <span className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border ${map[grade]}`}>
       {labels[grade]}
     </span>
   )
@@ -62,7 +62,7 @@ function MetricCard({
 }) {
   return (
     <div className={`rounded border px-4 py-3 ${highlight ? 'bg-brand-subtle/10 border-brand/20' : 'bg-white border-[#e8eaef]'}`}>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
         {label}
       </div>
       <div className="flex items-end gap-1.5">
@@ -104,7 +104,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
   if (!metrics || (metrics.total_revenue_try === 0 && metrics.total_cogs_try === 0)) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Çalışma Sermayesi
         </div>
         <p className="text-xs text-[#94a3b8] py-2">
@@ -135,7 +135,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Çalışma Sermayesi
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -155,7 +155,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
                                             'bg-neg-light border-neg-light'
       }`}>
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest opacity-60 mb-0.5">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider opacity-60 mb-0.5">
             Nakit Dönüşüm Döngüsü (CCC)
           </div>
           <div className="text-3xl font-black tabular-nums">

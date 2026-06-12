@@ -42,12 +42,12 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
               <table className="w-full text-xs min-w-[500px]">
                 <thead>
                   <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
+                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Çeyrek</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ciro</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-brand-light">Brüt Kâr</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">Net Kâr</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt Marj</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-warn">KV Matrahı</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
@@ -86,7 +86,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
             {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
               <div className="border-t border-[#e8eaef]">
                 <div className="px-4 py-3 flex items-center justify-between">
-                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
+                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
                   <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2 py-0.5 rounded">Toplam {fmtTRY(ytd.total_gecici)}</span>
                 </div>
                 <div className="divide-y divide-[#f1f5f9]">

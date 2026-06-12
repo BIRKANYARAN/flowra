@@ -36,7 +36,7 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             GL Mutabakat Raporu
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -90,11 +90,11 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="text-left px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap</th>
-                <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL</th>
-                <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel</th>
-                <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fark %</th>
-                <th className="text-center px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+                <th className="text-left px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hesap</th>
+                <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">GL</th>
+                <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Operasyonel</th>
+                <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Fark %</th>
+                <th className="text-center px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

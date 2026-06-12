@@ -113,7 +113,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
       {/* ── Header + method toggle ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Gelir Tanıma — {report.period_label}
           </h3>
         </div>
@@ -257,7 +257,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
         />
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Toplam Fark
             </div>
             <div className="text-lg font-black tabular-nums text-[#0f172a]">
@@ -265,7 +265,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Aylık Ort. Fark
             </div>
             <div className="text-lg font-black tabular-nums text-[#0f172a]">
@@ -273,7 +273,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Fark Oranı
             </div>
             <div className="text-lg font-black tabular-nums text-[#0f172a]">

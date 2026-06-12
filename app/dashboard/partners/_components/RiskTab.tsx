@@ -140,7 +140,7 @@ function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]/60">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Isı Haritası</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Risk Isı Haritası</div>
         <div className="text-[10px] text-[#94a3b8] mt-0.5">
           Yeşil ≥70 · Turuncu 40–69 · Kırmızı &lt;40 · Not: A≥80 · B≥60 · C≥40 · D&lt;40
         </div>
@@ -149,15 +149,15 @@ function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="border-b border-[#e8eaef]">
-              <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[100px]">
+              <th className="px-3 py-2 text-left text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[100px]">
                 Ortak
               </th>
               {DIM_KEYS.map(k => (
-                <th key={k} className="px-2 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap min-w-[72px]">
+                <th key={k} className="px-2 py-2 text-center text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap min-w-[72px]">
                   {DIM_LABELS[k]}
                 </th>
               ))}
-              <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+              <th className="px-3 py-2 text-center text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                 Genel Not
               </th>
             </tr>
@@ -228,7 +228,7 @@ function DimScoreCell({ dim }: { dim: NewDimension }) {
   const color = dim.is_flagged ? 'text-neg-text' : dim.score >= 75 ? 'text-pos-text' : 'text-warn-text'
   return (
     <div className="bg-[#f8fafc] rounded px-2 py-1.5">
-      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] truncate mb-0.5">
+      <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] truncate mb-0.5">
         {dim.label}
       </div>
       <div className={`text-xs font-black tabular-nums ${color}`}>
@@ -294,7 +294,7 @@ function NewRiskCard({ p }: { p: NewProfile }) {
       {/* Top concern */}
       {p.top_concern && (
         <div className="px-4 py-2 bg-neg-light/50 border-t border-neg-light/60">
-          <span className="text-[9px] font-black uppercase tracking-widest text-neg-text mr-2">Ana Endişe</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-neg-text mr-2">Ana Endişe</span>
           <span className="text-[11px] text-neg-text">{p.top_concern}</span>
         </div>
       )}
@@ -357,21 +357,21 @@ function PartnerRiskDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {/* Avg score chip */}
         <div className={`border rounded px-3 py-2.5 ${avgGradeColors}`}>
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-0.5">Portföy Skoru</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-0.5">Portföy Skoru</div>
           <div className="text-xl font-black tabular-nums leading-none">{avg_score.toFixed(0)}</div>
           <div className="text-[10px] opacity-70 mt-0.5">Not: {avgGrade}</div>
         </div>
 
         {/* Flagged partners */}
         <div className={`border rounded px-3 py-2.5 ${flagged_partners > 0 ? 'bg-neg-light border-neg-light text-neg-text' : 'bg-pos-light border-pos-light text-pos-text'}`}>
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-0.5">Riskli Ortak</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-0.5">Riskli Ortak</div>
           <div className="text-xl font-black tabular-nums leading-none">{flagged_partners}</div>
           <div className="text-[10px] opacity-70 mt-0.5">D veya F notu</div>
         </div>
 
         {/* Grade distribution */}
         <div className="col-span-2 border border-[#e8eaef] rounded px-3 py-2.5 bg-white">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Not Dağılımı</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">Not Dağılımı</div>
           <div className="flex items-center gap-2 flex-wrap">
             {(['A', 'B', 'C', 'D', 'F'] as const).map(g => (
               <div key={g} className="flex items-center gap-1">
@@ -386,7 +386,7 @@ function PartnerRiskDashboard() {
       {/* Critical flags */}
       {critical_flags.length > 0 && (
         <div className="bg-neg-light/60 border border-neg-light rounded px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-2">
             Kritik Uyarılar
           </div>
           <div className="space-y-1">
@@ -466,7 +466,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Section 1: Partner Risk Dashboard (new) ───────────────────────────── */}
       <div className="space-y-2">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Partner Risk Dashboard
         </div>
         <PartnerRiskDashboard />
@@ -474,7 +474,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Divider ───────────────────────────────────────────────────────────── */}
       <div className="border-t border-[#e8eaef] pt-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           PCLE Risk Analizi
         </div>
       </div>
@@ -482,7 +482,7 @@ export function RiskTab({ loading }: RiskTabProps) {
       {/* ── Section 2: Company-Level PCLE Grade Banner ───────────────────────── */}
       <div className={`rounded border px-5 py-4 flex items-center justify-between gap-4 ${GRADE_COLORS[rs.company_grade]}`}>
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1.5">Şirket Geneli Risk Notu</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1.5">Şirket Geneli Risk Notu</div>
           <div className="flex items-center gap-3">
             <span className="text-4xl font-black leading-none">{rs.company_grade}</span>
             <div>
@@ -513,7 +513,7 @@ export function RiskTab({ loading }: RiskTabProps) {
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-neg font-black text-base shrink-0">!</span>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-1">
               Konsantrasyon Uyarısı
             </div>
             <div className="text-xs text-neg-text">{rs.concentration_warning}</div>
@@ -529,7 +529,7 @@ export function RiskTab({ loading }: RiskTabProps) {
       {/* ── Compliance Warnings ─────────────────────────────────────────────── */}
       {cw.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text mb-2">
             ⚠ Yasal Uyum Uyarıları
           </div>
           <div className="space-y-1.5">
@@ -597,7 +597,7 @@ export function RiskTab({ loading }: RiskTabProps) {
           {/* Recommended action */}
           {p.recommended_action && (
             <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e8eaef] flex items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] shrink-0">Öneri</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] shrink-0">Öneri</span>
               <span className="text-[11px] text-[#64748b]">{p.recommended_action}</span>
             </div>
           )}

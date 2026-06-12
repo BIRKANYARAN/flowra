@@ -51,7 +51,7 @@ export function CashProjectionSection() {
   if (isError || !data?.report) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           90 Günlük Nakit Projeksiyonu
         </div>
         <div className="text-xs text-neg-text bg-neg-light border border-neg-light rounded px-3 py-2">
@@ -69,7 +69,7 @@ export function CashProjectionSection() {
       <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               90 Günlük Nakit Projeksiyonu
             </div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -106,7 +106,7 @@ export function CashProjectionSection() {
           },
         ].map(chip => (
           <div key={chip.label} className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {chip.label}
             </div>
             <div className={`text-base font-black tabular-nums leading-none ${chip.tone}`}>
@@ -128,12 +128,12 @@ export function CashProjectionSection() {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-t border-[#e8eaef] mt-3">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hafta</th>
-              <th className="text-right px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Taahhütlü Giriş</th>
-              <th className="text-right px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Taahhütlü Çıkış</th>
-              <th className="text-right px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">Net Akış</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#0f172a]">Kümülatif</th>
-              <th className="text-center px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Güven</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hafta</th>
+              <th className="text-right px-3 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">Taahhütlü Giriş</th>
+              <th className="text-right px-3 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-neg">Taahhütlü Çıkış</th>
+              <th className="text-right px-3 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">Net Akış</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#0f172a]">Kümülatif</th>
+              <th className="text-center px-3 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Güven</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -192,7 +192,7 @@ export function CashProjectionSection() {
             { label: 'Tahmini Çıkış',       value: r.total_estimated_outflow,  tone: 'text-neg opacity-60' },
           ].map(item => (
             <div key={item.label}>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{item.label}</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</div>
               <div className={`text-sm font-black tabular-nums leading-none mt-0.5 ${item.tone}`}>
                 {fmt(item.value)}
               </div>

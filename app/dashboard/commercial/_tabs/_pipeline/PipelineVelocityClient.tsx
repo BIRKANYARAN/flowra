@@ -106,7 +106,7 @@ interface KpiCardProps {
 function KpiCard({ label, value, sub, color = 'text-[#0f172a]' }: KpiCardProps) {
   return (
     <div className="p-3">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
         {label}
       </div>
       <div className={`text-xl font-black tabular-nums leading-none ${color}`}>
@@ -157,7 +157,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Satış Boru Hattı Hızı
         </span>
         <HealthBadge health={current.pipeline_health} />
@@ -223,7 +223,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
       {summary.total_revenue_from_pipeline > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Pipeline'dan Toplam Gelir
             </div>
             <div className="text-lg font-black text-[#0f172a] tabular-nums mt-0.5">
@@ -233,13 +233,13 @@ export default function PipelineVelocityClient({ companyId }: Props) {
           <div className="flex gap-4 text-right">
             {summary.best_conversion_month && (
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">En İyi Ay</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">En İyi Ay</div>
                 <div className="text-sm font-bold text-emerald-700">{fmtMonth(summary.best_conversion_month)}</div>
               </div>
             )}
             {summary.worst_conversion_month && (
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">En Kötü Ay</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">En Kötü Ay</div>
                 <div className="text-sm font-bold text-red-600">{fmtMonth(summary.worst_conversion_month)}</div>
               </div>
             )}
@@ -250,7 +250,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
       {/* Stuck deals warning */}
       {showStuckWarning && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text mb-1">
             Takılı Anlaşma Uyarısı
           </div>
           <div className="text-[10px] text-warn-text">
@@ -269,14 +269,14 @@ export default function PipelineVelocityClient({ companyId }: Props) {
       {monthly_flow.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[#e8eaef]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Aylık Pipeline Akışı — Son 6 Ay
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2">Ay</th>
                   <th className="text-right px-4 py-2">Oluştu</th>
                   <th className="text-right px-4 py-2">Dönüştü</th>

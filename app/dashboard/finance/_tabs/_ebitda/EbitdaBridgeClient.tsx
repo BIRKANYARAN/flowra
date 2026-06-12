@@ -124,14 +124,14 @@ function PeriodTable({ report }: { report: EbitdaBridgeReport }) {
 
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
         Dönem Karşılaştırması
       </div>
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className="border-b border-[#e8eaef]">
             {['Kalem', report.prior_period, report.current_period, 'Fark'].map(h => (
-              <th key={h} className={`py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] ${h === 'Kalem' ? 'text-left' : 'text-right'}`}>
+              <th key={h} className={`py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8] ${h === 'Kalem' ? 'text-left' : 'text-right'}`}>
                 {h}
               </th>
             ))}
@@ -239,13 +239,13 @@ export function EbitdaBridgeClient({ companyId }: Props) {
     <div className="space-y-4">
 
       {/* ── Section header ───────────────────────────────────────────────────── */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         FAVÖK Köprüsü
       </div>
 
       {/* ── Bridge waterfall ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
           {report.prior_period} → {report.current_period} FAVÖK Değişimi
         </div>
 
@@ -273,7 +273,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
 
       {/* ── Trend & driver card ───────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
           Trend & Birincil Etken
         </div>
         <div className="flex items-start gap-6 flex-wrap">

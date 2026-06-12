@@ -81,7 +81,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden mb-5">
         <table className="w-full">
           <thead>
-            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+            <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-5 py-3">Ürün</th>
               <th className="text-center px-3 py-3">Miktar</th>
               <th className="text-right px-3 py-3">Birim Fiyat</th>
@@ -140,7 +140,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
 
       {/* Profit card */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Finansal Özet</h2>
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">Finansal Özet</h2>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-xs text-[#94a3b8] mb-1">Maliyet</div>

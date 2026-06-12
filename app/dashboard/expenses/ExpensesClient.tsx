@@ -18,7 +18,7 @@ import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors bg-white'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 
 export const CATEGORY_LABELS: Record<string, string> = {
   general:      'Genel',
@@ -383,7 +383,7 @@ export default function ExpensesClient({
           {/* ── One-off expenses ──────────────────────────────────────────────── */}
           {list.length > 0 && (
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
-              <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
+              <div className="grid grid-cols-12 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
                 <div className="col-span-2">Tarih</div>
@@ -454,7 +454,7 @@ export default function ExpensesClient({
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
               <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
-                <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
+                <div className="grid grid-cols-12 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>
                   <div className="col-span-2">Sıklık</div>

@@ -127,7 +127,7 @@ export function PriceOptimizationClient() {
       {/* Header strip */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Optimizasyonu</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Fiyat Optimizasyonu</div>
           <div className="text-xs text-[#64748b] mt-0.5">
             Son {report.period_months} ay · {report.per_product.length} ürün analiz edildi
           </div>
@@ -170,7 +170,7 @@ export function PriceOptimizationClient() {
           },
         ].map((card, i) => (
           <div key={card.label} className={`px-4 py-2.5 ${i === 0 ? 'rounded-bl' : ''}`}>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{card.label}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{card.label}</div>
             <div className={`text-lg font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">{card.sub}</div>
           </div>
@@ -189,12 +189,12 @@ export function PriceOptimizationClient() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Liste / Ort.</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Tavsiye</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">İskonto</th>
-              <th className="text-center px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Tutarlılık</th>
-              <th className="text-center px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Strateji</th>
+              <th className="text-left px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Ürün</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Liste / Ort.</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Tavsiye</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">İskonto</th>
+              <th className="text-center px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Tutarlılık</th>
+              <th className="text-center px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Strateji</th>
             </tr>
           </thead>
           <tbody>

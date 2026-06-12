@@ -324,7 +324,7 @@ export default function PeriodClosePage() {
 
                   {r && (
                     <>
-                      <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+                      <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
                         Kapanış Kontrol Listesi — {r.checks.length} kontrol
                       </p>
 
@@ -334,7 +334,7 @@ export default function PeriodClosePage() {
                         if (catChecks.length === 0) return null
                         return (
                           <div key={cat} className="mb-3">
-                            <p className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+                            <p className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
                               {CATEGORY_LABEL[cat]}
                             </p>
                             <div className="space-y-1.5">

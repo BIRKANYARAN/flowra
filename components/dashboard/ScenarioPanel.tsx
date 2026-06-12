@@ -86,7 +86,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
   const comb_runway = calcRunway(comb_cash, comb_burn)
 
   const SL = 'flex flex-col gap-1'
-  const SLabel = 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]'
+  const SLabel = 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]'
   const SValue = 'text-xs text-[#94a3b8] tabular-nums'
 
   return (

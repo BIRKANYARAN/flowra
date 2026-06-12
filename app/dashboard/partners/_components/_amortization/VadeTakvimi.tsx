@@ -99,7 +99,7 @@ function RefinancingScoreChip({ score }: { score: number }) {
 
   return (
     <div className={`inline-flex items-center gap-2 rounded border px-3 py-1.5 ${color}`}>
-      <span className="text-[0.6rem] font-black uppercase tracking-widest">Yeniden Finansman Baskısı</span>
+      <span className="text-[0.6rem] font-bold uppercase tracking-wider">Yeniden Finansman Baskısı</span>
       <span className="text-base font-black tabular-nums">{rounded}</span>
       <span className="text-[0.65rem] font-semibold">/100</span>
       <span className="text-[0.65rem] font-semibold">·</span>
@@ -314,7 +314,7 @@ export function VadeTakvimi() {
 
       {/* Maturity cliffs summary (replaces 36-month schedule) */}
       <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Vade Dağılımı
         </div>
         <MaturityScheduleTable schedule={scheduleForWarnings} />

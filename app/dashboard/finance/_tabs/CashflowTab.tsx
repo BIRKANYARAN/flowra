@@ -142,7 +142,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
           },
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
         ))}
@@ -166,7 +166,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baskı Haritası</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Baskı Haritası</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded ${
@@ -211,7 +211,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Tablosu (Dönem Özeti)</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Nakit Akış Tablosu (Dönem Özeti)</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">
                 {from} – {today} · Faaliyet / Yatırım / Finansman
               </p>
@@ -258,7 +258,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
               <div key={section.key} className="px-4 py-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-base">{section.icon}</span>
-                  <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{section.label}</span>
+                  <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{section.label}</span>
                 </div>
                 <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
                   {fmt(section.value)}
@@ -303,7 +303,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Köprüsü</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Nakit Akış Köprüsü</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">
                 Son 3 ay — Faaliyet / Yatırım / Finansman köprüsü
               </p>
@@ -331,7 +331,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
               <div key={item.label} className="px-4 py-3">
                 <div className="flex items-center gap-1 mb-1">
                   <span className="text-sm">{item.icon}</span>
-                  <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{item.label}</span>
+                  <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</span>
                 </div>
                 <div className={`text-base font-black tabular-nums leading-none ${tone}`}>
                   {fmt(item.value)}
@@ -351,7 +351,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
           return (
             <div>
               <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
-                <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
                   {period.label} — Köprü Detayı
                 </span>
                 <span className="text-[10px] text-[#94a3b8]">
@@ -432,7 +432,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">12 Aylık Nakit Projeksiyonu</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
               const barH     = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
@@ -464,16 +464,16 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Projeksiyon Detayı</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Projeksiyon Detayı</div>
           </div>
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Gelen</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Giden</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Nakit Sonu</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ay</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">Gelen</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-neg">Giden</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-brand-light">Nakit Sonu</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -512,7 +512,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {/* Zone 7 — Tahmin (30/60/90-day cash flow prediction) */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmin — 30/60/90 Günlük Nakit Projeksiyonu</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tahmin — 30/60/90 Günlük Nakit Projeksiyonu</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Alacak davranışı + taahhütler temelinde iyimser / baz / kötümser senaryo analizi
           </p>

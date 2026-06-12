@@ -186,7 +186,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
   if (total === 0) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Alacak Yaşlandırma</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Alacak Yaşlandırma</div>
         <div className="text-xs text-[#64748b]">Açık alacak bulunmuyor.</div>
       </div>
     )
@@ -200,7 +200,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Alacak Yaşlandırma</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Alacak Yaşlandırma</div>
           <div className="text-xs text-[#64748b] mt-0.5">Müşteri bazlı yaş kovası, tahsilat önceliği ve tahmin edilen tahsilat</div>
         </div>
         <div className="flex items-center gap-4 text-xs">
@@ -277,7 +277,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
       {top_priority_actions.length > 0 && (
         <div className="border-t border-[#f1f5f9]">
           <div className="px-4 py-2">
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
               Öncelikli Tahsilat Aksiyonları
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
       {customer_aging.length > 0 && (
         <div className="border-t border-[#f1f5f9] overflow-x-auto">
           <div className="px-4 pt-3 pb-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
               Müşteri Yaşlandırma Detayı
             </div>
           </div>

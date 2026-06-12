@@ -99,7 +99,7 @@ export function ExpenseForecastPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Gider Tahmini
           </div>
           <div className="text-sm font-black text-[#0f172a] mt-0.5">

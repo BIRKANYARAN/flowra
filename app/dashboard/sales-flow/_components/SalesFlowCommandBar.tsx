@@ -121,7 +121,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Açık Pipeline */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Açık Pipeline</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Açık Pipeline</span>
           {openPipelineValue > 0
             ? <span className="text-sm font-black tabular-nums text-info-text">{fmt(openPipelineValue)}</span>
             : <span className="text-sm font-black text-[#94a3b8]">—</span>
@@ -131,7 +131,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* MTD Satış */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Bu Ay</span>
           {mtdRevenue > 0
             ? <span className="text-sm font-black tabular-nums text-pos-text">{fmt(mtdRevenue)}</span>
             : <span className="text-sm font-black text-[#94a3b8]">—</span>
@@ -146,7 +146,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
             winRate >= 35 ? 'bg-warn-light border-warn-light'    :
                             'bg-neg-light border-neg-light'
           }`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Kazanma</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#64748b]">Kazanma</span>
             <span className={`text-sm font-black tabular-nums ${
               winRate >= 60 ? 'text-pos-text' :
               winRate >= 35 ? 'text-warn-text'   : 'text-neg'
@@ -160,7 +160,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         {/* Dönüşüm */}
         {conversionRate !== null && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönüşüm</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Dönüşüm</span>
             <span className="text-sm font-black tabular-nums text-[#334155]">%{conversionRate.toFixed(0)}</span>
             <span className="text-[9px] text-[#94a3b8]">{funnel.converted}/{total}</span>
           </div>
@@ -178,7 +178,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Funnel mini-viz */}
         <div className="flex items-center gap-3 flex-1">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] shrink-0">Huni</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] shrink-0">Huni</span>
           <div className="flex items-end gap-1.5 h-6 flex-1">
             {funnelSteps.map(step => {
               const pct = Math.max(8, (step.count / funnelMax) * 100)
@@ -220,7 +220,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         <div className="bg-warn-light border border-warn-light rounded overflow-hidden">
           <div className="px-3 py-2 border-b border-warn-light flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-warn-light rounded-full shrink-0" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-warn-text">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-warn-text">
               Yanıt Bekleyen Teklifler — 15+ Gün
             </span>
           </div>

@@ -341,7 +341,7 @@ export function CalendarContent({ companyId }: Props) {
       {/* Acil Takvim — next 30 days */}
       {report && report.upcoming_30d.length > 0 && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Acil Takvim — Sonraki 30 Gün
           </div>
           <div className="bg-white rounded-lg border border-[#e8eaef] divide-y divide-[#f1f5f9]">
@@ -357,7 +357,7 @@ export function CalendarContent({ companyId }: Props) {
       {/* Overdue section */}
       {report && report.overdue_events > 0 && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-red-400 mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-red-400 mb-3">
             Gecikmiş Etkinlikler ({report.overdue_events})
           </div>
           <div className="bg-red-50 rounded-lg border border-red-200 divide-y divide-red-100">

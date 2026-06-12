@@ -132,7 +132,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
     return (
       <div className="space-y-4 pt-4 border-t border-[#e8eaef]">
         <div className="flex items-center justify-between">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Stratejik P&amp;L Projeksiyonu (12 Ay)
           </span>
           <span className="text-[9px] text-[#cbd5e1]">6 aylık ortalama gider + yıllık gelir bazında</span>
@@ -142,7 +142,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-3">
           {SCENARIO_CFG.map(s => (
             <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent} ${s.key === result.recommended ? 'ring-2 ring-brand/30 ring-offset-1' : ''}`}>
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{s.label}</div>
               {result.recommended === s.key && (
                 <div className="text-[8px] font-bold text-brand-light mb-1.5 uppercase tracking-wide">★ Önerilen</div>
               )}
@@ -174,13 +174,13 @@ export async function StrategicScenarioSection({ companyId }: Props) {
 
         {/* Recommendation */}
         <div className="px-4 py-3 bg-brand-subtle border border-[#e8eaef] rounded text-xs text-brand">
-          <span className="font-black uppercase tracking-wide text-[9px] text-brand-light mr-2">Öneri</span>
+          <span className="font-bold uppercase tracking-wide text-[9px] text-brand-light mr-2">Öneri</span>
           {result.recommendation_reason}
         </div>
 
         {/* Base scenario monthly P&L table (compact) */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#f1f5f9] text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="px-4 py-3 border-b border-[#f1f5f9] text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
             Baz Senaryo — Aylık P&amp;L
           </div>
           <div className="overflow-x-auto">

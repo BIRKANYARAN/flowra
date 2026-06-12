@@ -47,7 +47,7 @@ function SermayeMaliyetiSection() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Sermaye Maliyeti — WACD
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -65,15 +65,15 @@ function SermayeMaliyetiSection() {
       {/* Summary KPIs */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Borç</div>
           <div className="text-sm font-black tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</div>
         </div>
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
           <div className="text-sm font-black tabular-nums text-neg-text">{fmtTRY(data.total_annual_interest_try)}</div>
         </div>
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD Tahakkuk</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD Tahakkuk</div>
           <div className="text-sm font-black tabular-nums text-neg-text">{fmtTRY(data.ytd_interest_accrued_try)}</div>
         </div>
       </div>
@@ -83,12 +83,12 @@ function SermayeMaliyetiSection() {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç</th>
-              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
-              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yıllık Maliyet</th>
-              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık</th>
-              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YTD</th>
+              <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Borç</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Oran</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Yıllık Maliyet</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">YTD</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -257,13 +257,13 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           onSubmit={handleSubmit}
           className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm flex flex-col gap-4"
         >
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Yeni Borç Dilimi
           </div>
 
           {/* Partner select */}
           <div className="flex flex-col gap-1">
-            <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Ortak <span className="text-neg">*</span>
             </label>
             <select
@@ -282,7 +282,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           {/* Amount + interest rate */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Tutar (₺) <span className="text-neg">*</span>
               </label>
               <input
@@ -297,7 +297,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Yıllık Faiz (%)
               </label>
               <input
@@ -316,7 +316,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           {/* Disbursement date + expected repayment date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Kullandırım Tarihi <span className="text-neg">*</span>
               </label>
               <input
@@ -328,7 +328,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Beklenen Geri Ödeme
               </label>
               <input
@@ -342,7 +342,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
 
           {/* Notes */}
           <div className="flex flex-col gap-1">
-            <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Notlar
             </label>
             <textarea
@@ -397,13 +397,13 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               <div className="text-xl font-black tabular-nums text-warn-text">{fmt(waterfall.total_debt_try)}</div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aktif Borç Dilimi</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aktif Borç Dilimi</div>
               <div className="text-xl font-black tabular-nums text-[#0f172a]">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kapanma Tahmini</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kapanma Tahmini</div>
               <div className={`text-xl font-black tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
                   ? waterfall.debt_clearance_months! <= 3 ? 'text-pos-text' : waterfall.debt_clearance_months! <= 12 ? 'text-warn-text' : 'text-neg-text'
@@ -425,19 +425,19 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             return (
               <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
                 <div className="px-4 py-2 border-b border-[#f1f5f9] bg-[#f8fafc]/60">
-                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Faiz Yükü Özeti</div>
+                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Faiz Yükü Özeti</div>
                 </div>
                 <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
                   <div className="px-4 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kalan Ana Para</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kalan Ana Para</div>
                     <div className="text-base font-black tabular-nums text-warn-text">{fmt(totalPrincipal)}</div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Faiz Maliyeti</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aylık Faiz Maliyeti</div>
                     <div className="text-base font-black tabular-nums text-neg-text">{fmt(totalMonthly)}</div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Tahakkuk</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Tahakkuk</div>
                     <div className="text-base font-black tabular-nums text-neg-text">{fmt(totalAccrued)}</div>
                   </div>
                 </div>
@@ -485,23 +485,23 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
 
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-3 text-xs">
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ana Para</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ana Para</div>
                         <div className="font-mono font-bold text-[#334155]">{fmt(t.principal_try)}</div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
                         <div className="font-mono font-bold text-[#334155]">%{t.interest_rate_annual_pct.toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Aylık Maliyet</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Aylık Maliyet</div>
                         <div className="font-mono font-bold text-neg-text">{fmt(monthlyInterest)}</div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahakkuk</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Tahakkuk</div>
                         <div className="font-mono font-bold text-neg-text">{fmt(t.accrued_interest_try)}</div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Sonraki Faiz</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Sonraki Faiz</div>
                         <div className="font-mono text-[#64748b] text-[10px]">{nextInterestDate}</div>
                       </div>
                     </div>

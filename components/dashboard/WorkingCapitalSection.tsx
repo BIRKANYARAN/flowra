@@ -84,7 +84,7 @@ function MetricChip({
 }) {
   return (
     <div className={`border rounded px-3 py-2.5 flex flex-col gap-1 ${chipClass}`}>
-      <span className="text-[0.6rem] font-black uppercase tracking-widest opacity-70">{label}</span>
+      <span className="text-[0.6rem] font-bold uppercase tracking-wider opacity-70">{label}</span>
       <span className="text-sm font-black tabular-nums leading-none">{value}</span>
     </div>
   )
@@ -181,7 +181,7 @@ export function WorkingCapitalSection() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between flex-wrap gap-2">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             İşletme Sermayesi Analizi
           </div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -278,10 +278,10 @@ export function WorkingCapitalSection() {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">NDD</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Cari Oran</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşletme Sermayesi</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ay</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">NDD</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Cari Oran</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İşletme Sermayesi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">

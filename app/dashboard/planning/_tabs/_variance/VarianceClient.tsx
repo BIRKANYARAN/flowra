@@ -44,7 +44,7 @@ function VerdictBadge({ verdict }: { verdict: ScenarioVariance['verdict'] }) {
   const cfg = VERDICT_CFG[verdict]
   return (
     <span className={cn(
-      'inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide border',
+      'inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border',
       cfg.bg, cfg.text, cfg.border
     )}>
       {cfg.label}
@@ -133,7 +133,7 @@ function DetailRow({ v }: { v: ScenarioVariance }) {
     <tr>
       <td colSpan={6} className="px-0 py-0">
         <div className="mx-4 mb-3 mt-1 rounded border border-[#e8eaef] overflow-hidden bg-[#f8fafc]/60">
-          <div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
+          <div className="px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#e8eaef]">
             {v.scenario_name} — Detay ({v.period_from.slice(0, 7)})
           </div>
           <table className="w-full text-[10px]">
@@ -237,7 +237,7 @@ function SummaryStrip({ variances }: { variances: ScenarioVariance[] }) {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {kpis.map(k => (
         <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
           <div className={cn('text-xl font-black tabular-nums leading-none', k.color)}>{k.value}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{k.sub}</div>
         </div>
@@ -308,7 +308,7 @@ export function VarianceClient() {
       {/* Comparison table */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
             Senaryo Karşılaştırması
           </span>
           <span className="text-[9px] text-[#cbd5e1]">{variances.length} senaryo</span>

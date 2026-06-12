@@ -7,7 +7,7 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 type Mode = 'login' | 'register'
 
 const IL  = 'w-full border border-[#e8eaef] rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-shadow'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 
 export default function AuthPage() {
   const supabase = useSupabase()
@@ -86,7 +86,7 @@ export default function AuthPage() {
           </div>
           <div>
             <div className="font-black text-lg leading-none">Flowra</div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-white/40 mt-0.5">ERP Sistemi</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-white/40 mt-0.5">ERP Sistemi</div>
           </div>
         </div>
 
@@ -124,7 +124,7 @@ export default function AuthPage() {
             </div>
             <div>
               <div className="font-black text-[#0f172a]">Flowra</div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">ERP Sistemi</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">ERP Sistemi</div>
             </div>
           </div>
 

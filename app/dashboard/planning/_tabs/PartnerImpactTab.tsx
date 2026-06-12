@@ -131,7 +131,7 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
         }`}>
           <span className="text-base mt-0.5">{insufficientCash ? '🔴' : '⚠'}</span>
           <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${insufficientCash ? 'text-neg-text' : 'text-warn-text'}`}>
+            <div className={`text-[11px] font-bold uppercase tracking-wide ${insufficientCash ? 'text-neg-text' : 'text-warn-text'}`}>
               Vade Yaklaşıyor — {daysUntilNextDue === 0 ? 'Bugün' : `${daysUntilNextDue} gün sonra`}
             </div>
             <div className={`text-xs mt-0.5 ${insufficientCash ? 'text-neg-text' : 'text-warn-text'}`}>
@@ -152,7 +152,7 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
         <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-warn-text">
               Dağıtılabilir Nakit Yok
             </div>
             <div className="text-xs text-warn-text mt-0.5">

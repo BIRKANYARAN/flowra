@@ -67,7 +67,7 @@ export function PayablesAgingSection() {
   if (loading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Borç Yaşlandırma
         </div>
         <div className="text-xs text-[#94a3b8] animate-pulse">Yükleniyor…</div>
@@ -78,7 +78,7 @@ export function PayablesAgingSection() {
   if (error) {
     return (
       <div className="bg-neg-light border border-neg-light rounded p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-1">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-1">
           Borç Yaşlandırma
         </div>
         <div className="text-xs text-neg-text">Veri yüklenemedi: {error}</div>
@@ -89,7 +89,7 @@ export function PayablesAgingSection() {
   if (!report || report.total_count === 0) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Borç Yaşlandırma
         </div>
         <div className="text-xs text-[#94a3b8]">Bekleyen veya kısmi ödemeli gider bulunamadı.</div>
@@ -104,7 +104,7 @@ export function PayablesAgingSection() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Borç Yaşlandırma (AP Aging)
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -120,20 +120,20 @@ export function PayablesAgingSection() {
       {/* KPI strip */}
       <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
         <div className="px-4 py-2.5 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Kritik (&gt;30 Gün)</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Kritik (&gt;30 Gün)</div>
           <div className={`text-sm font-black tabular-nums ${report.critical_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
             {fmt(report.critical_try)}
           </div>
           <div className="text-[10px] text-[#94a3b8]">{report.critical_count} kayıt</div>
         </div>
         <div className="px-4 py-2.5 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ort. Gecikme</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ort. Gecikme</div>
           <div className="text-sm font-black tabular-nums text-[#0f172a]">
             {report.avg_days_outstanding !== null ? `${Math.round(report.avg_days_outstanding)} gün` : '—'}
           </div>
         </div>
         <div className="px-4 py-2.5 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">En Eski</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">En Eski</div>
           <div className={`text-sm font-black tabular-nums ${(report.oldest_entry_days ?? 0) > 90 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
             {report.oldest_entry_days !== null ? `${report.oldest_entry_days} gün` : '—'}
           </div>
@@ -142,7 +142,7 @@ export function PayablesAgingSection() {
 
       {/* Bucket summary */}
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Vade Dağılımı</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Vade Dağılımı</div>
         <div className="grid grid-cols-5 gap-2">
           {report.buckets.map((b: APAgingBucketSummary) => (
             <div key={b.bucket} className={`rounded px-2 py-2 text-center ${BUCKET_BADGE_COLORS[b.bucket]}`}>
@@ -159,12 +159,12 @@ export function PayablesAgingSection() {
         <table className="w-full text-xs min-w-[560px]">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tür</th>
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tarih</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Gün</th>
-              <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tedarikçi</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tür</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tarih</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tutar</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Gün</th>
+              <th className="text-center px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Vade</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -182,7 +182,7 @@ export function PayablesAgingSection() {
                   {entry.days_outstanding > 0 ? entry.days_outstanding : '—'}
                 </td>
                 <td className="px-4 py-2 text-center">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${BUCKET_BADGE_COLORS[entry.bucket]}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${BUCKET_BADGE_COLORS[entry.bucket]}`}>
                     {report.buckets.find((b: APAgingBucketSummary) => b.bucket === entry.bucket)?.label ?? entry.bucket}
                   </span>
                 </td>

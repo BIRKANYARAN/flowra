@@ -106,10 +106,10 @@ export function DistributionTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dağıtım Parametreleri</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Dağıtım Parametreleri</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Dönem Net Gelir (TL)
             </label>
             <input
@@ -122,7 +122,7 @@ export function DistributionTab({
             />
           </div>
           <div>
-            <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Yönetim Kurulu Alıkoyması (TL)
             </label>
             <input
@@ -148,7 +148,7 @@ export function DistributionTab({
       {preCheck && (
         <div className={`border rounded overflow-hidden ${hasBlockingViolation ? 'border-neg-light bg-neg-light' : 'border-pos-light bg-pos-light'}`}>
           <div className={`px-4 py-2 border-b ${hasBlockingViolation ? 'border-neg-light' : 'border-pos-light'}`}>
-            <div className={`text-[0.65rem] font-black uppercase tracking-widest ${hasBlockingViolation ? 'text-neg-text' : 'text-pos-text'}`}>
+            <div className={`text-[0.65rem] font-bold uppercase tracking-wider ${hasBlockingViolation ? 'text-neg-text' : 'text-pos-text'}`}>
               Yasal Uyum Ön Kontrolü
             </div>
           </div>
@@ -219,7 +219,7 @@ export function DistributionTab({
           {/* 4-Layer Distribution Breakdown */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
               {[
@@ -301,13 +301,13 @@ export function DistributionTab({
           {distrib.per_partner_distribution.length > 0 && (
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Hak Edilenler</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak Bazında Hak Edilenler</div>
               </div>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[#e8eaef]">
                     {['Ortak', 'Pay', 'Brüt Hak', 'Stopaj', 'Net Hak'].map(h => (
-                      <th key={h} className={`px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                      <th key={h} className={`px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>

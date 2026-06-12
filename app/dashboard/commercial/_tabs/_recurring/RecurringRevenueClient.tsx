@@ -28,7 +28,7 @@ type NrrHealth = keyof typeof NRR_HEALTH_CFG
 function NrrHealthBadge({ health }: { health: NrrHealth }) {
   const cfg = NRR_HEALTH_CFG[health]
   return (
-    <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
       {cfg.label}
     </span>
   )
@@ -49,7 +49,7 @@ function KpiCard({
 }) {
   return (
     <div className="p-3">
-      <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+      <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
         {label}
       </div>
       <div className={`text-lg font-black tabular-nums leading-none ${valueColor}`}>
@@ -183,7 +183,7 @@ export default function RecurringRevenueClient({ companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Tekrarlayan Gelir Analizi
         </span>
       </div>
@@ -228,7 +228,7 @@ export default function RecurringRevenueClient({ companyId }: Props) {
 
       {/* Monthly movement bars */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Bu Ay Hareket
         </div>
         <div className="space-y-2">
@@ -262,12 +262,12 @@ export default function RecurringRevenueClient({ companyId }: Props) {
       {/* Top recurring customers */}
       {top_recurring_customers.length > 0 && (
         <div className="px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             En İyi Tekrarlayan Müşteriler
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#f1f5f9] text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <tr className="border-b border-[#f1f5f9] text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 <th className="text-left pb-1.5">#</th>
                 <th className="text-left pb-1.5">Müşteri</th>
                 <th className="text-right pb-1.5">Ort. Aylık Gelir</th>
@@ -290,11 +290,11 @@ export default function RecurringRevenueClient({ companyId }: Props) {
                   </td>
                   <td className="py-1.5 text-center">
                     {c.is_expanding ? (
-                      <span className="inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                      <span className="inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
                         ↑ Büyüme
                       </span>
                     ) : (
-                      <span className="inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8]">
+                      <span className="inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8]">
                         Stabil
                       </span>
                     )}

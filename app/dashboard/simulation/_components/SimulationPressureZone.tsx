@@ -48,7 +48,7 @@ export function SimulationPressureZone({
       {/* ── Pressure Timeline ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Finansal Baskı Zaman Çizelgesi — 12 Ay
           </h2>
           {hasScenario && (
@@ -105,19 +105,19 @@ export function SimulationPressureZone({
       {/* ── Runway Forecast ───────────────────────────────────────────────────── */}
       {hasInputs && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">İlk Kümülatif Kâr</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">İlk Kümülatif Kâr</div>
               <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
                 {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
               </div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Kümülatif nakit pozitife geçer</div>
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 {adjustedOutstanding > 0 ? 'Borç Temizlenir' : 'Borç Durumu'}
               </div>
               <div className={`text-xl font-black tabular-nums ${
@@ -134,7 +134,7 @@ export function SimulationPressureZone({
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Dağıtım kapasitesine göre</div>
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
               <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
               </div>
@@ -159,7 +159,7 @@ export function SimulationPressureZone({
 
       {/* ── Debt burden tracking ──────────────────────────────────────────────── */}
       <div className={`border rounded p-4 ${ds.bg} ${ds.border}`}>
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Borç Baskısı Takibi
         </h2>
         {debtBurdenLoading ? (
@@ -168,7 +168,7 @@ export function SimulationPressureZone({
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                   Toplam Borç{extraDebtTRY > 0 && <span className="text-warn ml-1">(+senaryo)</span>}
                 </div>
                 <div className="text-lg font-black tabular-nums text-[#1e293b]">
@@ -179,14 +179,14 @@ export function SimulationPressureZone({
                 </div>
               </div>
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Aylık Dağıtım Kapasitesi</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Aylık Dağıtım Kapasitesi</div>
                 <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                   {hasInputs ? fmtC(toDisplay(monthlyDistributable), S) : '—'}
                 </div>
                 <div className="text-[10px] text-[#94a3b8]">Vergi sonrası / 12</div>
               </div>
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
                 <div className={`text-lg font-black tabular-nums ${
                   adjustedMonthsToClear === null ? 'text-[#cbd5e1]'
                   : adjustedMonthsToClear > 24 ? 'text-neg'
@@ -200,7 +200,7 @@ export function SimulationPressureZone({
                 <div className="text-[10px] text-[#94a3b8]">Borç / aylık kapasite</div>
               </div>
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
                 <div className="text-lg font-black tabular-nums text-[#334155]">
                   {debtBurden?.summary.partner_count ?? partnerCount}
                 </div>

@@ -104,7 +104,7 @@ function KpiTile({
 
   return (
     <div className={`bg-white border border-[#e8eaef] border-l-4 ${accentCls} rounded px-4 py-4 shadow-sm`}>
-      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className="text-2xl font-black tabular-nums text-[#0f172a] mb-1">
         {fmtPct(value)}
       </div>
@@ -247,7 +247,7 @@ export function MarginTrendClient({ companyId }: Props) {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Kâr Marjı Trend Analizi — Son 12 Ay
         </div>
         <HealthBadge health={r.margin_health as MarginHealth} />
@@ -300,7 +300,7 @@ export function MarginTrendClient({ companyId }: Props) {
       {/* ── Bar chart ────────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="flex items-center justify-between mb-1">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Aylık Brüt Marj
           </div>
           <div className="flex gap-3 text-[9px] text-[#94a3b8]">
@@ -332,14 +332,14 @@ export function MarginTrendClient({ companyId }: Props) {
 
       {/* ── Monthly detail table ─────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
           Aylık Marj Detayı
         </div>
         <table className="w-full text-xs border-collapse min-w-[560px]">
           <thead>
             <tr className="border-b border-[#e8eaef]">
               {['Ay', 'Brüt Marj', 'Faaliyet Marjı', 'Net Marj', '3A Ort. (Brüt)'].map(h => (
-                <th key={h} className="text-right py-2 px-2 first:text-left text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+                <th key={h} className="text-right py-2 px-2 first:text-left text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
                   {h}
                 </th>
               ))}
@@ -395,7 +395,7 @@ export function MarginTrendClient({ companyId }: Props) {
         <div className="grid grid-cols-2 gap-3">
           {r.best_month && (
             <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
-              <div className="text-[9px] font-black uppercase tracking-widest text-amber-600 mb-1">En İyi Ay</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-amber-600 mb-1">En İyi Ay</div>
               <div className="text-[13px] font-bold text-amber-900">{r.best_month.year_month}</div>
               <div className="text-xl font-black text-amber-700">{fmtPct(r.best_month.gross_margin_pct)}</div>
               <div className="text-[9px] text-amber-600 mt-0.5">brüt marj</div>
@@ -403,7 +403,7 @@ export function MarginTrendClient({ companyId }: Props) {
           )}
           {r.worst_month && (
             <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
-              <div className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-1">En Kötü Ay</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-red-600 mb-1">En Kötü Ay</div>
               <div className="text-[13px] font-bold text-red-900">{r.worst_month.year_month}</div>
               <div className="text-xl font-black text-red-700">{fmtPct(r.worst_month.gross_margin_pct)}</div>
               <div className="text-[9px] text-red-600 mt-0.5">brüt marj</div>

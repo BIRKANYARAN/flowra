@@ -133,7 +133,7 @@ function SummaryStrip({ report }: { report: LoanAmortizationReport }) {
           key={label}
           className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3"
         >
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {label}
           </div>
           <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
@@ -186,7 +186,7 @@ function ScheduleTable({ rows }: { rows: AmortizationRow[] }) {
                 <td className="py-1 px-2 whitespace-nowrap">
                   {row.month_label}
                   {row.is_current && (
-                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-info">
+                    <span className="ml-1.5 text-[0.55rem] font-bold uppercase tracking-wider text-info">
                       Şimdi
                     </span>
                   )}
@@ -233,7 +233,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
 
         <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-0.5 sm:grid-cols-4">
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Ortak
             </div>
             <div className="text-xs font-semibold text-[#0f172a] truncate">
@@ -241,7 +241,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
             </div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Bakiye
             </div>
             <div className="text-xs font-semibold text-[#0f172a] tabular-nums">
@@ -249,7 +249,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
             </div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Aylık Ödeme
             </div>
             <div className="text-xs font-semibold text-[#0f172a] tabular-nums">
@@ -257,7 +257,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
             </div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Faiz Oranı
             </div>
             <div className="text-xs font-semibold text-[#0f172a]">
@@ -273,7 +273,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
           {/* Tranche summary stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 pb-1">
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Kullandırılan
               </div>
               <div className="text-xs font-semibold text-[#0f172a] tabular-nums">
@@ -281,7 +281,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
               </div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Kalan Toplam Faiz
               </div>
               <div className="text-xs font-semibold text-amber-600 tabular-nums">
@@ -289,7 +289,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
               </div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Toplam Kalan Ödeme
               </div>
               <div className="text-xs font-semibold text-[#0f172a] tabular-nums">
@@ -297,7 +297,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
               </div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Kapanış Ayı
               </div>
               <div className="text-xs font-semibold text-[#0f172a]">
@@ -318,20 +318,20 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
 function RateChip({ ratePct, marketRatePct }: { ratePct: number; marketRatePct: number }) {
   if (ratePct === 0) {
     return (
-      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
+      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
         %0
       </span>
     )
   }
   if (ratePct < marketRatePct * 0.5) {
     return (
-      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
+      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
         %{ratePct.toFixed(1)}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700">
+    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700">
       %{ratePct.toFixed(1)}
     </span>
   )
@@ -367,7 +367,7 @@ function FaizTahakkuku() {
       {/* Portfolio summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Anapara
           </div>
           <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
@@ -375,7 +375,7 @@ function FaizTahakkuku() {
           </div>
         </div>
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Tahakkuk
           </div>
           <div className="text-base font-black text-amber-600 leading-tight tabular-nums">
@@ -383,7 +383,7 @@ function FaizTahakkuku() {
           </div>
         </div>
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ödenmemiş Faiz
           </div>
           <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
@@ -402,14 +402,14 @@ function FaizTahakkuku() {
       {/* Reference rate + next month obligation chips */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="inline-flex items-center gap-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] px-3 py-1.5">
-          <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Referans Faiz
           </span>
           <span className="text-sm font-black text-[#0f172a]">%{report.market_rate_pct}</span>
         </div>
         {report.next_month_interest_try > 0 && (
           <div className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-3 py-1.5">
-            <span className="text-[0.6rem] font-black uppercase tracking-widest text-amber-700">
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider text-amber-700">
               Gelecek ay faiz yükü
             </span>
             <span className="text-sm font-black text-amber-800 tabular-nums">
@@ -474,12 +474,12 @@ function FaizTahakkuku() {
                   </td>
                   <td className="py-1 px-2 text-center">
                     {t.vuk_risk && (
-                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
+                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
                         VUK
                       </span>
                     )}
                     {t.is_below_market && !t.vuk_risk && (
-                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
+                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
                         Düşük
                       </span>
                     )}
@@ -542,7 +542,7 @@ function ScheduleDetailTable({
                 <td className="py-1 px-2 whitespace-nowrap">
                   {fmtDate(row.period_date)}
                   {isCurrent && (
-                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-info">
+                    <span className="ml-1.5 text-[0.55rem] font-bold uppercase tracking-wider text-info">
                       Şimdi
                     </span>
                   )}
@@ -575,28 +575,28 @@ function ScheduleCard({ schedule }: { schedule: LoanAmortizationSchedule }) {
           </span>
           <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-0.5 sm:grid-cols-5">
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</div>
               <div className="text-xs font-semibold text-[#0f172a] truncate">{schedule.partner_name}</div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Anapara</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Anapara</div>
               <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.principal_try)}</div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Faiz Oranı</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Faiz Oranı</div>
               <div className="text-xs font-semibold text-[#0f172a]">{rateFmt}</div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Ödeme</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Ödeme</div>
               <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.monthly_payment_try)}</div>
             </div>
             <div>
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Maliyet</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Maliyet</div>
               <div className="text-xs font-semibold text-amber-600 tabular-nums">{fmtTRY(schedule.total_cost_try)}</div>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Kalan Bakiye</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kalan Bakiye</div>
             <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.remaining_balance_try)}</div>
           </div>
         </div>
@@ -605,19 +605,19 @@ function ScheduleCard({ schedule }: { schedule: LoanAmortizationSchedule }) {
       <div className="border-t border-[#e8eaef] px-4 pb-4 bg-[#f8fafc]">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 pb-1 text-xs">
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Ay</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Ay</div>
             <div className="font-semibold text-[#0f172a]">{schedule.total_months} ay</div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçen Ay</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Geçen Ay</div>
             <div className="font-semibold text-[#0f172a]">{schedule.already_paid_months} ay</div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Faiz</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Faiz</div>
             <div className="font-semibold text-amber-600 tabular-nums">{fmtTRY(schedule.total_interest_try)}</div>
           </div>
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Başlangıç</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Başlangıç</div>
             <div className="font-semibold text-[#0f172a]">{fmtDate(schedule.start_date)}</div>
           </div>
         </div>
@@ -667,7 +667,7 @@ function FullAmortizationSchedule() {
       {/* Total debt service strip */}
       <div className="grid grid-cols-3 gap-3 pt-1">
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Aylık Toplam Servis
           </div>
           <div className="text-base font-black text-[#0f172a] tabular-nums">
@@ -675,7 +675,7 @@ function FullAmortizationSchedule() {
           </div>
         </div>
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Kalan Bakiye
           </div>
           <div className="text-base font-black text-[#0f172a] tabular-nums">
@@ -683,7 +683,7 @@ function FullAmortizationSchedule() {
           </div>
         </div>
         <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kalan Toplam Faiz
           </div>
           <div className="text-base font-black text-amber-600 tabular-nums">
@@ -741,7 +741,7 @@ export function AmortizationTab() {
       <SummaryStrip report={report} />
 
       <div className="flex flex-col gap-2">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Tranche Takvimleri ({report.tranches.length})
         </div>
         {report.tranches.map(tranche => (
@@ -769,7 +769,7 @@ export function AmortizationTab() {
 
       {/* ── Faiz Tahakkuku ───────────────────────────────────────────────── */}
       <div className="border-t border-[#e8eaef] pt-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Faiz Tahakkuku
         </div>
         <FaizTahakkuku />
@@ -777,7 +777,7 @@ export function AmortizationTab() {
 
       {/* ── Vade Takvimi ─────────────────────────────────────────────────── */}
       <div className="border-t border-[#e8eaef] pt-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Vade Takvimi
         </div>
         <VadeTakvimi />
@@ -785,7 +785,7 @@ export function AmortizationTab() {
 
       {/* ── Tam Amortisman Takvimi ────────────────────────────────────────── */}
       <div className="border-t border-[#e8eaef] pt-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Tam Amortisman Takvimi
         </div>
         <FullAmortizationSchedule />

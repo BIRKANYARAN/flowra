@@ -204,7 +204,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Personel Maliyeti Analizi
         </h3>
         <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -217,7 +217,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
         {/* Personel Maliyet Oranı */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Personel Maliyet Oranı
           </div>
           <div className="text-[10px] text-[#94a3b8]">Bu ay / Ciro</div>
@@ -228,7 +228,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
         {/* Aylık Personel Maliyeti */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Aylık Personel Maliyeti
           </div>
           <div className="text-[10px] text-[#94a3b8]">Toplam (maaş+SGK+huzur)</div>
@@ -239,7 +239,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
         {/* Trend */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Trend
           </div>
           <div className="text-[10px] text-[#94a3b8]">Önceki aya göre</div>
@@ -250,7 +250,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
         {/* Verimlilik Derecesi */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Verimlilik Derecesi
           </div>
           <div className="text-[10px] text-[#94a3b8]">Türk KOBİ kıyaslama</div>
@@ -263,7 +263,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
       {/* ── Cost breakdown bars ──────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Maliyet Dağılımı — Bu Ay
         </div>
         <BreakdownBar
@@ -298,7 +298,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
       {/* ── YTD summary ──────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Yıl Başından Bugüne (YTD)
         </div>
         <div className="grid grid-cols-3 gap-4">
@@ -328,7 +328,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
       {/* ── Benchmark reference ──────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Türk KOBİ Kıyaslaması
           </div>
           {currentRatio !== null && (
@@ -362,7 +362,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
 
       {/* ── SGK reference ────────────────────────────────────────────────────── */}
       <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#1e40af] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#1e40af] mb-3">
           SGK Referans Bilgileri — 2025
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">

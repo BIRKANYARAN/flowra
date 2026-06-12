@@ -80,7 +80,7 @@ function KpiCard({
 
   return (
     <div className="flex flex-col gap-0.5 px-4 py-3 border-r border-[#e8eaef] last:border-r-0">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
@@ -224,14 +224,14 @@ export default async function CorporateTaxPage() {
       {/* ── Quarterly Breakdown ─────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Geçici Vergi Takvimi — {currentYear}
           </div>
         </div>
 
         <div className="divide-y divide-[#e8eaef]">
           {/* Column headers */}
-          <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             <div>Dönem</div>
             <div className="text-right">Matrah</div>
             <div className="text-right">Tahmini KV</div>
@@ -297,11 +297,11 @@ export default async function CorporateTaxPage() {
                 {/* Status badge */}
                 <div className="flex justify-end">
                   {isQ4 ? (
-                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border bg-brand-subtle text-brand border-[#e8eaef]">
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded border bg-brand-subtle text-brand border-[#e8eaef]">
                       Yıllık KV
                     </span>
                   ) : (
-                    <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border ${meta.cls}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded border ${meta.cls}`}>
                       {meta.label}
                     </span>
                   )}
@@ -313,7 +313,7 @@ export default async function CorporateTaxPage() {
           {/* YTD totals row */}
           {quarters.length > 0 && (
             <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-3 items-center bg-[#f8fafc] border-t-2 border-[#e8eaef]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">YTD</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">YTD</div>
               <div className="text-right tabular-nums text-sm font-black text-[#0f172a]">
                 {ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}
               </div>
@@ -335,7 +335,7 @@ export default async function CorporateTaxPage() {
       {monthsElapsed < 12 && projectedMatrah > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Yıllık Projeksiyon (Extrapolasyon)
             </div>
           </div>

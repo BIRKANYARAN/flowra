@@ -68,7 +68,7 @@ export function FlowraTable<T>({
               <th
                 key={col.key}
                 className={cn(
-                  'px-5 py-3 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]',
+                  'px-5 py-3 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]',
                   col.align === 'right'  && 'text-right',
                   col.align === 'center' && 'text-center',
                   col.className,

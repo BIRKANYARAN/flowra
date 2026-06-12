@@ -33,7 +33,7 @@ const CUSTOMER_FIELDS = [
 ]
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 
 const EMPTY = {
   name: '', address: '', tax_number: '', tax_office: '',
@@ -113,7 +113,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
     <div className="space-y-4">
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           {list.length} Müşteri
         </h2>
         {!showForm && (

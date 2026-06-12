@@ -99,7 +99,7 @@ export function ProductProfitabilityWaterfall() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
             Ürün Karlılığı
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">
@@ -131,7 +131,7 @@ export function ProductProfitabilityWaterfall() {
           },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
           </div>
         ))}
@@ -139,7 +139,7 @@ export function ProductProfitabilityWaterfall() {
 
       {/* ── Tier distribution chips ─────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#f1f5f9] flex-wrap">
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mr-1">Tier Dağılımı</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mr-1">Tier Dağılımı</span>
         {tiers.map(({ key, count }) => {
           const cfg = TIER_CONFIG[key]
           return (
@@ -162,11 +162,11 @@ export function ProductProfitabilityWaterfall() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Gelir</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj %</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Katkı Marjı</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Katkı %</th>
+              <th className="text-left px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Ürün</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Gelir</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt Marj %</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Katkı Marjı</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Katkı %</th>
             </tr>
           </thead>
           <tbody>

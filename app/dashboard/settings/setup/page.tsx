@@ -108,7 +108,7 @@ function ItemRow({ item }: { item: ChecklistItem }) {
             {item.label}
           </span>
           {isRequired && !isComplete && (
-            <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn text-white">
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-warn text-white">
               Zorunlu
             </span>
           )}
@@ -234,7 +234,7 @@ export default async function SetupChecklistPage() {
       {report.next_action && (
         <div className="rounded-xl border border-brand/20 bg-brand-subtle px-5 py-4 flex items-center gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand/70 mb-0.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-brand/70 mb-0.5">
               Sonraki Adım
             </p>
             <p className="text-sm font-semibold text-[#1e293b]">{report.next_action.label}</p>
@@ -273,7 +273,7 @@ export default async function SetupChecklistPage() {
                     </svg>
                   </span>
                 )}
-                <p className="text-xs font-black uppercase tracking-widest text-[#64748b]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
                   {CATEGORY_LABELS[cat]}
                 </p>
               </div>

@@ -241,7 +241,7 @@ export function TaxCalendarClient({ companyId }: Props) {
             return (
               <div key={ym}>
                 {/* Month header */}
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2 flex items-center gap-2">
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 flex items-center gap-2">
                   <span>{formatYM(ym)}</span>
                   <div className="flex-1 h-px bg-[#f1f5f9]" />
                 </div>

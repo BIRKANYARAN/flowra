@@ -61,7 +61,7 @@ type Health = keyof typeof HEALTH_CFG
 function HealthBadge({ health }: { health: Health }) {
   const cfg = HEALTH_CFG[health]
   return (
-    <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
       {cfg.label}
     </span>
   )
@@ -175,7 +175,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Kohort Tutma & Churn Analizi
         </span>
 
@@ -200,13 +200,13 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
       {/* Overall KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Tutma Sağlığı
           </div>
           <HealthBadge health={report.overall_retention_health} />
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             3 Aylık Ort. Tutma
           </div>
           <div className={`text-lg font-black tabular-nums leading-none ${
@@ -222,7 +222,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. Aylık Churn
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -233,7 +233,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Kohort
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -250,7 +250,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
         <div className="px-4 py-2 border-b border-[#f1f5f9] flex flex-wrap gap-3">
           {bestCohort && (
             <div className="text-[11px] text-[#334155]">
-              <span className="text-[9px] font-black uppercase tracking-wide text-emerald-600 mr-1">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 mr-1">
                 En iyi kohort:
               </span>
               <strong>{bestCohort.cohort_label}</strong>
@@ -261,7 +261,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           )}
           {worstCohort && worstCohort.cohort_month !== bestCohort?.cohort_month && (
             <div className="text-[11px] text-[#334155]">
-              <span className="text-[9px] font-black uppercase tracking-wide text-red-600 mr-1">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-red-600 mr-1">
                 En zayıf kohort:
               </span>
               <strong>{worstCohort.cohort_label}</strong>
@@ -278,14 +278,14 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-4 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-28">
+              <th className="text-left px-4 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-28">
                 Kohort
               </th>
-              <th className="text-center px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-14">
+              <th className="text-center px-2 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-14">
                 Müşteri
               </th>
               {Array.from({ length: MAX_COLS }, (_, i) => (
-                <th key={i} className="text-center px-1 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-14">
+                <th key={i} className="text-center px-1 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-14">
                   Ay {i}
                 </th>
               ))}
@@ -334,7 +334,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
 
       {/* Revenue per cohort bar chart */}
       <div className="px-4 pt-3 pb-2 border-t border-[#f1f5f9]">
-        <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Kohort Başına Toplam Gelir
         </div>
         <RevenueChart cohorts={report.cohorts} />

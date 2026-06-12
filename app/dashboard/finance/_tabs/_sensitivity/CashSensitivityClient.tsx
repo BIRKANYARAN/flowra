@@ -60,7 +60,7 @@ export function CashSensitivityClient({ companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Nakit Duyarlılık Analizi — Stres Testi
         </div>
         <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -126,7 +126,7 @@ export function CashSensitivityClient({ companyId }: Props) {
               },
             ].map(item => (
               <div key={item.label} className="px-4 py-3">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                   {item.label}
                 </div>
                 <div className={`text-base font-black tabular-nums leading-none ${item.tone}`}>
@@ -148,25 +148,25 @@ export function CashSensitivityClient({ companyId }: Props) {
             <table className="w-full text-xs min-w-[700px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-left px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Senaryo
                   </th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-red-600">
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-red-600">
                     Gelir Şoku
                   </th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-amber-600">
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-amber-600">
                     Tahsilat Gecikmesi
                   </th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-orange-600">
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-orange-600">
                     Gider Artışı
                   </th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Stresli Runway
                   </th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Delta
                   </th>
-                  <th className="px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Etki
                   </th>
                 </tr>

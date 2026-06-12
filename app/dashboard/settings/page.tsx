@@ -604,7 +604,7 @@ export default function SettingsPage() {
 
             {addBank && (
               <div className="bg-[#f8fafc] rounded p-3 mb-3 space-y-3">
-                <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   {editBankId ? 'Hesabı Düzenle' : 'Yeni Banka Hesabı'}
                 </p>
 

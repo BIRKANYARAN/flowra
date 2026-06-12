@@ -115,7 +115,7 @@ function SummaryCard({
 }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
     </div>
@@ -162,7 +162,7 @@ export function FxExposureClient({ companyId }: Props) {
   if (data.currencies.length === 0) {
     return (
       <div className="space-y-3">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#64748b]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
           Kur Riski Analizi
         </h3>
         <div className="bg-[#f0f9ff] border border-[#bae6fd] rounded-lg p-4 text-sm text-[#0369a1] font-semibold">
@@ -181,7 +181,7 @@ export function FxExposureClient({ companyId }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#64748b]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
           Kur Riski Analizi
         </h3>
         <Badge config={riskBadge} />
@@ -217,7 +217,7 @@ export function FxExposureClient({ companyId }: Props) {
       {/* Per-currency table */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Para Birimi Dağılımı
           </span>
         </div>
@@ -226,7 +226,7 @@ export function FxExposureClient({ companyId }: Props) {
             <thead>
               <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
                 {['Para Birimi', 'Alacaklar (FX)', 'Borçlar (FX)', 'Net Maruziyet (FX)', 'Alacaklar (TRY)', 'Borçlar (TRY)', 'Net Maruziyet (TRY)', 'Risk %'].map(h => (
-                  <th key={h} className="px-3 py-2 text-left text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -256,7 +256,7 @@ export function FxExposureClient({ companyId }: Props) {
       {/* Scenario analysis */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Senaryo Analizi — TRY Değer Kaybı
           </span>
         </div>
@@ -269,7 +269,7 @@ export function FxExposureClient({ companyId }: Props) {
             const { text, cls } = fmtScenarioLoss(s.loss)
             return (
               <div key={s.label} className="px-4 py-3 text-center">
-                <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">{s.label}</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">{s.label}</div>
                 <div className={`text-base tabular-nums ${cls}`}>{text}</div>
                 <div className="text-[9px] text-[#94a3b8] mt-0.5">
                   {s.loss > 0 ? 'Zarar' : s.loss < 0 ? 'Kazanç' : ''}
@@ -282,7 +282,7 @@ export function FxExposureClient({ companyId }: Props) {
 
       {/* Diversification section */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-2">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b] mb-2">
           Para Birimi Çeşitlendirmesi
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs">

@@ -48,7 +48,7 @@ function BadgeSegment({ segment }: { segment: CustomerSegment }) {
     : 'bg-[#f1f5f9] text-[#475569]'
 
   return (
-    <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${color}`}>
+    <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${color}`}>
       {label}
     </span>
   )
@@ -95,22 +95,22 @@ function SegmentTable({ segments, totalRevenue }: SegmentTableProps) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-[#f1f5f9]">
-            <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Segment
             </th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Gelir
             </th>
-            <th className="px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell w-28">
+            <th className="px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell w-28">
               Gelir Payı
             </th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Marj %
             </th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">
               Müşteri
             </th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">
               Büyüme
             </th>
           </tr>
@@ -209,7 +209,7 @@ export default function CustomerSegmentProfitabilityClient({ companyId }: Props)
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteri Segmenti Kârlılığı
         </span>
         <span className="text-[10px] font-bold text-[#64748b]">

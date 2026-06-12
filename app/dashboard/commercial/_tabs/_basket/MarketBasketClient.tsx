@@ -45,7 +45,7 @@ const STRENGTH_CFG: Record<Strength, { label: string; bg: string; text: string }
 function StrengthBadge({ strength }: { strength: Strength }) {
   const cfg = STRENGTH_CFG[strength]
   return (
-    <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
       {cfg.label}
     </span>
   )
@@ -127,7 +127,7 @@ export default function MarketBasketClient({ companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Sepet Analizi — Çapraz Satış Fırsatları
         </span>
       </div>
@@ -135,7 +135,7 @@ export default function MarketBasketClient({ companyId }: Props) {
       {/* Summary KPI strip */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam İşlem
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -146,7 +146,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Ürün
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -157,7 +157,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. Ürün/Sepet
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -170,7 +170,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Eşsiz Çift
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-[#0f172a]">
@@ -181,7 +181,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kural Sayısı
           </div>
           <div className="text-lg font-black tabular-nums leading-none text-emerald-700">
@@ -196,26 +196,26 @@ export default function MarketBasketClient({ companyId }: Props) {
       {/* Top cross-sell opportunities table */}
       {top_cross_sell.length > 0 && (
         <div className="px-4 pt-3 pb-1">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             En İyi Çapraz Satış Fırsatları
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#f1f5f9]">
-                  <th className="text-left px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-left px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Alınan Ürün
                   </th>
-                  <th className="text-left px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-left px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Öneri
                   </th>
-                  <th className="text-right px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Güven
                   </th>
-                  <th className="text-right px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Lift
                   </th>
-                  <th className="text-center px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-center px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Güç
                   </th>
                 </tr>
@@ -256,7 +256,7 @@ export default function MarketBasketClient({ companyId }: Props) {
       {/* Full association rules table */}
       {association_rules.length > top_cross_sell.length && (
         <div className="px-4 pt-3 pb-1 border-t border-[#f1f5f9] mt-2">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             Tüm İlişki Kuralları
             <span className="font-normal normal-case ml-1 text-[#cbd5e1]">
               (lift = 1 = bağımsız)
@@ -266,19 +266,19 @@ export default function MarketBasketClient({ companyId }: Props) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#f1f5f9]">
-                  <th className="text-left px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-left px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Öncül
                   </th>
-                  <th className="text-left px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-left px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Ardıl
                   </th>
-                  <th className="text-right px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Destek
                   </th>
-                  <th className="text-right px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Güven
                   </th>
-                  <th className="text-right px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                  <th className="text-right px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Lift
                   </th>
                 </tr>

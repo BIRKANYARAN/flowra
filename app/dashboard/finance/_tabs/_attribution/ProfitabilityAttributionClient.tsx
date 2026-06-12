@@ -100,7 +100,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       {/* Overall margin */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Genel Brüt Marj
         </div>
         <div className={`text-lg font-black tabular-nums ${
@@ -112,7 +112,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
 
       {/* Gini */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Gini Katsayısı
         </div>
         <div className={`text-lg font-black tabular-nums ${giniColor(gini_by_category)}`}>
@@ -125,7 +125,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
 
       {/* Pareto */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Pareto 80% Kategorisi
         </div>
         <div className="text-lg font-black tabular-nums text-[#0f172a]">
@@ -139,7 +139,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
 
       {/* Volatility */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Marj Volatilitesi
         </div>
         <div className={`text-lg font-black tabular-nums ${
@@ -176,25 +176,25 @@ function CategoryParetoTable({
       <table className="w-full text-xs border-collapse min-w-[640px]">
         <thead>
           <tr className="border-b border-[#e8eaef]">
-            <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-left py-2 pr-3 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Kategori
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Ciro
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Ciro %
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Brüt Marj
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Marj %
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Marj Katkısı
             </th>
-            <th className="text-center py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-center py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Pareto
             </th>
           </tr>
@@ -305,25 +305,25 @@ function MonthlyTimeSeriesTable({ months }: { months: MonthRow[] }) {
       <table className="w-full text-xs border-collapse min-w-[640px]">
         <thead>
           <tr className="border-b border-[#e8eaef]">
-            <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-left py-2 pr-3 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Ay
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Ciro
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Brüt Kâr
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Brüt Marj
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Ciro AoA
             </th>
-            <th className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Marj AoA
             </th>
-            <th className="text-center py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
+            <th className="text-center py-2 px-2 text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               Not
             </th>
           </tr>
@@ -406,7 +406,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
   if (isLoading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
           Kârlılık Kaynağı Analizi
         </div>
         <div className="animate-pulse space-y-3">
@@ -424,7 +424,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
   if (isError || !data?.report) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Kârlılık Kaynağı Analizi
         </div>
         <div className="text-center py-6 text-[#94a3b8] text-sm">
@@ -439,7 +439,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm space-y-5">
       {/* Header */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Kârlılık Kaynağı Analizi
       </div>
 
@@ -448,7 +448,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
 
       {/* By-category Pareto table */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-wide text-[#64748b] mb-3">
+        <div className="text-[10px] font-bold uppercase tracking-wide text-[#64748b] mb-3">
           Kategori Bazlı Kârlılık (Pareto)
         </div>
         <CategoryParetoTable
@@ -460,7 +460,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
       {/* Profit drag section */}
       {report.profit_drags.length > 0 && (
         <div>
-          <div className="text-[10px] font-black uppercase tracking-wide text-neg mb-2">
+          <div className="text-[10px] font-bold uppercase tracking-wide text-neg mb-2">
             Kârlılık Sürükleyicileri
           </div>
           <ProfitDragSection drags={report.profit_drags} />
@@ -469,7 +469,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
 
       {/* Monthly time series */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-wide text-[#64748b] mb-3">
+        <div className="text-[10px] font-bold uppercase tracking-wide text-[#64748b] mb-3">
           Aylık Kârlılık Trendi (Son 12 Ay)
         </div>
         {report.summary.best_month && (

@@ -39,7 +39,7 @@ export function SimulationInsightsPanel({
       {/* ── Revenue timeline chart (CSS bars) ────────────────────────────────── */}
       {hasInputs && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+          <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
             Gelir Çizelgesi — 12 Ay
           </h2>
           <div className="grid grid-cols-12 gap-1 items-end h-24">
@@ -80,18 +80,18 @@ export function SimulationInsightsPanel({
 
       {/* ── Tax effect ───────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Vergi Etkisi — Yıllık Tahmin
         </h2>
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
             <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-[#1e293b]' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—'}
             </div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
               Kurumlar Vergisi (%{CORP_TAX_RATE})
             </div>
             <div className="text-lg font-black tabular-nums text-warn">
@@ -100,7 +100,7 @@ export function SimulationInsightsPanel({
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Tahmini KV</div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
             <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(netAfterCorpTax), S) : '—'}
             </div>
@@ -134,7 +134,7 @@ export function SimulationInsightsPanel({
         }`}>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+              <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 Ortak Dengesi Nasıl Etkilenir?
               </h2>
               <p className="text-xs text-[#64748b]">

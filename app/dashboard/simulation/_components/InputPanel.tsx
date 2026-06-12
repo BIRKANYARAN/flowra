@@ -68,7 +68,7 @@ export function InputPanel({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Parametreler</h2>
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Parametreler</h2>
         <span className="text-[10px] text-[#94a3b8] italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
       </div>
 
@@ -188,7 +188,7 @@ export function InputPanel({
       {/* ── Senaryo Katmanları ──────────────────────────────────────────────── */}
       <div className="pt-3 border-t border-dashed border-[#e8eaef]">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Senaryo Katmanları</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Senaryo Katmanları</span>
           <span className="text-[10px] text-[#94a3b8] font-normal">— isteğe bağlı · baskı haritasını etkiler</span>
           {hasScenario && (
             <span className="ml-auto text-[10px] bg-warn-light text-warn-text border border-warn-light rounded px-2 py-0.5 font-bold">

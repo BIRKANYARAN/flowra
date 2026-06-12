@@ -119,7 +119,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
       {/* ── Header + date selector ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Fatura Yaşlandırma</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Fatura Yaşlandırma</div>
           <div className="text-xs text-[#64748b] mt-0.5">Tahsilat aciliyet skoru ve öncelik sırası</div>
         </div>
 
@@ -188,7 +188,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
 
       {/* ── Aging bucket bars ──────────────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Yaşlandırma Dağılımı
         </div>
         <div className="space-y-2">
@@ -218,7 +218,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
 
       {/* ── Collection priority table (top 10) ────────────────────────────── */}
       <div className="px-4 pt-3 pb-1">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tahsilat Öncelik Sırası (İlk 10)
         </div>
       </div>

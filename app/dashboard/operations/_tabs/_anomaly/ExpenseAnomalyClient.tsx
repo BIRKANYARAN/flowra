@@ -35,21 +35,21 @@ const WINDOW_OPTIONS: { label: string; days: number }[] = [
 function SeverityBadge({ severity }: { severity: ExpenseAnomaly['severity'] }) {
   if (severity === 'high') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]">
         Yüksek
       </span>
     )
   }
   if (severity === 'medium') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
         Orta
       </span>
     )
   }
   if (severity === 'low') {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fefce8] text-[#a16207] border border-[#fde047]/50">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fefce8] text-[#a16207] border border-[#fde047]/50">
         Düşük
       </span>
     )
@@ -83,7 +83,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Anormal Gider Tespiti
         </span>
 
@@ -153,7 +153,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
               },
             ].map((card, i) => (
               <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
                 <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
               </div>
@@ -163,19 +163,19 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
           {/* Severity breakdown chips */}
           {report.anomalies_found > 0 && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#f1f5f9]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciddiyet</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ciddiyet</span>
               {highCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]">
                   Yüksek {highCount}
                 </span>
               )}
               {mediumCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
                   Orta {mediumCount}
                 </span>
               )}
               {lowCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fefce8] text-[#a16207] border border-[#fde047]/50">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fefce8] text-[#a16207] border border-[#fde047]/50">
                   Düşük {lowCount}
                 </span>
               )}
@@ -200,12 +200,12 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[#e8eaef]">
-                    <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2">Tedarikçi</th>
-                    <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tutar</th>
-                    <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Kategori</th>
-                    <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Z-Skoru</th>
-                    <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Ciddiyet</th>
-                    <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Sebepler</th>
+                    <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-4 py-2">Tedarikçi</th>
+                    <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Tutar</th>
+                    <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Kategori</th>
+                    <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Z-Skoru</th>
+                    <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Ciddiyet</th>
+                    <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Sebepler</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f8fafc]">
@@ -264,7 +264,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
           {/* Categories with anomalies */}
           {report.categories_with_anomalies.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-[#f1f5f9]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Etkilenen Kategoriler
               </span>
               {report.categories_with_anomalies.map(cat => (

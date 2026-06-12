@@ -112,13 +112,13 @@ function LtvTable({ customers }: { customers: CustomerLtvProfile[] }) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-[#f1f5f9]">
-            <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-8">#</th>
-            <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">LTV</th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">RFM</th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Segment</th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Kayıp Riski</th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">Son Sipariş</th>
+            <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-8">#</th>
+            <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Müşteri</th>
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">LTV</th>
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">RFM</th>
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Segment</th>
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kayıp Riski</th>
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">Son Sipariş</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#f8fafc]">
@@ -150,12 +150,12 @@ function LtvTable({ customers }: { customers: CustomerLtvProfile[] }) {
                   </span>
                 </td>
                 <td className="px-3 py-2.5 text-center">
-                  <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${segCfg.bg} ${segCfg.text}`}>
+                  <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${segCfg.bg} ${segCfg.text}`}>
                     {segCfg.label}
                   </span>
                 </td>
                 <td className="px-3 py-2.5 text-center">
-                  <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${churnCfg.bg} ${churnCfg.text}`}>
+                  <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${churnCfg.bg} ${churnCfg.text}`}>
                     {churnCfg.label}
                   </span>
                 </td>
@@ -199,7 +199,7 @@ export default function CustomerLtvClient() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden space-y-0">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteri Değer Analizi
         </span>
         <span className="text-[9px] text-[#94a3b8]">

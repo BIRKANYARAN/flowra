@@ -98,7 +98,7 @@ function Skeleton() {
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className="text-xl font-black tabular-nums text-[#1e293b]">{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
@@ -110,7 +110,7 @@ function MonthlySpendChart({ data }: { data: PurchaseAnalyticsSummary['monthly_s
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Harcama (Son 6 Ay)</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Harcama (Son 6 Ay)</div>
       </div>
       <div className="px-4 py-4">
         <div className="flex items-end gap-2 h-28">
@@ -148,7 +148,7 @@ function CostVarianceAlerts({ alerts }: { alerts: ProductPurchaseAnalytics[] }) 
       <div className="bg-[#fff7ed] border border-[#fed7aa] rounded px-4 py-3 flex items-start gap-3">
         <span className="text-base mt-0.5">⚠</span>
         <div className="flex-1">
-          <div className="text-[11px] font-black uppercase tracking-wide text-[#9a3412]">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-[#9a3412]">
             {alerts.length} Üründe Fiyat Dalgalanması
           </div>
           <div className="text-xs text-[#9a3412] mt-0.5">
@@ -160,11 +160,11 @@ function CostVarianceAlerts({ alerts }: { alerts: ProductPurchaseAnalytics[] }) 
       {/* Table */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Değişim Uyarıları</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Fiyat Değişim Uyarıları</div>
         </div>
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#f1f5f9] bg-[#f8fafc]">
+            <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#f1f5f9] bg-[#f8fafc]">
               <th className="text-left px-4 py-2">Ürün</th>
               <th className="text-right px-4 py-2">Önceki Maliyet</th>
               <th className="text-right px-4 py-2">Son Maliyet</th>
@@ -201,11 +201,11 @@ function TopSuppliersTable({ suppliers }: { suppliers: SupplierAnalytics[] }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">En Büyük Tedarikçiler</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">En Büyük Tedarikçiler</div>
       </div>
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#f1f5f9] bg-[#f8fafc]">
+          <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#f1f5f9] bg-[#f8fafc]">
             <th className="text-left px-4 py-2">Tedarikçi</th>
             <th className="text-right px-4 py-2">Sipariş</th>
             <th className="text-right px-4 py-2">Toplam Harcama</th>
@@ -249,7 +249,7 @@ function ProductCostTrendList({ products }: { products: ProductPurchaseAnalytics
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Maliyet Trendi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ürün Maliyet Trendi</div>
       </div>
       <div className="divide-y divide-[#f1f5f9]">
         {top.map(p => (

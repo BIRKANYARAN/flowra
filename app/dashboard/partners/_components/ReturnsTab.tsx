@@ -24,7 +24,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
         <>
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Sermaye Getirisi</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak Bazında Sermaye Getirisi</div>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
               {returns.map(r => (

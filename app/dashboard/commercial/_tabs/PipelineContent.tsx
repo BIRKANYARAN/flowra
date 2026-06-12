@@ -172,7 +172,7 @@ export async function PipelineContent({ companyId }: Props) {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {/* Header */}
         <div className="px-4 py-2.5 border-b border-[#e8eaef] flex items-center justify-between">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Satış Hattı Sağlığı
           </span>
           {healthBadge && (
@@ -211,7 +211,7 @@ export async function PipelineContent({ companyId }: Props) {
             },
           ].map((tile, i) => (
             <div key={tile.label} className="px-3 py-2.5">
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{tile.label}</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{tile.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">{tile.sub}</div>
             </div>
@@ -220,7 +220,7 @@ export async function PipelineContent({ companyId }: Props) {
 
         {/* Status Swimlanes */}
         <div className="px-4 py-3 border-b border-[#f1f5f9]">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Durum Özeti</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Durum Özeti</div>
           <div className="flex items-center gap-2 flex-wrap">
             {[
               { key: 'draft',     label: 'Taslak',         cls: 'bg-[#f1f5f9] text-[#64748b]' },
@@ -381,7 +381,7 @@ export async function PipelineContent({ companyId }: Props) {
               },
             ].map(card => (
               <div key={card.label} className="px-3 py-2.5">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{card.label}</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{card.label}</div>
                 <div className={`text-sm font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               </div>
             ))}
@@ -398,7 +398,7 @@ export async function PipelineContent({ companyId }: Props) {
           { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue <= 0 ? 'veri yok' : totalCogs > 0 ? `%${grossMargin.toFixed(1)} marj` : 'maliyet girilmedi', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
@@ -409,7 +409,7 @@ export async function PipelineContent({ companyId }: Props) {
       {revenueAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Anormal Gelir Hareketi</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text">Anormal Gelir Hareketi</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">

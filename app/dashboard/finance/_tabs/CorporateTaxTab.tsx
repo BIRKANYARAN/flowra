@@ -115,7 +115,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
         <div className="px-5 py-3.5 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 Kurumlar Vergisi
               </div>
               <h2 className="text-base font-black text-[#0f172a]">
@@ -137,7 +137,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
 
         {/* Quarterly Schedule */}
         <div className="px-5 py-4">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Geçici Vergi Takvimi
           </div>
           {geciciSched.length === 0 ? (
@@ -177,7 +177,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
       {/* ── UPCOMING 90-DAY CALENDAR ──────────────────────────────────────────── */}
       <div className="rounded-lg border border-[#e8eaef] bg-white overflow-hidden">
         <div className="px-5 py-3.5 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Vergi Takvimi
           </div>
           <h2 className="text-base font-black text-[#0f172a]">Sonraki 90 Gün</h2>

@@ -280,7 +280,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
         {/* ── LEFT: SLIDERS ───────────────────────────────────────────────── */}
         <div className="space-y-4">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Değişkenler</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Değişkenler</div>
 
           <SliderRow
             label="Gelir Değişimi"
@@ -367,7 +367,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Save scenario inline form */}
           {showSaveBox && (
             <div className="bg-brand-subtle border border-brand/10 rounded px-3 py-3 space-y-2">
-              <div className="text-[9px] font-black uppercase tracking-widest text-brand-light">Senaryo Adı</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-brand-light">Senaryo Adı</div>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -400,7 +400,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Saved scenarios list */}
           {(scenariosLoading || saved.length > 0) && (
             <div className="space-y-1.5">
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] flex items-center justify-between">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   Kayıtlı Senaryolar
                   {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e8eaef] border-t-[#64748b] rounded-full animate-spin" />}
@@ -457,7 +457,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                       <div className="flex items-center gap-1.5">
                         <div className="text-[11px] font-bold text-[#1e293b] truncate">{s.name}</div>
                         {isBaseline && (
-                          <span className="flex-shrink-0 text-[8px] font-black uppercase tracking-wide bg-brand-subtle text-brand px-1.5 py-0.5 rounded">
+                          <span className="flex-shrink-0 text-[8px] font-bold uppercase tracking-wide bg-brand-subtle text-brand px-1.5 py-0.5 rounded">
                             ★ Referans
                           </span>
                         )}
@@ -508,7 +508,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
         {/* ── RIGHT: OUTPUT ───────────────────────────────────────────────── */}
         <div className="space-y-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
             {compareMode && compareSelected.size >= 2 ? 'Senaryo Karşılaştırması' : 'Sonuçlar'}
           </div>
 
@@ -604,7 +604,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* P&L Summary */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e8eaef]">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kar/Zarar Özeti</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Kar/Zarar Özeti</span>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
               <PnlRow label="Gelir"       value={result.revenue}      base={baseline.revenue}   indent={0} positive />
@@ -621,13 +621,13 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Key metrics row */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt Marj</div>
               <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">KDV Net</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">KDV Net</div>
               <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
               </div>
@@ -638,7 +638,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Cash + distribution */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e8eaef]">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım & Nakit</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Dağıtım & Nakit</span>
             </div>
             <div className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -690,7 +690,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {cascadeStory && (
             <div className="bg-[#f8fafc] border border-[#e8eaef] rounded overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e8eaef]">
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Senaryo Zinciri</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Bu Senaryo Zinciri</span>
               </div>
               <div className="divide-y divide-[#e8eaef]">
                 {cascadeStory.map(impact => (

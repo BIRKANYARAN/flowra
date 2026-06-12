@@ -145,7 +145,7 @@ function TrendRow({ period, isCurrent }: { period: CccScorecardPeriod; isCurrent
       <td className="px-3 py-2 text-xs font-medium text-[#334155] whitespace-nowrap">
         {period.period_label}
         {isCurrent && (
-          <span className="ml-1.5 text-[9px] font-black uppercase tracking-wide text-info-text">
+          <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-info-text">
             Güncel
           </span>
         )}
@@ -248,7 +248,7 @@ export function CccScorecardClient({ companyId }: Props) {
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Nakit Dönüşüm Verimliliği Skorkartı <InfoTip k="CCC" />
         </span>
         <span className={`text-[10px] font-bold ${trendCfg.cls}`}>
@@ -265,7 +265,7 @@ export function CccScorecardClient({ companyId }: Props) {
           </div>
           {/* Score + label */}
           <div className="flex-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Nakit Dönüşüm Verimliliği
             </div>
             <div className="text-3xl font-black tabular-nums text-[#0f172a]">
@@ -293,7 +293,7 @@ export function CccScorecardClient({ companyId }: Props) {
                 ? 'bg-green-50 border-green-200'
                 : 'bg-orange-50 border-orange-200'
             }`}>
-              <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-0.5">
+              <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-0.5">
                 Kıyaslama vs
               </div>
               <div className={`text-xl font-black tabular-nums ${
@@ -316,7 +316,7 @@ export function CccScorecardClient({ companyId }: Props) {
 
       {/* 3-Component breakdown */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 space-y-5">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Bileşen Skorları
         </div>
 
@@ -362,7 +362,7 @@ export function CccScorecardClient({ companyId }: Props) {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-black uppercase tracking-wide text-amber-800 mb-0.5">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-amber-800 mb-0.5">
               En Düşük Skor
             </div>
             <div className="text-xs font-bold text-amber-900">
@@ -379,7 +379,7 @@ export function CccScorecardClient({ companyId }: Props) {
       {report.periods.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
               6 Aylık Trend
             </span>
           </div>
@@ -387,11 +387,11 @@ export function CccScorecardClient({ companyId }: Props) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#f1f5f9]">
-                  <th className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">Ay</th>
-                  <th className="px-3 py-2 text-center text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">CCC</th>
-                  <th className="px-3 py-2 text-center text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">Verimlilik</th>
-                  <th className="px-3 py-2 text-center text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">Not</th>
-                  <th className="px-3 py-2 text-center text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">vs Kıyaslama</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">Ay</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">CCC</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">Verimlilik</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">Not</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">vs Kıyaslama</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -413,7 +413,7 @@ export function CccScorecardClient({ companyId }: Props) {
         <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="text-[10px] font-black uppercase tracking-wide text-[#16a34a] mb-1">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-[#16a34a] mb-1">
                 İyileştirme Potansiyeli
               </div>
               <div className="text-sm text-[#15803d] leading-relaxed">

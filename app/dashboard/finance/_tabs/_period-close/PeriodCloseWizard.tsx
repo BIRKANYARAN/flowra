@@ -244,7 +244,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
   if (isLoading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
           Dönem Kapanış Sihirbazı
         </div>
         <div className="flex items-center justify-center py-8">
@@ -287,7 +287,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Dönem Kapanış Sihirbazı
           </div>
           <div className="text-xs font-semibold text-[#0f172a] mt-0.5">

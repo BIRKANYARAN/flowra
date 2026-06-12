@@ -385,7 +385,7 @@ export function ProformaDetailClient({
 
             {/* Modal body — items only, no manual holding days */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Seçimi</p>
+              <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ürün Seçimi</p>
 
               {selItems.map(it => {
                 const lt = calculateLine({ price: it.price, quantity: it.qty, discount_percent: it.discountPercent, kdv: it.kdv }).line_total

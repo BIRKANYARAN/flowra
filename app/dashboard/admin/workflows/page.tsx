@@ -141,19 +141,19 @@ export default async function WorkflowsPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Tür
                 </th>
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Başlatan
                 </th>
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Başlatıldı
                 </th>
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   Son Tarih
                 </th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                   İşlemler
                 </th>
               </tr>
@@ -162,7 +162,7 @@ export default async function WorkflowsPage() {
               {workflows.map(w => (
                 <tr key={w.id} className="hover:bg-[#f8fafc]/50 transition-colors">
                   <td className="px-4 py-3">
-                    <span className="text-[0.65rem] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
+                    <span className="text-[0.65rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
                       {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
                     </span>
                   </td>

@@ -377,7 +377,7 @@ export default function SimulationClient({
       {/* ── Zone 1: Status header ─────────────────────────────────────────────── */}
       <div className="bg-[#020617] text-white rounded px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mr-3">Simülasyon</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mr-3">Simülasyon</span>
           {!hasInputs ? (
             <span className="text-sm text-[#94a3b8]">Maliyet ve fiyat girerek başlayın</span>
           ) : isViable ? (
@@ -445,7 +445,7 @@ export default function SimulationClient({
         ].map((card, i) => (
           <div key={card.label}
             className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
           </div>
@@ -511,7 +511,7 @@ export default function SimulationClient({
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Yıllık Toplam</h2>
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[
             { label: 'Toplam Gelir',               value: fmtC(toDisplay(yearly.totalRevenue), S) },
@@ -524,33 +524,33 @@ export default function SimulationClient({
             },
           ].map(t => (
             <div key={t.label}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{t.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{t.label}</div>
               <div className={`text-lg font-black tabular-nums ${t.color ?? 'text-[#334155]'}`}>{t.value}</div>
             </div>
           ))}
         </div>
         <div className="mt-4 pt-4 border-t border-[#e8eaef] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Gider (Tekrarlı)</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Gider (Tekrarlı)</div>
             <div className="text-lg font-black tabular-nums text-neg">{fmtC(toDisplay(yearly.yearlyExpenses), S)}</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Tekrarlı gider planından</div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Net Kâr</div>
             <div className={`text-lg font-black tabular-nums ${yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmtC(toDisplay(yearly.totalNetProfit), S)}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Brüt Kâr − Gider</div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortalama Marj</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ortalama Marj</div>
             <div className={`text-lg font-black tabular-nums ${yearly.avgMargin >= 0 ? 'text-brand' : 'text-neg'}`}>
               {pct(yearly.avgMargin)}
             </div>
           </div>
           {yearly.breakEvenUnits > 0 && (
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Başabaş Noktası</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Başabaş Noktası</div>
               <div className="text-lg font-black tabular-nums text-warn-text">
                 {yearly.breakEvenUnits.toLocaleString('tr-TR')} adet
               </div>

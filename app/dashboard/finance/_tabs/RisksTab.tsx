@@ -233,7 +233,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           },
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
           </div>
@@ -243,7 +243,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       {/* C9 — Financial Early-Warning System */}
       {earlyWarningLines.length > 0 && (
         <div className="bg-[#fffbeb] border border-warn-light rounded p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-3">Erken Uyarı Göstergesi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text mb-3">Erken Uyarı Göstergesi</div>
           <div className="space-y-1.5">
             {earlyWarningLines.map((line, i) => (
               <p key={i} className="text-xs text-[#334155] leading-relaxed">
@@ -258,7 +258,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Konsantrasyon Analizi</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Konsantrasyon Analizi</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Top müşterilerin toplam alacak içindeki payı</div>
           </div>
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${riskCfg.bg} ${riskCfg.text} ${riskCfg.border}`}>
@@ -300,19 +300,19 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       {/* Zone 3 — Aging table */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri Yaşlandırma Analizi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Müşteri Yaşlandırma Analizi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Alacakların vade kırılımı</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[600px]">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Güncel</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">+30g</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">+60g</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">+90g</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Müşteri</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">Güncel</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-warn">+30g</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-warn">+60g</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-neg">+90g</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -360,10 +360,10 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel Sapma Sinyalleri</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Operasyonel Sapma Sinyalleri</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Kural tabanlı · Son 6 ay istatistiksel sapma · ±2σ eşiği</div>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wide bg-[#f8fafc] border border-[#e8eaef] text-[#64748b] px-2 py-0.5 rounded">
+            <span className="text-[9px] font-bold uppercase tracking-wide bg-[#f8fafc] border border-[#e8eaef] text-[#64748b] px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
             </span>
           </div>
@@ -393,7 +393,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${cfg.dot}`} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wide">{typeLabel}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wide">{typeLabel}</span>
                       <span className="text-[9px] font-semibold opacity-60">{monthLabel}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
                         a.direction === 'spike'
@@ -418,7 +418,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 5 — Pressure Assessment */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Baskı Değerlendirmesi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Baskı Değerlendirmesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (
             <li key={i} className="text-[11px] text-[#334155] leading-relaxed flex items-start gap-2">

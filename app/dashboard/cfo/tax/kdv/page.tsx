@@ -152,7 +152,7 @@ export default async function KdvPage({
 
         {/* Output VAT */}
         <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesaplanan KDV (Çıkış) — 391</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hesaplanan KDV (Çıkış) — 391</div>
         </div>
         <div className="px-4 py-3 space-y-1.5">
           <div className="flex items-center justify-between">
@@ -163,7 +163,7 @@ export default async function KdvPage({
 
         {/* Input VAT */}
         <div className="px-4 py-2.5 bg-[#f8fafc] border-y border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İndirilecek KDV (Giriş) — 191</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İndirilecek KDV (Giriş) — 191</div>
         </div>
         <div className="px-4 py-3 space-y-1.5">
           <div className="flex items-center justify-between">
@@ -198,14 +198,14 @@ export default async function KdvPage({
       {kdv.breakdown.vat_rate_summary.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Oranı Dağılımı</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">KDV Oranı Dağılımı</div>
           </div>
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
-                <th className="text-right px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Matrah</th>
-                <th className="text-right px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV</th>
+                <th className="text-left px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Oran</th>
+                <th className="text-right px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Matrah</th>
+                <th className="text-right px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">KDV</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

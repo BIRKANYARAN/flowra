@@ -82,7 +82,7 @@ export function CashForecastClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
           </div>
         </div>
@@ -96,7 +96,7 @@ export function CashForecastClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
           </div>
         </div>
@@ -149,7 +149,7 @@ export function CashForecastClient({ companyId }: Props) {
       <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               13 Haftalık Nakit Projeksiyonu
             </div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -169,7 +169,7 @@ export function CashForecastClient({ companyId }: Props) {
           { label: `DPO (${inputs_used.dpo} gün)`,  value: `${inputs_used.dpo} gün`   },
         ].map(item => (
           <div key={item.label} className="px-3 py-2">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{item.label}</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</div>
             <div className="text-xs font-bold text-[#334155] tabular-nums">{item.value}</div>
           </div>
         ))}
@@ -179,7 +179,7 @@ export function CashForecastClient({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] border-b border-[#e8eaef]">
         {kpis.map(kpi => (
           <div key={kpi.label} className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {kpi.label}
             </div>
             <div className={`text-lg font-black tabular-nums leading-none ${kpi.tone}`}>
@@ -207,11 +207,11 @@ export function CashForecastClient({ companyId }: Props) {
         <table className="w-full text-xs min-w-[520px]">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hafta</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-green-700">Gelen</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-red-600">Giden</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#475569]">Kapanış Nakit</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hafta</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-green-700">Gelen</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-600">Giden</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#475569]">Kapanış Nakit</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -261,7 +261,7 @@ export function CashForecastClient({ companyId }: Props) {
       {known_obligations.length > 0 && (
         <div className="border-t border-[#e8eaef]">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Planlı Taahhütler ({known_obligations.length} adet)
             </div>
           </div>

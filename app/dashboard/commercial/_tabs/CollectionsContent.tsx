@@ -290,7 +290,7 @@ export async function CollectionsContent({ companyId }: Props) {
           {/* KPI strip */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Tahsilat Önceliklendirme</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Tahsilat Önceliklendirme</div>
               <div className="text-xs text-[#64748b] mt-0.5">Müşteri risk profili bazlı öncelik sıralaması</div>
             </div>
             <div className="flex items-center gap-4 text-xs">

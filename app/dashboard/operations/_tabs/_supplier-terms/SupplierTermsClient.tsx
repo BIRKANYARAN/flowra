@@ -105,7 +105,7 @@ function EarlyPaymentCard({
   const badge = DECISION_BADGE[decision]
   return (
     <div className="border border-[#e8eaef] rounded p-3 flex flex-col gap-1">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{title}</div>
       <div className="flex items-center justify-between">
         <div>
           <div className="text-lg font-black tabular-nums text-[#0f172a]">
@@ -113,7 +113,7 @@ function EarlyPaymentCard({
           </div>
           <div className="text-[10px] text-[#94a3b8]">Yıllık maliyet eşdeğeri</div>
         </div>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${badge.cls}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${badge.cls}`}>
           {badge.label}
         </span>
       </div>
@@ -146,7 +146,7 @@ function VendorRow({ v }: { v: VendorRow }) {
       </td>
       <td className="px-3 py-2.5 text-center">
         {v.payment_behavior ? (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${BEHAVIOR_BADGE[v.payment_behavior].cls}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${BEHAVIOR_BADGE[v.payment_behavior].cls}`}>
             {BEHAVIOR_BADGE[v.payment_behavior].label}
           </span>
         ) : (
@@ -184,7 +184,7 @@ export function SupplierTermsClient({ companyId }: Props) {
   if (isLoading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Tedarikçi Ödeme Koşulları
         </div>
         <div className="text-xs text-[#94a3b8] animate-pulse">Yükleniyor…</div>
@@ -195,7 +195,7 @@ export function SupplierTermsClient({ companyId }: Props) {
   if (error) {
     return (
       <div className="bg-neg-light border border-neg-light rounded p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-1">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-1">
           Tedarikçi Ödeme Koşulları
         </div>
         <div className="text-xs text-neg-text">
@@ -210,7 +210,7 @@ export function SupplierTermsClient({ companyId }: Props) {
   if (!report || report.company_summary.total_vendors === 0) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Ödeme Koşulları
         </div>
         <div className="text-xs text-[#94a3b8]">Tedarikçi verisi bulunamadı</div>
@@ -227,7 +227,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Tedarikçi Ödeme Koşulları
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -246,7 +246,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
         {/* Health score */}
         <div className="px-4 py-3 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Sağlık Skoru
           </div>
           {healthScore !== null ? (
@@ -268,7 +268,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
         {/* Average DPO */}
         <div className="px-4 py-3 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. DPO
           </div>
           <div className="text-xl font-black tabular-nums text-[#0f172a]">
@@ -279,7 +279,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
         {/* DPO Opportunity */}
         <div className="px-4 py-3 text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             DPO Fırsatı
           </div>
           <div className={`text-xl font-black tabular-nums ${cs.total_dpo_opportunity > 0 ? 'text-[#15803d]' : 'text-[#94a3b8]'}`}>
@@ -291,7 +291,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
       {/* ── Early payment analysis ───────────────────────────────────────────── */}
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Erken Ödeme İndirim Analizi
           <span className="ml-2 font-normal normal-case text-[10px]">
             (Borçlanma oranı: %{epa.default_borrowing_rate})
@@ -316,7 +316,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       {/* ── Payment behavior distribution ───────────────────────────────────── */}
       {cs.total_vendors > 0 && (
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             Ödeme Davranışı Dağılımı
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -327,7 +327,7 @@ export function SupplierTermsClient({ companyId }: Props) {
                 const b = BEHAVIOR_BADGE[k]
                 return (
                   <span key={key} className="flex items-center gap-1 text-xs text-[#64748b]">
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${b.cls}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${b.cls}`}>
                       {b.label}
                     </span>
                     <strong className="text-[#1e293b]">{count}</strong>
@@ -342,7 +342,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       {vendors.length > 0 && (
         <details className="group" open>
           <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between select-none hover:bg-[#f8fafc] transition-colors border-b border-[#e8eaef]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Tedarikçi Tablosu ({vendors.length})
             </span>
             <span className="text-xs text-[#94a3b8] group-open:rotate-90 transition-transform inline-block">
@@ -353,11 +353,11 @@ export function SupplierTermsClient({ companyId }: Props) {
             <table className="w-full text-xs min-w-[560px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Harcama</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Güven</th>
-                  <th className="text-center px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Davranış</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">DPO Fırsatı</th>
+                  <th className="text-left px-4 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tedarikçi</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Harcama</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Güven</th>
+                  <th className="text-center px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Davranış</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">DPO Fırsatı</th>
                 </tr>
               </thead>
               <tbody>

@@ -284,7 +284,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
         <div className="flex items-center gap-6">
           {/* Score */}
           <div className="text-center min-w-[80px]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Bütçe Sağlığı
             </div>
             <div className={`text-4xl font-black tabular-nums ${scoreColor(report.budget_health_score)}`}>
@@ -295,7 +295,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
 
           {/* Grade */}
           <div className="text-center min-w-[48px]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Not
             </div>
             <div className={`text-3xl font-black ${gradeColor(report.budget_health_grade)}`}>
@@ -309,7 +309,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
           {/* Alerts summary */}
           <div className="flex-1 grid grid-cols-2 gap-3">
             <div className="bg-[#fef2f2] rounded px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-wide text-neg-text mb-0.5">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-neg-text mb-0.5">
                 Bütçe Aşımı
               </div>
               <div className="text-lg font-black text-[#0f172a]">
@@ -318,7 +318,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
               <div className="text-[9px] text-[#94a3b8]">kalem</div>
             </div>
             <div className="bg-[#fffbeb] rounded px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-wide text-warn-text mb-0.5">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-warn-text mb-0.5">
                 Risk
               </div>
               <div className="text-lg font-black text-[#0f172a]">
@@ -339,7 +339,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       {report.revenue_adherence && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
           <div className="px-4 pt-4 pb-2 border-b border-[#f1f5f9]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Gelir Bütçesi
             </div>
           </div>
@@ -383,7 +383,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
         <div className="px-4 pt-4 pb-2 border-b border-[#f1f5f9] flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Gider Bütçesi
             </div>
             <div className="text-xs text-[#94a3b8] mt-0.5">
@@ -458,7 +458,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       {/* YTD Pacing */}
       {ytdPacingPct !== null && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Yılbaşından Bu Yana Bütçe Yürüyüşü
           </div>
           <div className="flex items-center gap-3">

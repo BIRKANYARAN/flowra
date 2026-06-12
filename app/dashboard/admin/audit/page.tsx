@@ -177,14 +177,14 @@ export default function AdminAuditPage() {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm mb-5">
         <div className="flex items-start justify-between mb-3 gap-4 flex-wrap">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">SHA-256 hash zinciri · tarih aralığı seçin</div>
           </div>
 
           {/* Date range picker + verify button */}
           <div className="flex items-end gap-2 flex-wrap">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Başlangıç</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Başlangıç</div>
               <input
                 type="date"
                 className={SEL + ' text-xs'}
@@ -194,7 +194,7 @@ export default function AdminAuditPage() {
               />
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Bitiş</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Bitiş</div>
               <input
                 type="date"
                 className={SEL + ' text-xs'}
@@ -283,7 +283,7 @@ export default function AdminAuditPage() {
                 </div>
                 {chainResult.first_broken && (
                   <div className="bg-white border border-neg-light rounded p-3 space-y-1">
-                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İlk İhlal</div>
+                    <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">İlk İhlal</div>
                     <div className="text-[10px] text-[#334155]">
                       <span className="text-[#94a3b8]">ID:</span>{' '}
                       <code className="bg-neg-light px-1 rounded">{chainResult.first_broken.id}</code>
@@ -313,7 +313,7 @@ export default function AdminAuditPage() {
       {/* Filters */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İşlem</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">İşlem</div>
           <select
             className={SEL}
             value={filterAction}
@@ -326,7 +326,7 @@ export default function AdminAuditPage() {
           </select>
         </div>
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Kayıt Türü</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">Kayıt Türü</div>
           <select
             className={SEL}
             value={filterEntityType}
@@ -339,7 +339,7 @@ export default function AdminAuditPage() {
           </select>
         </div>
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Başlangıç Tarihi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">Başlangıç Tarihi</div>
           <input
             type="date"
             className={SEL}
@@ -382,12 +382,12 @@ export default function AdminAuditPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#e8eaef]">
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tarih</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kullanıcı</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşlem</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kaynak</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hash</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Detay</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tarih</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kullanıcı</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İşlem</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kaynak</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hash</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Detay</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
@@ -448,7 +448,7 @@ export default function AdminAuditPage() {
                             <td colSpan={6} className="px-5 py-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+                                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
                                     Önceki Değer
                                   </div>
                                   <pre className="text-[10px] bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
@@ -456,7 +456,7 @@ export default function AdminAuditPage() {
                                   </pre>
                                 </div>
                                 <div>
-                                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+                                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
                                     Yeni Değer
                                   </div>
                                   <pre className="text-[10px] bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">

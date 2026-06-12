@@ -77,7 +77,7 @@ export function Card({
 /* ── Label (tiny uppercase) ──────────────────────────────────────────────── */
 export function Label({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]', className)}>
+    <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]', className)}>
       {children}
     </div>
   )

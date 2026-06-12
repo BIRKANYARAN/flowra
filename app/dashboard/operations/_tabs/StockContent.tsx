@@ -115,7 +115,7 @@ export async function StockContent({ companyId, userId }: Props) {
   return (
     <div className="max-w-4xl space-y-4">
       <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Zekası</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Stok Zekası</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
       </div>
 
@@ -143,7 +143,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yeniden Sipariş Uyarıları</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Yeniden Sipariş Uyarıları</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— düşük stok tespiti ve sipariş önerileri</span>
             </div>
             {/* Alert count badges */}
@@ -170,7 +170,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Kalan Gün</th>
@@ -240,7 +240,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Talep Tahmini</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Talep Tahmini</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">
                 — {demandForecastReport.period_months} aylık geçmişe dayalı 3 aylık talep projeksiyonu
               </span>
@@ -262,7 +262,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Aylık Ort.</th>
@@ -329,7 +329,7 @@ export async function StockContent({ companyId, userId }: Props) {
           },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
@@ -341,7 +341,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text mb-1">
               Stok Tükendi — {zeroStockCount} Ürün
             </div>
             <div className="flex flex-wrap gap-2">
@@ -362,7 +362,7 @@ export async function StockContent({ companyId, userId }: Props) {
       {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
       {inconsistentItems.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-2">
             ⚠ Stok Tutarsızlığı — {inconsistentItems.length} Ürün
           </div>
           <div className="space-y-1.5">
@@ -397,7 +397,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Değerleme</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Stok Değerleme</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— FIFO maliyet bazlı lot yaşlandırması</span>
             </div>
             <span className="text-[10px] text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded">
@@ -414,7 +414,7 @@ export async function StockContent({ companyId, userId }: Props) {
               { label: '90+ gün',        value: valuationReport.aging_summary.aging_90_plus_try,  color: 'text-neg' },
             ].map(b => (
               <div key={b.label} className="px-4 py-3">
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{b.label}</div>
                 <div className={`text-base font-black tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
               </div>
             ))}
@@ -424,7 +424,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Toplam Miktar</th>
                   <th className="text-right px-4 py-2.5">Stok Değeri (₺)</th>
@@ -481,7 +481,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">FIFO Lot Paneli</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">FIFO Lot Paneli</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— açık lotlar, tutma süresi ve maliyet</span>
             </div>
             <span className="text-[10px] text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded">
@@ -503,13 +503,13 @@ export async function StockContent({ companyId, userId }: Props) {
                     </div>
                     <div className="flex items-center gap-4 text-right">
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Miktar</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Miktar</div>
                         <div className="text-sm font-black tabular-nums text-[#1e293b]">
                           {totalQty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {product.unit}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Lot Değeri</div>
+                        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Lot Değeri</div>
                         <div className="text-sm font-black tabular-nums text-brand">{fmtTRY(productValue)}</div>
                       </div>
                     </div>
@@ -517,7 +517,7 @@ export async function StockContent({ companyId, userId }: Props) {
                   <div className="bg-[#f8fafc] rounded overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
+                        <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#e8eaef]">
                           <th className="text-left px-4 py-2.5">Giriş Tarihi</th>
                           <th className="text-right px-4 py-2.5">Kalan Adet</th>
                           <th className="text-right px-4 py-2.5">Birim Maliyet</th>
@@ -566,7 +566,7 @@ export async function StockContent({ companyId, userId }: Props) {
       {/* Current stock levels */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e8eaef]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Mevcut Stok</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Mevcut Stok</span>
         </div>
         {products.length === 0 ? (
           <div className="py-10 text-center">
@@ -611,7 +611,7 @@ export async function StockContent({ companyId, userId }: Props) {
       {/* Movement history */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e8eaef]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Hareketler</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">— son 50 kayıt</span>
         </div>
         {movements.length === 0 ? (
@@ -623,7 +623,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-3">Ürün</th>
                   <th className="text-center px-3 py-3">Tip</th>
                   <th className="text-right px-3 py-3">Değişim</th>

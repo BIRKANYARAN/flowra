@@ -163,7 +163,7 @@ function MarginSummary({ statement }: { statement: IncomeStatement }) {
     <div className="grid grid-cols-4 gap-2 pt-3 border-t border-[#e8eaef]">
       {margins.map(m => (
         <div key={m.label} className="text-center">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             {m.label}
           </div>
           <div className={`text-sm font-black tabular-nums ${
@@ -239,7 +239,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
       {/* ── Header + Controls ─────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Gelir Tablosu
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -321,7 +321,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
         <div className="border-b border-[#e8eaef] bg-[#f8fafc]">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 <th className="text-left px-4 py-2.5 w-1/2">Kalem</th>
                 <th className="text-right px-4 py-2.5">
                   {statement?.period_label ?? (mode === 'monthly' ? periodKeyLabel(period) : `${year} Yılı`)}
@@ -379,7 +379,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
       {/* ── Margin summary ────────────────────────────────────────────────── */}
       {!isLoading && !isError && statement && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Kâr Marjları
           </div>
           <MarginSummary statement={statement} />

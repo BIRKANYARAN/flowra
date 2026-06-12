@@ -49,7 +49,7 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">{title}</span>
         <span className="text-[0.6rem] text-[#94a3b8] font-medium">Tutar · Pay</span>
       </div>
       <div className="flex-1 divide-y divide-[#f1f5f9] px-4 py-2">
@@ -259,7 +259,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
 
       {/* Balance source indicator */}
       <div className="flex items-center gap-2 px-1">
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bilanço Kaynağı:</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Bilanço Kaynağı:</span>
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
           useGlData
             ? 'bg-pos-light border-pos-light text-pos-text'
@@ -277,7 +277,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1.5" />
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-neg-text">
               Negatif Özsermaye — Teknik İflas Riski
             </div>
             <div className="text-xs text-neg-text mt-0.5">
@@ -298,7 +298,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0 mt-1.5" />
           <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
+            <div className={`text-[11px] font-bold uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
               {leverageRatio > 0.80 ? 'Yüksek Finansal Kaldıraç' : 'Kaldıraç Oranı Dikkat Sınırında'}
             </div>
             <div className={`text-xs mt-0.5 ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
@@ -315,7 +315,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0 mt-1.5" />
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-warn-text">
               Düşük Likidite — Cari Oran {currentRatio.toFixed(2)}
             </div>
             <div className="text-xs text-warn-text mt-0.5">
@@ -337,7 +337,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
           { label: 'Özsermaye',            value: fmt(bs.equity.total_equity_try),       color: bs.equity.total_equity_try >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.color}`}>{c.value}</div>
           </div>
         ))}

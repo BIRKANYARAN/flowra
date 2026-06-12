@@ -119,7 +119,7 @@ export function BelgeKimligiCard({
 
           {/* Preview chip */}
           <div className="mt-2 p-3 rounded border border-[#e8eaef] bg-[#f8fafc]">
-            <p className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
               PDF Önizleme
             </p>
             <div className="flex items-center gap-2">

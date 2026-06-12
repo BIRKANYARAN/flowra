@@ -118,7 +118,7 @@ export async function CustomersContent({ companyId }: Props) {
   return (
     <div className="max-w-3xl space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
         </span>
       </div>
@@ -145,10 +145,10 @@ export async function CustomersContent({ companyId }: Props) {
       {concentrationReport && concentrationReport.customer_count > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Müşteri Yoğunlaşma Riski
             </span>
-            <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded ${hhiStatusColor[concentrationReport.hhi_status].badge}`}>
+            <span className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${hhiStatusColor[concentrationReport.hhi_status].badge}`}>
               HHI {concentrationReport.hhi.toFixed(3)} — {hhiStatusColor[concentrationReport.hhi_status].label}
             </span>
           </div>
@@ -156,7 +156,7 @@ export async function CustomersContent({ companyId }: Props) {
           {/* Dominant customer warning */}
           {concentrationReport.has_dominant_customer && (
             <div className="bg-neg-light border border-neg-light rounded px-3 py-2">
-              <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-neg-text">
                 Dominant Müşteri Riski
               </div>
               <div className="text-xs text-neg-text mt-0.5">
@@ -244,7 +244,7 @@ export async function CustomersContent({ companyId }: Props) {
             },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
@@ -267,7 +267,7 @@ export async function CustomersContent({ companyId }: Props) {
             { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
@@ -283,7 +283,7 @@ export async function CustomersContent({ companyId }: Props) {
             : 'bg-warn-light border-warn-light'
         }`}>
           <div>
-            <div className={`text-[11px] font-black uppercase tracking-wide ${
+            <div className={`text-[11px] font-bold uppercase tracking-wide ${
               topCustomers[0].total / billed > 0.6 ? 'text-neg-text' : 'text-warn-text'
             }`}>
               Yüksek Müşteri Konsantrasyonu
@@ -302,7 +302,7 @@ export async function CustomersContent({ companyId }: Props) {
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">En Yüksek Cirolu Müşteriler</h3>
+          <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {
               const barPct   = (tc.total / maxTopTotal) * 100
@@ -330,7 +330,7 @@ export async function CustomersContent({ companyId }: Props) {
       {atRiskCustomers.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Müşteri Ödeme Riski
             </span>
             <span className="text-[9px] text-[#94a3b8]">
@@ -355,7 +355,7 @@ export async function CustomersContent({ companyId }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-[#1e293b] truncate">{r.customer_name}</span>
-                      <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.badge}`}>
+                      <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.badge}`}>
                         {cfg.label}
                       </span>
                     </div>

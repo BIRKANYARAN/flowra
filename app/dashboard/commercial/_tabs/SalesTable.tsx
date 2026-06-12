@@ -118,7 +118,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         {/* Drawer header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[#e8eaef]">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] leading-none">
               Ödeme Kaydet
             </div>
             <div className="text-sm font-semibold text-[#0f172a] mt-1">{sale.customer_name}</div>
@@ -147,7 +147,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-amount"
-              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tutarı (TRY)
             </label>
@@ -179,7 +179,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-method"
-              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Yöntemi
             </label>
@@ -199,7 +199,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-date"
-              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tarihi
             </label>
@@ -408,7 +408,7 @@ export function SalesTable({ rows }: Props) {
             },
           ].map(card => (
             <div key={card.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
             </div>
           ))}

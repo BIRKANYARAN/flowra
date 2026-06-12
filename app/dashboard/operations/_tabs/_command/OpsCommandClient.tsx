@@ -92,7 +92,7 @@ function MetricCard({
 
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{primary}</div>
       {secondary && (
         <div className="text-[10px] text-[#94a3b8] mt-1">{secondary}</div>
@@ -113,7 +113,7 @@ function WtdBar({ todayTry, wtdTry }: { todayTry: number; wtdTry: number }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Haftalık İlerleme (Bu Gün / Haftalık Toplam)</span>
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Haftalık İlerleme (Bu Gün / Haftalık Toplam)</span>
         <span className="text-xs font-bold text-[#334155] tabular-nums">{fmtTRY(todayTry)} / {fmtTRY(wtdTry)}</span>
       </div>
       <div className="h-2 bg-[#f1f5f9] rounded overflow-hidden">
@@ -186,7 +186,7 @@ export function OpsCommandClient({ companyId }: Props) {
       <div className={`flex items-center gap-3 px-5 py-4 border rounded ${pulse.bg}`}>
         <span className={`w-3 h-3 rounded-full ${pulse.dot} animate-pulse`} />
         <div className="flex-1">
-          <div className={`text-sm font-black uppercase tracking-wide ${pulse.text}`}>
+          <div className={`text-sm font-bold uppercase tracking-wide ${pulse.text}`}>
             Operasyonel Nabız: {pulse.label}
           </div>
           <div className={`text-[11px] mt-0.5 ${pulse.text} opacity-75`}>
@@ -247,7 +247,7 @@ export function OpsCommandClient({ companyId }: Props) {
       {/* Alerts */}
       {m.alerts.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Uyarılar</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Uyarılar</div>
           {m.alerts.map((alert, i) => {
             const cfg = ALERT_CONFIG[alert.severity]
             return (

@@ -72,7 +72,7 @@ export function CashflowChart({ className = '' }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akışı</h3>
+          <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Nakit Akışı</h3>
           <p className="text-[10px] text-[#cbd5e1] mt-0.5">12 aylık görünüm · tahsilat − gider</p>
         </div>
         {/* Legend */}

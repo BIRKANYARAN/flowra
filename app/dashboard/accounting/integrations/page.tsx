@@ -34,7 +34,7 @@ export default function IntegrationsPage() {
     <div className="flex flex-col gap-6 max-w-4xl">
       {/* Hero */}
       <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Entegrasyonlar</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Entegrasyonlar</div>
         <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">Bağlanabilir Sistemler</h1>
         <p className="text-sm text-[#94a3b8] mt-1 max-w-2xl">
           Flowra muhasebe programınızın yerine geçmez — <strong className="text-[#475569]">onu okur</strong>. Faturalarınızı,

@@ -57,7 +57,7 @@ function LoadingSkeleton() {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Vergi Uyum Takvimi
         </div>
       </div>
@@ -94,7 +94,7 @@ export function TaxComplianceClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Vergi Uyum Takvimi
           </div>
         </div>
@@ -131,7 +131,7 @@ export function TaxComplianceClient({ companyId }: Props) {
 
         {/* Header */}
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Vergi Uyum Takvimi
           </div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -145,7 +145,7 @@ export function TaxComplianceClient({ companyId }: Props) {
           {/* Current month KDV card */}
           <div className="p-4 border-r border-[#e8eaef]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 KDV — Bu Ay
               </div>
               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusBadgeCls(kdv.obligation_status)}`}>
@@ -182,7 +182,7 @@ export function TaxComplianceClient({ companyId }: Props) {
           {/* Current quarter Geçici Vergi card */}
           <div className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Geçici Vergi — Q{gecici.current_quarter}
               </div>
               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusBadgeCls(gecici.obligation_status)}`}>
@@ -226,7 +226,7 @@ export function TaxComplianceClient({ companyId }: Props) {
         {/* Next 3 obligations list */}
         <div>
           <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Sonraki Yükümlülükler
             </div>
           </div>
@@ -275,7 +275,7 @@ export function TaxComplianceClient({ companyId }: Props) {
         {penalty && (
           <div className="border-t border-[#e8eaef]">
             <div className="px-4 py-2 bg-neg-light/30 border-b border-[#e8eaef]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text">
                 Gecikme Cezası Tahmini
               </div>
             </div>
@@ -290,7 +290,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                   key={item.label}
                   className={`p-3 ${i < 3 ? 'border-r border-[#e8eaef]' : ''}`}
                 >
-                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                     {item.label}
                   </div>
                   <div className={`text-sm font-black tabular-nums ${item.cls}`}>

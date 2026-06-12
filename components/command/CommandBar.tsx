@@ -264,7 +264,7 @@ export function CommandBar() {
                   <div className={`px-4 pt-3 pb-1 flex items-center gap-2 ${
                     grp.name === 'Akıllı Öneriler' ? 'pt-2' : ''
                   }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">
                       {grp.name}
                     </span>
                     {grp.name === 'Akıllı Öneriler' && (

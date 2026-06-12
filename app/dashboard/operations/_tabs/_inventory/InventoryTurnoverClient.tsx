@@ -162,7 +162,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Stok Devir Analizi
           </span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">
@@ -176,7 +176,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] border-b border-[#e8eaef]">
         {/* Stok Devir Hızı */}
         <div className="px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Stok Devir Hızı
           </div>
           <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">
@@ -189,7 +189,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
 
         {/* DIO */}
         <div className="px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             DIO (Gün)
           </div>
           <div className={`text-xl font-black tabular-nums leading-none ${
@@ -204,7 +204,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
 
         {/* Ölü Stok Değeri */}
         <div className="px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ölü Stok Değeri
           </div>
           <div className={`text-xl font-black tabular-nums leading-none ${
@@ -219,7 +219,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
 
         {/* Kritik Stok */}
         <div className="px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kritik Stok Sayısı
           </div>
           <div className={`text-xl font-black tabular-nums leading-none ${
@@ -237,7 +237,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       <div className="px-5 py-4 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Fire / Kayıp Analizi
             </span>
           </div>
@@ -275,7 +275,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       {topDeadItems.length > 0 && (
         <div className="border-b border-[#e8eaef]">
           <div className="px-5 py-3 border-b border-[#e8eaef]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Ölü Stok — İlk 5 Ürün
             </span>
             <span className="ml-2 text-[10px] text-[#94a3b8]">90+ gün hareketsiz</span>
@@ -283,7 +283,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün ID</th>
                   <th className="text-right px-4 py-2.5">Stok Değeri</th>
                   <th className="text-right px-5 py-2.5">Son Satış</th>
@@ -315,7 +315,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       {urgentAlerts.length > 0 && (
         <div>
           <div className="px-5 py-3 border-b border-[#e8eaef] flex items-center justify-between">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Acil Sipariş Uyarıları
             </span>
             <span className="text-[10px] text-[#94a3b8]">
@@ -325,7 +325,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut</th>
                   <th className="text-right px-4 py-2.5">Yeniden Sipariş Noktası</th>

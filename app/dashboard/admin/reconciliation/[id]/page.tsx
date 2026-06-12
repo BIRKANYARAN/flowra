@@ -209,7 +209,7 @@ export default async function ReconciliationDetailPage({
           const es = (snapshot.sections as any)._executive_summary as any
           return (
             <div className="bg-[#0f172a] text-white rounded p-5">
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2">Yönetim Özeti</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-white/60 mb-2">Yönetim Özeti</div>
               <p className="text-sm font-semibold text-white mb-4">{es.headline}</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
                 {[

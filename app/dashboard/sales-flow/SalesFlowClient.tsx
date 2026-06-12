@@ -415,7 +415,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-2 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{titles[selected]}</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{titles[selected]}</span>
           <button onClick={() => setSelected(null)} className="text-[#94a3b8] hover:text-[#334155] text-lg leading-none">×</button>
         </div>
         {panels[selected]}
@@ -463,7 +463,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       {/* ── Conversion rate strip ────────────────────────────────────────── */}
       {proformas.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönüşüm Oranları</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Dönüşüm Oranları</div>
           <div className="grid grid-cols-4 gap-4 text-center">
             {[
               { label: 'Taslak',       count: drafts.length,    color: 'text-[#64748b]',    stage: null         },

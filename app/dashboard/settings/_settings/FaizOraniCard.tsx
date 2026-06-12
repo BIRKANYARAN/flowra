@@ -70,7 +70,7 @@ export function FaizOraniCard({ currency, setCurrency, rate, setRate, saving, on
 
       {history.length > 0 && (
         <div className="mt-3 border-t border-[#e8eaef] pt-3 space-y-1">
-          <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+          <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
             Geçmiş — {currency}
           </p>
           {history.map(r => (

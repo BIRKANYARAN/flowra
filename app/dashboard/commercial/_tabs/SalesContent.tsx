@@ -171,7 +171,7 @@ export async function SalesContent({ companyId }: Props) {
             },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
             </div>
@@ -189,7 +189,7 @@ export async function SalesContent({ companyId }: Props) {
           <div className={`rounded border px-4 py-3 ${
             isDown ? 'bg-warn-light border-warn-light' : 'bg-pos-light border-pos-light'
           }`}>
-            <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
+            <div className={`text-[11px] font-bold uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
               {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
             </div>
             <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
@@ -276,7 +276,7 @@ export async function SalesContent({ companyId }: Props) {
           <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e8eaef]">
             {/* Top 5 customers */}
             <div className="p-4">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">En İyi 5 Müşteri</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">En İyi 5 Müşteri</div>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-[#94a3b8] text-[10px]">
@@ -309,7 +309,7 @@ export async function SalesContent({ companyId }: Props) {
             {/* Top 5 products (or new/returning summary if no products) */}
             {attribution.by_product.length > 0 ? (
               <div className="p-4">
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">En İyi 5 Ürün / Hizmet</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">En İyi 5 Ürün / Hizmet</div>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[#94a3b8] text-[10px]">
@@ -333,7 +333,7 @@ export async function SalesContent({ companyId }: Props) {
               </div>
             ) : (
               <div className="p-4 flex flex-col gap-3">
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Yeni vs Mevcut Müşteri</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Yeni vs Mevcut Müşteri</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[#f0fdf4] rounded p-3">
                     <div className="text-[10px] text-[#94a3b8] mb-0.5">Yeni Müşteri</div>
@@ -366,7 +366,7 @@ export async function SalesContent({ companyId }: Props) {
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
               <div key={cur} className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-wide bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded">{cur}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wide bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded">{cur}</span>
                 <span className="text-xs font-bold tabular-nums text-[#1e293b]">{fmt(total)}</span>
                 {mtdRevenue > 0 && (
                   <span className="text-[10px] text-[#94a3b8]">%{Math.round((total / mtdRevenue) * 100)}</span>

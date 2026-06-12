@@ -18,7 +18,7 @@ import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 
 // ── Role labels ───────────────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ export default function AdminUsersPage() {
       {/* Active members */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden mb-5">
         <div className="px-5 py-3 border-b border-[#e8eaef]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Üyeler</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aktif Üyeler</span>
         </div>
         {activeMembers.length === 0 ? (
           <div className="text-center py-10 text-[#94a3b8] text-sm">Aktif üye bulunamadı.</div>
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
       {pendingMembers.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-3 border-b border-[#e8eaef]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bekleyen Davetler</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Bekleyen Davetler</span>
           </div>
           <div className="divide-y divide-[#f1f5f9]">
             {pendingMembers.map(m => (

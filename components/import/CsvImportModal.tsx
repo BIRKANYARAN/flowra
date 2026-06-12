@@ -114,7 +114,7 @@ export function CsvImportModal({ open, onClose, onDone, title, endpoint, synonym
 
               {text.trim() && hasRequired && (
                 <div className="border border-[#e8eaef] rounded-lg overflow-hidden">
-                  <div className="px-3 py-2 bg-[#f8fafc] text-[10px] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
+                  <div className="px-3 py-2 bg-[#f8fafc] text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] border-b border-[#e8eaef]">
                     Önizleme — {validRows.length} geçerli satır
                   </div>
                   <div className="overflow-x-auto">

@@ -66,7 +66,7 @@ function ScenarioChip({
       ].join(' ')}
     >
       {scenario.is_baseline && (
-        <span className="text-[8px] font-black uppercase tracking-wide opacity-70 mr-0.5">BZ</span>
+        <span className="text-[8px] font-bold uppercase tracking-wide opacity-70 mr-0.5">BZ</span>
       )}
       {scenario.name}
     </button>
@@ -261,7 +261,7 @@ export function ScenarioComparisonClient() {
 
       {/* Scenario selector chips */}
       <div className="space-y-1.5">
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">
           Karşılaştırma Seçimi
         </div>
         <div className="flex flex-wrap gap-2">

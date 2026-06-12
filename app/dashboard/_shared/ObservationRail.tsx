@@ -113,7 +113,7 @@ export function ObservationRail({ context, maxItems = 3 }: Props) {
         className={`w-full flex items-center justify-between px-3 py-2 text-left hover:opacity-80 transition-opacity ${headerBg}`}
       >
         <div className="flex items-center gap-2">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Durum Sinyalleri
           </span>
           <span className={`text-[10px] font-semibold ${labelColor}`}>{label}</span>

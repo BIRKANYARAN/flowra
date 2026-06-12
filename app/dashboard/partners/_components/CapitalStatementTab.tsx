@@ -223,7 +223,7 @@ export function CapitalStatementTab() {
       {/* Controls */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Sermaye Hesap Özeti
           </div>
           <p className="text-xs text-[#64748b]">

@@ -47,7 +47,7 @@ type Grade = keyof typeof GRADE_CFG
 function GradeBadge({ grade }: { grade: Grade }) {
   const cfg = GRADE_CFG[grade]
   return (
-    <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
       {grade}
     </span>
   )
@@ -150,7 +150,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteri Kredi Skoru
         </span>
       </div>
@@ -158,11 +158,11 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
       {/* Summary KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Müşteri</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Müşteri</div>
           <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{report.total_customers}</div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ort. Kredi Skoru</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Ort. Kredi Skoru</div>
           <div className={`text-xl font-black tabular-nums leading-none ${
             report.avg_credit_score >= 65 ? 'text-emerald-700'
             : report.avg_credit_score >= 50 ? 'text-yellow-700'
@@ -172,7 +172,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
           </div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Yüksek Risk</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Yüksek Risk</div>
           <div className={`text-xl font-black tabular-nums leading-none ${
             report.high_risk_customers.length > 0 ? 'text-red-700' : 'text-emerald-700'
           }`}>
@@ -181,7 +181,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
           <div className="text-[9px] text-[#94a3b8] mt-0.5">D / F dereceli müşteri</div>
         </div>
         <div className="p-3">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Kredi Limiti</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Kredi Limiti</div>
           <div className="text-xl font-black tabular-nums leading-none text-brand">
             {fmtTRY(report.total_recommended_limits_try)}
           </div>
@@ -194,7 +194,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
       {/* High-risk alert */}
       {alertCustomers.length > 0 && (
         <div className="mx-4 my-3 bg-red-50 border border-red-200 rounded px-3 py-2">
-          <div className="text-[11px] font-black uppercase tracking-wide text-red-800 mb-1">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-red-800 mb-1">
             Yüksek Risk Uyarısı — {alertCustomers.length} Müşteri
           </div>
           <div className="text-xs text-red-700">
@@ -218,7 +218,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
 
       {/* Grade distribution */}
       <div className="px-4 pt-3 pb-2 border-b border-[#f1f5f9]">
-        <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Derece Dağılımı
         </div>
         <GradeDistribution dist={report.grade_distribution} total={report.total_customers} />
@@ -229,10 +229,10 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-4 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <th className="text-left px-4 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Müşteri
               </th>
-              <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-20">
+              <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-20">
                 <button
                   onClick={() => setSortAsc(v => !v)}
                   className="flex items-center gap-1 mx-auto hover:text-brand transition-colors"
@@ -241,19 +241,19 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
                   Skor {sortAsc ? '↑' : '↓'}
                 </button>
               </th>
-              <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-16">
+              <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-16">
                 Derece
               </th>
-              <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-28">
+              <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-28">
                 Limit
               </th>
-              <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-28">
+              <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-28">
                 Açık Bakiye
               </th>
-              <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-20">
+              <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-20">
                 Bakiye %
               </th>
-              <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-24 hidden sm:table-cell">
+              <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-24 hidden sm:table-cell">
                 Geç (30/60/90+)
               </th>
             </tr>

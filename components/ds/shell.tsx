@@ -13,7 +13,7 @@
 //   PanelHeader    → panel title row                (border-b, px-5 py-3.5)
 //   KpiStrip       → horizontal instrument bar      (divide-x, single container)
 //   KpiCell        → individual reading in a strip  (px-5 py-3.5)
-//   SectionLabel   → uppercase category label       (text-[0.65rem] font-black uppercase tracking-widest)
+//   SectionLabel   → uppercase category label       (text-[0.65rem] font-bold uppercase tracking-wider)
 //   PageHero       → page title + subtitle + CTA
 //   PressureBanner → adaptive pressure mode banner  (severity-aware colors)
 //   EmptySlate     → empty state inside a panel
@@ -40,15 +40,15 @@ export const TOKENS = {
   panelOk:       'bg-pos-light border border-pos-light rounded',
 
   // Section label (inner, above a block)
-  label: 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none',
+  label: 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] leading-none',
 
   // Page-level section divider label
-  pageLabel: 'text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5',
+  pageLabel: 'text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5',
 
   // Page hero title
   heroTitle: 'text-2xl font-black tracking-tight text-[#0f172a] leading-tight',
   heroSub:   'text-sm text-[#94a3b8] mt-1',
-  heroSuper: 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1',
+  heroSuper: 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1',
 
   // Typography
   valueXl:  'text-xl font-black tabular-nums leading-none',
@@ -305,19 +305,19 @@ export function PressureBanner({
   const theme = {
     critical: {
       wrap:   'border border-neg-light bg-neg-light',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-neg',
+      tag:    'text-[9px] font-bold uppercase tracking-wider text-neg',
       msg:    'text-sm text-neg-text font-medium',
       btn:    'text-xs font-bold text-neg-text bg-neg-light hover:bg-neg-light',
     },
     warn: {
       wrap:   'border border-warn-light bg-warn-light',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-warn-text',
+      tag:    'text-[9px] font-bold uppercase tracking-wider text-warn-text',
       msg:    'text-sm text-warn-text font-medium',
       btn:    'text-xs font-bold text-warn-text bg-warn-light hover:bg-warn-light',
     },
     info: {
       wrap:   'border border-info-light bg-info-light',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-info-text',
+      tag:    'text-[9px] font-bold uppercase tracking-wider text-info-text',
       msg:    'text-sm text-info-text font-medium',
       btn:    'text-xs font-bold text-info-text bg-info-light hover:bg-info-light',
     },
@@ -440,7 +440,7 @@ export function DataTh({
 }) {
   return (
     <th className={cn(
-      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e8eaef]',
+      'px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e8eaef]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
       className,

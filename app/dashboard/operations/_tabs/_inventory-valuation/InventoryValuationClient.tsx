@@ -78,7 +78,7 @@ export function InventoryValuationClient() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Envanter Değerleme</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Envanter Değerleme</div>
           <div className="text-xs text-[#64748b] mt-0.5">FIFO maliyet · devir analizi · atıl stok</div>
         </div>
         <div className="text-[10px] text-[#94a3b8]">
@@ -113,7 +113,7 @@ export function InventoryValuationClient() {
           },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-base font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 truncate">{card.sub}</div>
           </div>
@@ -139,13 +139,13 @@ export function InventoryValuationClient() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Stok Adedi</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Stok Değeri</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Devir Hızı</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
-              <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Stok Günü</th>
-              <th className="text-center px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+              <th className="text-left px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Ürün</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Stok Adedi</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Stok Değeri</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Devir Hızı</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt Marj</th>
+              <th className="text-right px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Stok Günü</th>
+              <th className="text-center px-4 py-2 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
             </tr>
           </thead>
           <tbody>

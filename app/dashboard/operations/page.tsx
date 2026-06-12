@@ -66,7 +66,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
     <div className="border border-[#e8eaef] rounded-lg overflow-hidden shadow-sm">
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 px-5 py-3 bg-[#0f172a]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Operasyon Paneli
         </span>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${badge.bg} ${badge.text}`}>
@@ -84,7 +84,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
       <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] bg-white">
         {/* Bugün */}
         <div className="px-4 py-4">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Bugün</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Bugün</div>
           <div className="text-xl font-black text-[#0f172a]">
             ₺{(m.today_sales_try / 1000).toFixed(0)}K
           </div>
@@ -93,7 +93,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
 
         {/* Geciken */}
         <div className="px-4 py-4">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Geciken</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Geciken</div>
           <div className={`text-xl font-black ${m.overdue_try > 0 ? 'text-[#ef4444]' : 'text-[#22c55e]'}`}>
             ₺{(m.overdue_try / 1000).toFixed(0)}K
           </div>
@@ -102,7 +102,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
 
         {/* Kritik Stok */}
         <div className="px-4 py-4">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kritik</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kritik</div>
           <div className={`text-xl font-black ${m.critical_stock_items > 0 ? 'text-[#f97316]' : 'text-[#22c55e]'}`}>
             {m.critical_stock_items} Stok
           </div>
@@ -111,7 +111,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
 
         {/* Doluluk */}
         <div className="px-4 py-4">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Doluluk</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Doluluk</div>
           <div className={`text-xl font-black ${m.fill_rate_pct >= 95 ? 'text-[#22c55e]' : m.fill_rate_pct >= 80 ? 'text-[#eab308]' : 'text-[#ef4444]'}`}>
             %{m.fill_rate_pct.toFixed(1)}
           </div>
@@ -120,7 +120,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
 
         {/* Açık Görev */}
         <div className="px-4 py-4 col-span-2 sm:col-span-1">
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Açık</div>
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Açık</div>
           <div className={`text-xl font-black ${m.open_tasks > 0 ? 'text-[#6366f1]' : 'text-[#22c55e]'}`}>
             {m.open_tasks} Görev
           </div>
@@ -211,7 +211,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
       {/* PAGE HERO */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Operasyon Merkezi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Operasyon Merkezi</div>
           <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
             {opTitles[activeTab] ?? 'Operasyon'}
           </h1>

@@ -173,7 +173,7 @@ function PartnerCard({ p }: { p: PartnerContributionPosition }) {
       {/* Contribution history */}
       {p.contributions.length > 0 && (
         <div>
-          <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Ödeme Geçmişi</p>
+          <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Ödeme Geçmişi</p>
           <ContributionHistory contributions={p.contributions} />
         </div>
       )}
@@ -277,7 +277,7 @@ export function ContributionTimelineTab({ companyId }: Props) {
       {report.next_expected_contribution && (
         <div className="rounded-lg border border-[#e8eaef] bg-[#f8fafc] px-4 py-3 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Sonraki Katkı</p>
+            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Beklenen Sonraki Katkı</p>
             <p className="text-sm font-bold text-[#0f172a] mt-0.5">{report.next_expected_contribution.partner_name}</p>
           </div>
           <p className="text-sm font-bold text-[#0f172a]">

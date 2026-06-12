@@ -207,7 +207,7 @@ function VarianceAnalysisPanel(): JSX.Element {
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             3 Yönlü Analiz
           </div>
           <div className="text-sm font-black text-[#0f172a] mt-0.5">
@@ -233,7 +233,7 @@ function VarianceAnalysisPanel(): JSX.Element {
       <div className="grid grid-cols-3 gap-3 px-4 py-3 border-b border-[#f1f5f9]">
         {/* YTD Revenue Variance */}
         <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
-          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+          <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
             YTD Gelir Varyansı
           </div>
           {report.ytd_revenue_variance_pct !== null ? (
@@ -251,7 +251,7 @@ function VarianceAnalysisPanel(): JSX.Element {
 
         {/* YTD Expense Variance */}
         <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
-          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+          <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
             YTD Gider Varyansı
           </div>
           {report.ytd_expense_variance_pct !== null ? (
@@ -269,7 +269,7 @@ function VarianceAnalysisPanel(): JSX.Element {
 
         {/* Forecast Accuracy */}
         <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
-          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+          <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
             Tahmin Doğruluğu
           </div>
           {report.forecast_accuracy_score !== null ? (
@@ -495,7 +495,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       <div className="grid grid-cols-3 gap-3">
         {/* YTD Revenue */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Gelir
           </div>
           <div className="text-xl font-black tabular-nums text-[#0f172a]">
@@ -522,7 +522,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
         {/* YTD Expense */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Gider
           </div>
           <div className="text-xl font-black tabular-nums text-[#0f172a]">
@@ -549,7 +549,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
         {/* YTD Gross Profit */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Brüt Kâr
           </div>
           <div className={`text-xl font-black tabular-nums ${
@@ -598,7 +598,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
       {/* 12-month variance table */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-x-auto">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 pt-4 pb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-4 pt-4 pb-2">
           Aylık Varyans (Son 12 Ay)
         </div>
         <table className="w-full text-xs">
@@ -669,7 +669,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       {/* Admin budget entry form */}
       {isAdmin && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Bütçe Hedefi Gir / Güncelle
           </div>
           <form onSubmit={handleSave} className="space-y-3">

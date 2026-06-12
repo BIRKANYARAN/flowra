@@ -27,11 +27,11 @@ export function ProjectionTable({ projection, toDisplay, S, hasInputs }: Project
 
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-      <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Aylık Projeksiyon (12 Ay)</h2>
+      <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Aylık Projeksiyon (12 Ay)</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="sticky top-0 bg-[#f8fafc]">
-            <tr className="border-b border-[#e8eaef] text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <tr className="border-b border-[#e8eaef] text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               <th className="py-1.5 pr-3">Ay</th>
               <th className="py-1.5 pr-3 text-right">Gelir</th>
               <th className="py-1.5 pr-3 text-right">SMM</th>

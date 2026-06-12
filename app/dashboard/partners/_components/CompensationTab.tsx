@@ -286,12 +286,12 @@ export function CompensationTab({ partners }: CompensationTabProps) {
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Toplam Brüt</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Toplam Brüt</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(totalMonthlyGross)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">{activeSchedules.length} aktif takvim</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Net Ödeme</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Net Ödeme</div>
           <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(totalMonthlyNet)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Stopaj sonrası</div>
         </div>
@@ -301,7 +301,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
             ? 'bg-[#fef2f2] border-[#fecaca]'
             : 'bg-white border-[#e8eaef]',
         )}>
-          <div className={cn('text-[0.65rem] font-black uppercase tracking-widest', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]')}>
+          <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]')}>
             Bu Ay Ödenen
           </div>
           <div className={cn('text-sm font-black tabular-nums mt-1', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]')}>
@@ -316,7 +316,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
       {/* New schedule button + form */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Aktif Huzur Hakkı Takvimleri
           </div>
           {!showForm && (
@@ -349,12 +349,12 @@ export function CompensationTab({ partners }: CompensationTabProps) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt/Ay</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stopaj</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net/Ay</th>
-                  <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Başlangıç</th>
-                  <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YK Kararı</th>
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt/Ay</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Stopaj</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net/Ay</th>
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Başlangıç</th>
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">YK Kararı</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -379,7 +379,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
 
       {/* Due payments */}
       <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
           Dönem Ödemeleri (Son 3 Ay)
         </div>
 
@@ -398,13 +398,13 @@ export function CompensationTab({ partners }: CompensationTabProps) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                  <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stopaj</th>
-                  <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-                  <th className="px-3 py-2 text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
-                  <th className="px-3 py-2 text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşlem</th>
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Stopaj</th>
+                  <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</th>
+                  <th className="px-3 py-2 text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
+                  <th className="px-3 py-2 text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İşlem</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">

@@ -139,7 +139,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             <div>
               <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${meta.dot} shrink-0`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${meta.labelColor}`}>{meta.label}</span>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${meta.labelColor}`}>{meta.label}</span>
               </div>
               <h2 className="text-base font-bold text-[#0f172a] mt-1">{activeRow.customer_name}</h2>
               {activeRow.proformas?.proforma_no && (
@@ -160,7 +160,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
 
           {/* This invoice */}
           <div className="space-y-2">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bu Fatura</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Bu Fatura</div>
             <div className="bg-[#f8fafc] rounded p-3 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
@@ -197,7 +197,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
           {/* All invoices for this customer */}
           {sameCustomer.length > 1 && (
             <div className="space-y-2">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Müşteri Toplamı — {sameCustomer.length} açık fatura
               </div>
               <div className="bg-[#f8fafc] rounded p-3">
@@ -226,7 +226,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
 
           {/* Actions */}
           <div className="space-y-2">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşlemler</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İşlemler</div>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setActiveAction(activeAction === 'pay' ? null : 'pay')}
@@ -251,7 +251,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             {/* Pay form */}
             {activeAction === 'pay' && (
               <div className="bg-pos-light/30 rounded p-3 space-y-2 border border-pos-light">
-                <label className="text-[10px] font-black uppercase tracking-widest text-pos-text">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-pos-text">
                   Tahsilat Tutarı (₺) — max {fmtTRY(remaining, 0)}
                 </label>
                 <div className="flex gap-2">
@@ -293,7 +293,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             {/* Extend form */}
             {activeAction === 'extend' && (
               <div className="bg-info-light/30 rounded p-3 space-y-2 border border-info-light">
-                <label className="text-[10px] font-black uppercase tracking-widest text-info-text">Yeni Vade Tarihi</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-info-text">Yeni Vade Tarihi</label>
                 <div className="flex gap-2">
                   <input
                     type="date"
@@ -323,7 +323,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             {/* Note form */}
             {activeAction === 'note' && (
               <div className="bg-[#f8fafc] rounded p-3 space-y-2 border border-[#e8eaef]">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Not</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">Not</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -384,7 +384,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
         {/* Severity label */}
         <div className="flex flex-col items-center justify-center w-14 shrink-0 pt-0.5">
           <span className={`w-2 h-2 rounded-full ${meta.dot} mb-1`} />
-          <span className={`text-[9px] font-black uppercase tracking-widest ${meta.labelColor} text-center leading-tight`}>
+          <span className={`text-[9px] font-bold uppercase tracking-wider ${meta.labelColor} text-center leading-tight`}>
             {meta.label}
           </span>
         </div>

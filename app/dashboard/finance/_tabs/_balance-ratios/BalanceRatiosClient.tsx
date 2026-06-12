@@ -133,7 +133,7 @@ function SectionCard({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">{title}</span>
         {badge}
       </div>
       <div className="px-4 py-2">{children}</div>
@@ -178,7 +178,7 @@ export function BalanceRatiosClient({ companyId }: Props) {
 
       {/* Section header */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Bilanço Oran Analizi
         </span>
       </div>
@@ -188,21 +188,21 @@ export function BalanceRatiosClient({ companyId }: Props) {
         <ScoreMeter score={report.composite_score} />
         <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-3">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1">Likidite</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Likidite</div>
             <HealthBadge cfg={LIQUIDITY_BADGE[liquidity.health] ?? LIQUIDITY_BADGE.insufficient_data} />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1">Borçluluk</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Borçluluk</div>
             <HealthBadge cfg={SOLVENCY_BADGE[solvency.health] ?? SOLVENCY_BADGE.insufficient_data} />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1">Cari Oran</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Cari Oran</div>
             <span className="text-base font-black tabular-nums text-[#0f172a]">
               {liquidity.current_ratio !== null ? liquidity.current_ratio.toFixed(2) : '—'}
             </span>
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1">Borç/Özsermaye</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Borç/Özsermaye</div>
             <span className="text-base font-black tabular-nums text-[#0f172a]">
               {solvency.debt_to_equity !== null ? solvency.debt_to_equity.toFixed(2) : '—'}
             </span>

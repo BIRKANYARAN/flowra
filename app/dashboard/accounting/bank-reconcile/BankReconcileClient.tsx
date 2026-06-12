@@ -108,16 +108,16 @@ export default function BankReconcileClient() {
             {/* Summary */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-[#f8fafc] rounded-lg p-3">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Eşleşme</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eşleşme</div>
                 <div className={`text-xl font-black tabular-nums ${matchPct >= 80 ? 'text-pos-text' : matchPct >= 50 ? 'text-warn-text' : 'text-neg'}`}>%{matchPct}</div>
                 <div className="text-[10px] text-[#94a3b8]">{result.matched.length} / {parsed.transactions.length} hareket</div>
               </div>
               <div className="bg-[#f8fafc] rounded-lg p-3">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Eşleşen Tutar</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eşleşen Tutar</div>
                 <div className="text-xl font-black tabular-nums text-[#0f172a]">₺{fmt(result.matchedAmountTry)}</div>
               </div>
               <div className="bg-[#f8fafc] rounded-lg p-3">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Açık Kalem</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Açık Kalem</div>
                 <div className="text-xl font-black tabular-nums text-neg">{result.unmatchedBank.length}</div>
                 <div className="text-[10px] text-[#94a3b8]">eşleşmeyen banka hareketi</div>
               </div>
@@ -137,7 +137,7 @@ export default function BankReconcileClient() {
             {/* Unmatched bank lines — the actionable list */}
             {result.unmatchedBank.length > 0 && (
               <div className="border border-[#e8eaef] rounded-lg overflow-hidden">
-                <div className="px-3 py-2 bg-warn-light text-[10px] font-black uppercase tracking-widest text-warn-text">
+                <div className="px-3 py-2 bg-warn-light text-[10px] font-bold uppercase tracking-wider text-warn-text">
                   Bankada var, Flowra'da yok — {result.unmatchedBank.length} hareket
                 </div>
                 <table className="w-full text-xs">
@@ -157,7 +157,7 @@ export default function BankReconcileClient() {
             {/* Unmatched book entries — recorded in Flowra but not seen on the statement */}
             {result.unmatchedBook.length > 0 && (
               <div className="border border-[#e8eaef] rounded-lg overflow-hidden">
-                <div className="px-3 py-2 bg-info-light text-[10px] font-black uppercase tracking-widest text-info-text">
+                <div className="px-3 py-2 bg-info-light text-[10px] font-bold uppercase tracking-wider text-info-text">
                   Flowra'da var, bankada yok — {result.unmatchedBook.length} kayıt
                 </div>
                 <table className="w-full text-xs">

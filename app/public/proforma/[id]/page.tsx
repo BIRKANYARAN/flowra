@@ -143,7 +143,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
         />
 
         <div className="text-center mb-4 print:hidden">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Flowra ile oluşturuldu</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Flowra ile oluşturuldu</span>
         </div>
 
         <div id="proforma-content">

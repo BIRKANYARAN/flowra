@@ -81,11 +81,11 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Müşteri Profili</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Müşteri Profili</div>
             <h2 className="text-lg font-black text-[#0f172a] leading-tight">{p.customer_name}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className={cn('text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded', tier.badge)}>
+            <span className={cn('text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded', tier.badge)}>
               {tier.label}
             </span>
             <button
@@ -107,7 +107,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
             { label: 'Bekleyen', value: p.total_outstanding_try > 0 ? fmt(p.total_outstanding_try) : '—', neg: p.total_outstanding_try > 0 },
           ].map(row => (
             <div key={row.label} className="bg-[#f8fafc] rounded p-3">
-              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{row.label}</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{row.label}</div>
               <div className={cn('text-sm font-black tabular-nums mt-0.5', row.neg ? 'text-neg' : 'text-[#0f172a]')}>{row.value}</div>
             </div>
           ))}
@@ -115,7 +115,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
 
         {/* Payment behavior */}
         <div className="space-y-1.5">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Davranışı</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ödeme Davranışı</div>
           {[
             { label: 'Ort. Ödeme Süresi', value: p.avg_days_to_pay !== null ? `${Math.round(p.avg_days_to_pay)} gün` : '—' },
             { label: 'Ort. Vade Sapması', value: p.avg_days_overdue !== null ? `${Math.round(p.avg_days_overdue) >= 0 ? '+' : ''}${Math.round(p.avg_days_overdue)} gün` : '—' },
@@ -132,7 +132,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
         {/* Risk signals */}
         {(p.overdue_sales_count > 0 || p.last_overdue_date) && (
           <div className="space-y-1.5">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Sinyalleri</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Risk Sinyalleri</div>
             {[
               p.overdue_sales_count > 0 && { label: 'Gecikmiş Satış', value: String(p.overdue_sales_count) },
               p.overdue_amount_try > 0  && { label: 'Vadesi Geçmiş Tutar', value: fmt(p.overdue_amount_try) },
@@ -187,7 +187,7 @@ export default function CustomerIntelligenceTable({ profiles }: Props) {
       <button
         onClick={() => toggleSort(k)}
         className={cn(
-          'text-[0.6rem] font-black uppercase tracking-widest whitespace-nowrap transition-colors',
+          'text-[0.6rem] font-bold uppercase tracking-wider whitespace-nowrap transition-colors',
           active ? 'text-brand' : 'text-[#94a3b8] hover:text-[#475569]',
         )}
       >
@@ -201,7 +201,7 @@ export default function CustomerIntelligenceTable({ profiles }: Props) {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {/* Table header */}
         <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Müşteri Ödeme Zekası — {profiles.length} müşteri
           </span>
           <div className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export default function CustomerIntelligenceTable({ profiles }: Props) {
                       <TrendArrow trend={p.trend} />
                     </div>
                   </div>
-                  <span className={cn('text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0', tier.badge)}>
+                  <span className={cn('text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0', tier.badge)}>
                     {tier.label}
                   </span>
                 </div>
@@ -260,7 +260,7 @@ export default function CustomerIntelligenceTable({ profiles }: Props) {
 
                   {/* Risk badge */}
                   <div>
-                    <span className={cn('text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded', tier.badge)}>
+                    <span className={cn('text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded', tier.badge)}>
                       {tier.label}
                     </span>
                   </div>

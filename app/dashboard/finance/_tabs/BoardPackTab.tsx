@@ -202,7 +202,7 @@ function SectionCard({ title, children, docHref }: {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
           {title}
         </span>
         {docHref && (
@@ -319,7 +319,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
       {/* ── Control bar ────────────────────────────────────────────────────── */}
       <div className="flex items-end gap-3 flex-wrap">
         <div>
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
             Dönem
           </div>
           <select
@@ -371,7 +371,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
       {/* ── Progress indicator ──────────────────────────────────────────────── */}
       {state === 'loading' && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 space-y-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Paket Hazırlanıyor
           </div>
           <div className="space-y-2">
@@ -423,7 +423,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           {/* Manifest checklist */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
                 Pakete Dahil Edilecek Raporlar
               </span>
               <span className="text-[10px] text-[#94a3b8]">
@@ -464,7 +464,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
 
           {/* Pack download info */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
               Pack&apos;i İndir
             </div>
             <div className="text-xs text-[#64748b] leading-relaxed mb-3">

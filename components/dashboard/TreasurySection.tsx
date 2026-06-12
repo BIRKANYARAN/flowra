@@ -162,7 +162,7 @@ export function TreasurySection() {
   if (error || !data?.report) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Hazine Yönetimi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Hazine Yönetimi</div>
         <p className="text-xs text-neg">Hazine verileri yüklenemedi.</p>
       </div>
     )
@@ -193,11 +193,11 @@ export function TreasurySection() {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Yönetimi</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hazine Yönetimi</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">{r.as_of_date} tarihi itibarıyla</p>
           </div>
           <div className="text-right">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Nakit</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Nakit</div>
             <div className="text-2xl font-black tabular-nums text-[#0f172a] leading-none">
               {fmtTRY(r.total_cash_try)}
             </div>
@@ -207,14 +207,14 @@ export function TreasurySection() {
         {/* Coverage ratio chips */}
         <div className="grid grid-cols-2 divide-x divide-[#e8eaef]">
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Ömrü <InfoTip k="Runway" /></div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Nakit Ömrü <InfoTip k="Runway" /></div>
             <div className={`text-lg font-black tabular-nums leading-none ${runwayTone}`}>
               {r.cash_runway_months !== null ? `${r.cash_runway_months.toFixed(1)} ay` : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Aylık gider bazında</div>
           </div>
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">30G Yükümlülük Karşılama</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">30G Yükümlülük Karşılama</div>
             <div className={`text-lg font-black tabular-nums leading-none ${coverageTone}`}>
               {r.obligation_coverage_ratio !== null ? `${r.obligation_coverage_ratio.toFixed(1)}x` : '—'}
             </div>
@@ -233,7 +233,7 @@ export function TreasurySection() {
       {/* Account list */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Banka Hesapları ({r.account_count})
           </div>
           {r.idle_cash_try > 0 && (
@@ -255,7 +255,7 @@ export function TreasurySection() {
           <div className="px-4 py-3 border-b border-[#e8eaef]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Günlük Nakit Pozisyonu (Son 30 Gün)</div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Günlük Nakit Pozisyonu (Son 30 Gün)</div>
                 <p className="text-[10px] text-[#94a3b8] mt-0.5">Gelen / giden akışlar ve net bakiye eğrisi</p>
               </div>
               <div className="text-right">
@@ -275,7 +275,7 @@ export function TreasurySection() {
       {r.recommendations.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Önerileri</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hazine Önerileri</div>
           </div>
           <ul className="divide-y divide-[#f1f5f9]">
             {r.recommendations.map((rec, i) => (

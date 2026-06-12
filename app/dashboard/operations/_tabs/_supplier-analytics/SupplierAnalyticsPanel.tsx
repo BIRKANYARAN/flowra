@@ -70,7 +70,7 @@ export function SupplierAnalyticsPanel() {
   if (loading) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
         <div className="text-xs text-[#94a3b8]">Yükleniyor…</div>
@@ -81,7 +81,7 @@ export function SupplierAnalyticsPanel() {
   if (error || !report) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
         <div className="text-xs text-[#94a3b8]">{error ?? 'Veri bulunamadı'}</div>
@@ -95,7 +95,7 @@ export function SupplierAnalyticsPanel() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Tedarikçi Analizi
         </span>
         <span className="text-[9px] text-[#94a3b8]">{report.period_label}</span>
@@ -132,7 +132,7 @@ export function SupplierAnalyticsPanel() {
             key={card.label}
             className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}
           >
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {card.label}
             </div>
             {card.badge ? (
@@ -151,16 +151,16 @@ export function SupplierAnalyticsPanel() {
       {/* ── AP Aging table ─────────────────────────────────────────────────── */}
       {report.aging.some(b => b.count > 0) && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             AP Aging (Ödenecekler Yaşlandırma)
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Dönem</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Kayıt</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Tutar</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pr-2">Dönem</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Kayıt</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pl-2">Tutar</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
@@ -180,7 +180,7 @@ export function SupplierAnalyticsPanel() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-[#e8eaef]">
-                  <td className="py-1.5 pr-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</td>
+                  <td className="py-1.5 pr-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam</td>
                   <td className="py-1.5 px-2 text-right tabular-nums text-[#64748b] text-xs font-semibold">
                     {report.aging.reduce((s, b) => s + b.count, 0)}
                   </td>
@@ -197,17 +197,17 @@ export function SupplierAnalyticsPanel() {
       {/* ── Top 5 suppliers table ──────────────────────────────────────────── */}
       {top5.length > 0 && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             En Büyük Tedarikçiler (İlk 5)
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Toplam</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Ödenmemiş</th>
-                  <th className="text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Risk</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Toplam</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Ödenmemiş</th>
+                  <th className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pl-2">Risk</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
@@ -225,7 +225,7 @@ export function SupplierAnalyticsPanel() {
                       {sup.unpaid_try > 0 ? fmtTRY(sup.unpaid_try) : '—'}
                     </td>
                     <td className="py-1.5 pl-2 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${RISK_COLORS[sup.risk_tier]}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${RISK_COLORS[sup.risk_tier]}`}>
                         {RISK_LABELS[sup.risk_tier]}
                       </span>
                     </td>

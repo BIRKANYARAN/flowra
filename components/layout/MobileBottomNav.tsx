@@ -67,7 +67,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
         <div className="mx-2 mb-1 bg-white rounded border border-[#e8eaef] shadow-sm overflow-hidden">
           {/* Hızlı Oluştur — task-first create chips */}
           <div className="px-2 pt-2">
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1 pb-1">Hızlı Oluştur</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] px-1 pb-1">Hızlı Oluştur</div>
             <div className="grid grid-cols-4 gap-1">
               {[
                 { label: 'Satış',    href: '/dashboard/commercial?tab=sales&new=1',     icon: '₺' },

@@ -118,7 +118,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
         {/* Total products */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürünler</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Ürünler</span>
           <span className="text-sm font-black tabular-nums text-[#0f172a]">{totalProducts}</span>
           <span className="text-[9px] text-[#94a3b8]">aktif</span>
         </div>
@@ -129,7 +129,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             ? 'bg-white border-[#e8eaef]'
             : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Fiyatlı</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Fiyatlı</span>
           <span className={`text-sm font-black tabular-nums ${
             pricedProducts.length === totalProducts ? 'text-[#0f172a]' : 'text-warn-text'
           }`}>{pricedProducts.length}/{totalProducts}</span>
@@ -143,7 +143,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             ? 'bg-[#f8fafc] border-[#e8eaef]'
             : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Maliyetli</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Maliyetli</span>
           <span className={`text-sm font-black tabular-nums ${
             costdProducts.length === totalProducts ? 'text-[#0f172a]' :
             costdProducts.length === 0             ? 'text-[#94a3b8]' : 'text-warn-text'
@@ -158,7 +158,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             avgMargin >= 0.20 ? 'bg-warn-light border-warn-light'    :
                                 'bg-neg-light border-neg-light'
           }`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Ort. Marj</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#64748b]">Ort. Marj</span>
             <span className={`text-sm font-black tabular-nums ${
               avgMargin >= 0.35 ? 'text-pos-text' :
               avgMargin >= 0.20 ? 'text-warn-text'   : 'text-neg'
@@ -181,7 +181,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
         <div className="bg-neg-light border border-neg-light rounded overflow-hidden">
           <div className="px-3 py-2 border-b border-neg-light flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-neg-light rounded-full animate-pulse shrink-0" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-neg-text">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-neg-text">
               Düşük Marjlı Ürünler — %{Math.round(MARGIN_FLOOR * 100)} altında
             </span>
           </div>

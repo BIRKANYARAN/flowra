@@ -68,7 +68,7 @@ function SectionHeader({ title, sub, badge }: { title: string; sub?: string; bad
   return (
     <div className="flex items-start justify-between mb-4">
       <div>
-        <h2 className="text-xs font-black uppercase tracking-widest text-[#64748b]">{title}</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">{title}</h2>
         {sub && <p className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</p>}
       </div>
       {badge}
@@ -335,7 +335,7 @@ export default async function InsightsPage() {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Durum Özeti — {period}</p>
+            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Durum Özeti — {period}</p>
             <div className="flex items-center gap-3">
               <span className={`text-3xl font-black tabular-nums ${statusCfg.cls}`}>{situation.composite}</span>
               <div>
@@ -371,7 +371,7 @@ export default async function InsightsPage() {
             )}
             {aiSummary.recommendation && (
               <div className="bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-3 py-2">
-                <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Önerilen Aksiyon</p>
+                <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Önerilen Aksiyon</p>
                 <p className="text-xs font-semibold text-[#0f172a]">{aiSummary.recommendation}</p>
               </div>
             )}
@@ -397,7 +397,7 @@ export default async function InsightsPage() {
                   <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[0.6rem] font-black uppercase tracking-wider opacity-70">{cfg.label}</span>
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider opacity-70">{cfg.label}</span>
                       <span className="text-xs font-bold">{a.title}</span>
                     </div>
                     <p className="text-[0.65rem] mt-0.5 opacity-80">{a.detail}</p>
@@ -440,7 +440,7 @@ export default async function InsightsPage() {
                   <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[0.6rem] font-black uppercase tracking-wider opacity-70">
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider opacity-70">
                         {isRev ? 'Gelir' : catLabel((a as ExpenseAnomaly).category)}
                       </span>
                       <span className="text-[0.65rem] font-bold">{a.month}</span>
@@ -518,7 +518,7 @@ export default async function InsightsPage() {
                 <div key={i} className={`rounded-lg border px-3 py-3 ${borderCls}`}>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
-                      <span className={`text-[0.6rem] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${badgeCls}`}>
+                      <span className={`text-[0.6rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${badgeCls}`}>
                         {isHigh ? 'Yüksek Güven' : 'Orta Güven'}
                       </span>
                       <span className="ml-2 text-xs font-bold text-[#0f172a]">{catLabel(g.expense_type)}</span>

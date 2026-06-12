@@ -11,7 +11,7 @@ import type { Task, TaskStatus, Customer, Sale } from '@/types'
 import { fmtTRY } from '@/lib/format'
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 const BTN = 'px-4 py-2 rounded text-sm font-semibold transition-colors'
 
@@ -136,7 +136,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           {filtered.length} Görev
         </h2>
         <button

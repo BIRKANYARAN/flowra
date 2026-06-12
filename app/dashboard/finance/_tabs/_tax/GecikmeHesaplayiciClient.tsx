@@ -51,7 +51,7 @@ export function GecikmeHesaplayiciClient() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Gecikme Faizi Hesaplayıcı</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Gecikme Faizi Hesaplayıcı</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Vadesi geçen vergi borçları için gecikme faizi hesaplama aracı</p>
         </div>
         <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]">
@@ -63,7 +63,7 @@ export function GecikmeHesaplayiciClient() {
         {/* Input row */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Borç Tutarı (₺)
             </label>
             <input
@@ -76,7 +76,7 @@ export function GecikmeHesaplayiciClient() {
             />
           </div>
           <div>
-            <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Vade Tarihi
             </label>
             <input
@@ -87,7 +87,7 @@ export function GecikmeHesaplayiciClient() {
             />
           </div>
           <div>
-            <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Ödeme Tarihi
             </label>
             <input
@@ -107,19 +107,19 @@ export function GecikmeHesaplayiciClient() {
               : 'bg-pos-light border-pos-light'
           }`}>
             <div className="text-center">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gecikme Süresi</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Gecikme Süresi</div>
               <div className={`text-xl font-black tabular-nums ${result.days > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {result.days} gün
               </div>
             </div>
             <div className="text-center border-x border-[#e8eaef]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gecikme Faizi</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Gecikme Faizi</div>
               <div className={`text-xl font-black tabular-nums ${result.faiz > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {formatTRY(result.faiz)}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Ödeme</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Ödeme</div>
               <div className="text-xl font-black tabular-nums text-warn-text">
                 {formatTRY(result.toplam)}
               </div>

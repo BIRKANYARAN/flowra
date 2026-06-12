@@ -111,7 +111,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
   if (!report || report.total_vendors === 0) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
           Tedarikçi Konsantrasyon Riski
         </div>
         <p className="text-xs text-[#94a3b8]">Tedarikçi verisi bulunamadı.</p>
@@ -127,7 +127,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Tedarikçi Konsantrasyon Riski
         </span>
         <div className="flex items-center gap-1">
@@ -150,7 +150,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
       {/* ── Single-source risk alert ─────────────────────────────────────────── */}
       {report.single_source_vendors.length > 0 && (
         <div className="flex items-center gap-2 px-4 py-2.5 bg-[#fee2e2] border-b border-[#fecaca]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#991b1b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#991b1b]">
             ⚠ Tek Tedarikçi Bağımlılığı Riski
           </span>
           <span className="text-[10px] text-[#991b1b]">
@@ -163,18 +163,18 @@ export function VendorConcentrationClient({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-b border-[#f1f5f9]">
         {/* HHI score */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">HHI Skoru</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">HHI Skoru</div>
           <div className={`text-xl font-black tabular-nums leading-none ${hhiTextColor(report.concentration_level)}`}>
             {report.hhi.toLocaleString('tr-TR')}
           </div>
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide mt-1 ${LEVEL_BADGE[report.concentration_level]}`}>
+          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide mt-1 ${LEVEL_BADGE[report.concentration_level]}`}>
             {LEVEL_LABEL[report.concentration_level]}
           </span>
         </div>
 
         {/* Total spend */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alım</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Alım</div>
           <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
             {fmtTRY(report.total_spend_try)}
           </div>
@@ -183,7 +183,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
         {/* Pareto-80 */}
         <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Pareto 80</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Pareto 80</div>
           <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
             {report.pareto_80_count}
           </div>
@@ -194,7 +194,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
         {/* Top-3 share */}
         <div className="p-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">İlk 3 Pay</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">İlk 3 Pay</div>
           <div className={`text-xl font-black tabular-nums leading-none ${report.top_3_spend_pct > 60 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
             %{report.top_3_spend_pct.toFixed(0)}
           </div>
@@ -222,12 +222,12 @@ export function VendorConcentrationClient({ companyId }: Props) {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#e8eaef]">
-              <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2">Tedarikçi</th>
-              <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tutar</th>
-              <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2 min-w-[120px]">Pay %</th>
-              <th className="text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Katman</th>
-              <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">İşlem</th>
-              <th className="text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Risk</th>
+              <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-4 py-2">Tedarikçi</th>
+              <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Tutar</th>
+              <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2 min-w-[120px]">Pay %</th>
+              <th className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Katman</th>
+              <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">İşlem</th>
+              <th className="text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-2 py-2">Risk</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f8fafc]">
@@ -264,7 +264,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
                   </td>
                   {/* Tier */}
                   <td className="px-2 py-2 text-center">
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${TIER_BADGE[vendor.tier]}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${TIER_BADGE[vendor.tier]}`}>
                       {TIER_LABEL[vendor.tier]}
                     </span>
                   </td>
@@ -275,11 +275,11 @@ export function VendorConcentrationClient({ companyId }: Props) {
                   {/* Risk badge */}
                   <td className="px-2 py-2 text-center">
                     {vendor.is_single_source_risk ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fee2e2] text-[#991b1b]">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fee2e2] text-[#991b1b]">
                         Tek Kaynak
                       </span>
                     ) : vendor.tier === 'tier1' ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fed7aa] text-[#9a3412]">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#fed7aa] text-[#9a3412]">
                         Yüksek Pay
                       </span>
                     ) : (
@@ -301,17 +301,17 @@ export function VendorConcentrationClient({ companyId }: Props) {
       {/* ── Monthly HHI trend ────────────────────────────────────────────────── */}
       {report.monthly_hhi_trend.length > 0 && (
         <div className="border-t border-[#f1f5f9] px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
             Aylık HHI Trendi
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-4">Ay</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">HHI</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Tedarikçi</th>
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Seviye</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pr-4">Ay</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">HHI</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Tedarikçi</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pl-2">Seviye</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
@@ -333,7 +333,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
                         {row.vendor_count}
                       </td>
                       <td className="py-1.5 pl-2">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${LEVEL_BADGE[level]}`}>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${LEVEL_BADGE[level]}`}>
                           {LEVEL_LABEL[level]}
                         </span>
                       </td>

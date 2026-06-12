@@ -87,7 +87,7 @@ function KpiCard({
 
   const inner = (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 transition-colors hover:bg-[#f8fafc]">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
     </div>
@@ -99,7 +99,7 @@ function SectionTitle({ label, count, href }: { label: string; count?: number; h
   return (
     <div className="flex items-center justify-between mb-2">
       <div className="flex items-center gap-2">
-        <h2 className="text-xs font-black uppercase tracking-widest text-[#64748b]">{label}</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">{label}</h2>
         {count !== undefined && count > 0 && (
           <span className="text-[10px] font-bold bg-neg-light text-neg-text rounded px-1.5 py-0.5">{count}</span>
         )}
@@ -222,7 +222,7 @@ export async function KomutaContent({ companyId }: Props) {
         <div className="bg-pos-light border border-pos-light/60 rounded px-5 py-4 flex items-center gap-3">
           <span className="text-xl">✓</span>
           <div>
-            <div className="text-[11px] font-black uppercase tracking-wide text-pos-text">Operasyon Temiz</div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-pos-text">Operasyon Temiz</div>
             <div className="text-xs text-pos-text/80 mt-0.5">
               Gecikmiş tahsilat yok · Kritik stok yok · Bekleyen onay yok
             </div>
@@ -438,7 +438,7 @@ export async function KomutaContent({ companyId }: Props) {
       {/* OPS Command Center — Daily Metrics Aggregator */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 pt-4 pb-2 border-b border-[#e8eaef]">
-          <h2 className="text-xs font-black uppercase tracking-widest text-[#64748b]">Günlük Operasyon Komutası</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">Günlük Operasyon Komutası</h2>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Satışlar · Tahsilat · Giderler · Stok</p>
         </div>
         <div className="p-4">

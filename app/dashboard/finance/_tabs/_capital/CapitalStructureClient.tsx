@@ -96,7 +96,7 @@ function SummaryCard({
 }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
     </div>
@@ -198,7 +198,7 @@ export function CapitalStructureClient({ companyId }: Props) {
 
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#64748b]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
           Sermaye Yapısı Analizi
         </h3>
         <Badge config={structureBadge} />
@@ -235,22 +235,22 @@ export function CapitalStructureClient({ companyId }: Props) {
       {/* DSCR detail card */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Borç Servisi Karşılama Oranı (DSCR)
           </span>
           <Badge config={dscrBadge} />
         </div>
         <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
           <div className="px-4 py-3 text-center">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">Yıllık Anapara</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">Yıllık Anapara</div>
             <div className="text-base font-bold tabular-nums text-[#0f172a]">{fmtTRY(ds.annual_principal)}</div>
           </div>
           <div className="px-4 py-3 text-center">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">Yıllık Faiz</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">Yıllık Faiz</div>
             <div className="text-base font-bold tabular-nums text-[#0f172a]">{fmtTRY(ds.annual_interest)}</div>
           </div>
           <div className="px-4 py-3 text-center">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">Toplam Borç Servisi</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">Toplam Borç Servisi</div>
             <div className="text-base font-bold tabular-nums text-[#334155]">{fmtTRY(ds.total_annual_debt_service)}</div>
           </div>
         </div>
@@ -263,7 +263,7 @@ export function CapitalStructureClient({ companyId }: Props) {
       {/* Capital structure split */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Sermaye Yapısı — Özsermaye / Borç Dağılımı
           </span>
         </div>
@@ -318,7 +318,7 @@ export function CapitalStructureClient({ companyId }: Props) {
       {/* Debt capacity bars */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Borç Kapasitesi — FAVÖK Çarpanı Bazlı
           </span>
         </div>
@@ -347,13 +347,13 @@ export function CapitalStructureClient({ companyId }: Props) {
       {/* WACD and partner loan detail */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
             Borçlanma Maliyeti
           </span>
         </div>
         <div className="grid grid-cols-2 divide-x divide-[#f1f5f9] sm:grid-cols-3">
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Ağırlıklı Ort. Borç Maliyeti (WACD)
             </div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">
@@ -362,7 +362,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             <div className="text-[9px] text-[#94a3b8] mt-0.5">Yıllık faiz oranı</div>
           </div>
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Ortak Kredileri
             </div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">
@@ -371,7 +371,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             <div className="text-[9px] text-[#94a3b8] mt-0.5">Toplam bakiye</div>
           </div>
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Yıllık Faiz Gideri
             </div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">

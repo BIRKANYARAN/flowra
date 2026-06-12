@@ -76,7 +76,7 @@ export default function EmailSettingsPage() {
         </div>
       ) : config ? (
         <div className="bg-white rounded-xl border border-[#e8eaef] p-5 space-y-4">
-          <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Durum</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">Durum</h2>
 
           <div className="grid grid-cols-1 gap-3">
             <StatusRow
@@ -115,7 +115,7 @@ export default function EmailSettingsPage() {
 
       {/* Test email */}
       <div className="bg-white rounded-xl border border-[#e8eaef] p-5 space-y-4">
-        <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Test E-postası</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">Test E-postası</h2>
         <p className="text-sm text-[#64748b]">
           Gerçekçi bir uyarı özeti gönderek bildirim sisteminin çalıştığını doğrulayın.
         </p>
@@ -154,7 +154,7 @@ export default function EmailSettingsPage() {
 
       {/* Setup guide */}
       <div className="bg-[#f8fafc] rounded-xl border border-[#e8eaef] p-5 space-y-3">
-        <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Kurulum Kılavuzu</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">Kurulum Kılavuzu</h2>
         <div className="space-y-2 text-sm text-[#475569]">
           <Step num={1} text="resend.com adresinden ücretsiz bir Resend hesabı oluşturun" />
           <Step num={2} text="Resend Dashboard → API Keys bölümünden bir anahtar oluşturun" />

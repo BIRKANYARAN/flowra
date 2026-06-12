@@ -91,7 +91,7 @@ function KpiCards({ report }: { report: RfmSegmentationReport }) {
           key={card.label}
           className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#f1f5f9]' : ''}`}
         >
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {card.label}
           </div>
           <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>
@@ -114,7 +114,7 @@ function SegmentDistribution({ report }: { report: RfmSegmentationReport }) {
 
   return (
     <div className="px-4 py-3 space-y-2">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
         Segment Dağılımı
       </div>
       <div className="space-y-1.5">
@@ -190,7 +190,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
     return (
       <button
         onClick={() => handleSort(k)}
-        className={`text-left text-[0.6rem] font-black uppercase tracking-widest px-3 py-2 ${
+        className={`text-left text-[0.6rem] font-bold uppercase tracking-wider px-3 py-2 ${
           active ? 'text-brand' : 'text-[#94a3b8]'
         }`}
       >
@@ -201,14 +201,14 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
 
   return (
     <div className="border-t border-[#f1f5f9]">
-      <div className="px-4 pt-3 pb-1 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="px-4 pt-3 pb-1 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Müşteri Listesi
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-[#f1f5f9]">
-              <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-8">#</th>
+              <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-8">#</th>
               <th className="text-left">
                 <ThBtn label="Müşteri" k="segment" />
               </th>
@@ -216,7 +216,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
                 <ThBtn label="RFM" k="rfm_code" />
               </th>
               <th className="text-center">
-                <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] px-3 py-2 block">Segment</span>
+                <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] px-3 py-2 block">Segment</span>
               </th>
               <th className="text-right">
                 <ThBtn label="Harcama" k="total_spend" />
@@ -227,7 +227,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
               <th className="text-right hidden sm:table-cell">
                 <ThBtn label="Son Alım" k="days_since_purchase" />
               </th>
-              <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden md:table-cell">
+              <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden md:table-cell">
                 Aksiyon
               </th>
             </tr>
@@ -256,7 +256,7 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <span
-                      className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${segCfg.bg} ${segCfg.text}`}
+                      className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${segCfg.bg} ${segCfg.text}`}
                     >
                       {segCfg.label}
                     </span>
@@ -328,7 +328,7 @@ function HighValueFocus({ report }: { report: RfmSegmentationReport }) {
   return (
     <div className="border-t border-[#f1f5f9] px-4 py-3 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Yüksek Değerli Müşteriler
         </span>
         <span className="text-[9px] text-[#94a3b8]">
@@ -354,7 +354,7 @@ function HighValueFocus({ report }: { report: RfmSegmentationReport }) {
                 <span className="text-[10px] font-black tabular-nums text-brand w-20 text-right">
                   {fmtTRY(c.total_spend)}
                 </span>
-                <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+                <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
                   {c.rfm_code}
                 </span>
               </div>
@@ -398,7 +398,7 @@ export default function RfmSegmentationClient({ companyId }: Props) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteri RFM Segmentasyonu
         </span>
         <span className="text-[9px] text-[#94a3b8]">

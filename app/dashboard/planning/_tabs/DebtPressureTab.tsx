@@ -174,7 +174,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Borç</div>
           <div className={`text-xl font-black tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
           </div>
@@ -182,7 +182,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         </div>
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
           <div className={`text-xl font-black tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
           </div>
@@ -190,7 +190,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         </div>
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">DSR (Borç/Gelir) <InfoTip k="DSR" /></div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">DSR (Borç/Gelir) <InfoTip k="DSR" /></div>
           <div className={`text-xl font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
           </div>
@@ -203,7 +203,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         </div>
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Sonraki Vade</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
               <div className={`text-xl font-black tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-[#0f172a]'}`}>
@@ -224,7 +224,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {hasTranches && pressureLines.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Baskı Değerlendirmesi</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Hazine Baskı Değerlendirmesi</span>
             <span className="text-[9px] text-[#94a3b8]">Borç servisi · Nakit ömrü · Konsantrasyon</span>
           </div>
           <div className="space-y-0.5">
@@ -254,7 +254,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
               <span className="text-[9px] text-[#94a3b8]">Varsayım: mevcut borç bakiyesi sabit kalıyor</span>
             </div>
             <div className="px-4 pt-3 pb-2">
@@ -283,7 +283,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Borç Dilimleri</span>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aktif Borç Dilimleri</span>
               <Link href="/dashboard/partners?tab=tranches"
                 className="text-[10px] text-brand-light font-semibold hover:underline">
                 Yönet →
@@ -293,11 +293,11 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/60">
-                    <th className="text-left px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kalan</th>
-                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
-                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">Aylık Faiz</th>
-                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
+                    <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Kalan</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Oran</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">Aylık Faiz</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Vade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
@@ -338,7 +338,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* ── CONCENTRATION ─────────────────────────────────────────────── */}
           {sorted.length > 1 && (
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
                 Borç Konsantrasyonu
               </div>
               <div className="space-y-2">

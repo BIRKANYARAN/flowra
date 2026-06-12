@@ -524,7 +524,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
         ) : (
           <>
             {/* Column headers */}
-            <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
+            <div className="grid grid-cols-12 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
               <div className="col-span-3">Ürün</div>
               <div className="col-span-1 text-right">Stok</div>
               <div className="col-span-2 text-right">Gerçek Maliyet</div>
@@ -650,7 +650,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                     {/* ── Expanded: stock lots ─────────────────────────── */}
                     {isExpanded && (
                       <div className="bg-[#f8fafc] px-5 py-4 border-t border-[#e8eaef]">
-                        <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Stok Lotları</h4>
+                        <h4 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Stok Lotları</h4>
 
                         {!productLots || productLots.loading ? (
                           <div className="flex items-center gap-2 text-sm text-[#94a3b8] py-2">
@@ -661,7 +661,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                           <p className="text-sm text-[#94a3b8] py-2">Bu ürün için stok lotu bulunamadı.</p>
                         ) : (
                           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
-                            <div className="grid text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2 border-b border-[#e8eaef]" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
+                            <div className="grid text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-4 py-2 border-b border-[#e8eaef]" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
                               <div className="col-span-2">Giriş Tarihi</div>
                               <div className="col-span-2 text-right">Kalan Adet</div>
                               <div className="col-span-2 text-right">Birim Maliyet</div>
@@ -757,7 +757,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
               ) : (
                 <>
                   <div>
-                    <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Adet</label>
+                    <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">Adet</label>
                     <input
                       type="number" min="1" step="1"
                       className="w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -765,7 +765,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                       onChange={e => setCostCalcQty(e.target.value)}
                     />
                   </div>
-                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Maliyet Kalemleri</div>
+                  <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Maliyet Kalemleri</div>
                   {costRows.map((row, i) => (
                     <div key={i} className="space-y-1.5 p-3 bg-[#f8fafc] rounded">
                       <div className="flex items-center gap-2">

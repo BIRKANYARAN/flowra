@@ -102,7 +102,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
         {hasMultiCompany && showSwitcher && (
           <div className="mt-2 rounded-lg border border-white/10 bg-[#1e293b] shadow-soft-lg overflow-hidden">
             <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-white/50">
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-white/50">
                 Şirket Seç
               </span>
             </div>
@@ -222,8 +222,8 @@ function NavGroupBlock({
   return (
     <div className={isFirst ? '' : 'mt-2'}>
       {group.label && (
-        <div className="px-3 pt-1.5 pb-0.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/35">
+        <div className="px-3 pt-2 pb-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-white/40">
             {group.label}
           </span>
         </div>

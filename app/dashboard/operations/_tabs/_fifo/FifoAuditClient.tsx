@@ -94,7 +94,7 @@ export function FifoAuditClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e8eaef]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             FIFO Lot Denetimi
           </span>
         </div>
@@ -117,7 +117,7 @@ export function FifoAuditClient({ companyId }: Props) {
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             FIFO Lot Denetimi
           </span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">
@@ -138,7 +138,7 @@ export function FifoAuditClient({ companyId }: Props) {
           <div className={`text-xl font-black tabular-nums leading-none ${gradeColor(audit.grade)}`}>
             {audit.integrity_score}<span className="text-sm font-semibold ml-0.5">/ 100</span>
           </div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mt-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mt-1">
             Bütünlük Skoru
           </div>
         </div>
@@ -187,7 +187,7 @@ export function FifoAuditClient({ companyId }: Props) {
       {/* Issues breakdown — only if there are problems */}
       {hasIssues && (
         <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#fafafa] flex items-center gap-3 flex-wrap">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tespit Edilen Sorunlar:</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tespit Edilen Sorunlar:</span>
           {audit.over_consumed_lots > 0 && (
             <span className="text-[10px] font-semibold bg-neg-light text-neg-text px-2 py-0.5 rounded">
               {audit.over_consumed_lots} Aşım (ayrılan &gt; mevcut)
@@ -211,7 +211,7 @@ export function FifoAuditClient({ companyId }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+              <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-5 py-2.5">Ürün</th>
                 <th className="text-right px-4 py-2.5">Mevcut Miktar</th>
                 <th className="text-right px-4 py-2.5">Kullanılan</th>
@@ -234,7 +234,7 @@ export function FifoAuditClient({ companyId }: Props) {
       {cleanLots.length > 0 && (
         <details className="group">
           <summary className="px-5 py-3 border-t border-[#e8eaef] bg-[#f8fafc] cursor-pointer list-none flex items-center justify-between hover:bg-[#f1f5f9]">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Temiz Lotlar ({cleanLots.length})
             </span>
             <span className="text-[10px] text-[#94a3b8] group-open:rotate-180 inline-block transition-transform">
@@ -244,7 +244,7 @@ export function FifoAuditClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Miktar</th>
                   <th className="text-right px-4 py-2.5">Kullanılan</th>

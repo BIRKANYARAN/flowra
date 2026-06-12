@@ -85,7 +85,7 @@ export async function TasksContent({ companyId }: Props) {
   return (
     <div className="max-w-3xl space-y-4">
       <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Görevler</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Görevler</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
       </div>
 
@@ -99,7 +99,7 @@ export async function TasksContent({ companyId }: Props) {
             { label: 'Tamamlanma Oranı', value: tasks.length > 0 ? `%${compRate}` : '—', sub: `${statusCounts.done ?? 0} tamamlandı · ${statusCounts.cancelled ?? 0} iptal`, color: compRate >= 70 ? 'text-pos-text' : compRate >= 40 ? 'text-warn-text' : 'text-[#64748b]' },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>

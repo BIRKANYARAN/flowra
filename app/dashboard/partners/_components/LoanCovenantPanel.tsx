@@ -99,7 +99,7 @@ function GaugeBar({
 }) {
   return (
     <div className={`border rounded px-4 py-3 ${colorClass}`}>
-      <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">{label}</div>
+      <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1">{label}</div>
       <div className="flex items-baseline gap-2 mb-1.5">
         <span className="text-2xl font-black tabular-nums leading-none">{value}</span>
         <span className="text-xs font-semibold opacity-70">{statusLabel}</span>
@@ -198,14 +198,14 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
     <div className="space-y-3">
 
       {/* ── Section header ──────────────────────────────────────────────────── */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Kredi Kovenanı İzleme
       </div>
 
       {/* ── Critical alerts banner ───────────────────────────────────────────── */}
       {critical_alerts.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-2">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-2">
             Kritik Kovenan Uyarıları
           </div>
           <div className="space-y-1">
@@ -243,7 +243,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
 
         {/* Overall risk score */}
         <div className={`border rounded px-4 py-3 ${riskScoreColor(overall_covenant_risk_score)}`}>
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">
+          <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1">
             Kovenan Risk Skoru
           </div>
           <div className="flex items-baseline gap-2 mb-1.5">
@@ -265,21 +265,21 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
       {/* ── Portfolio summary row ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Borç</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_outstanding_loans_try, 0)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Borç Servisi</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Borç Servisi</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_annual_debt_service_try, 0)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
           <div className={`text-sm font-black tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_net_income_try, 0)}
           </div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD EBITDA</div>
+          <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD EBITDA</div>
           <div className={`text-sm font-black tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_ebitda_try, 0)}
           </div>
@@ -289,7 +289,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
       {/* ── Per-tranche table ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]/60">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Tranche Bazında Kovenan Durumu
           </div>
         </div>
@@ -297,25 +297,25 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="border-b border-[#e8eaef]">
-                <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[120px]">
+                <th className="px-3 py-2 text-left text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[120px]">
                   Ortak
                 </th>
-                <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-right text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   Bakiye
                 </th>
-                <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-right text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   Yıllık Oran
                 </th>
-                <th className="px-3 py-2 text-right text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-right text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   Yıllık Faiz
                 </th>
-                <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-center text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   DSR Durumu
                 </th>
-                <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-center text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   ICR Durumu
                 </th>
-                <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                <th className="px-3 py-2 text-center text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
                   Risk Skoru
                 </th>
               </tr>

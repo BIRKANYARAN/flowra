@@ -93,7 +93,7 @@ function LoadingSkeleton() {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Uyum Paneli</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Vergi Uyum Paneli</div>
       </div>
       <div className="px-4 py-8 text-center">
         <div className="text-xs text-[#94a3b8] animate-pulse">Yükleniyor…</div>
@@ -128,7 +128,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Uyum Paneli</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Vergi Uyum Paneli</div>
         </div>
         <div className="px-4 py-6 text-center">
           <p className="text-xs text-[#94a3b8]">Vergi uyum paneli yüklenemedi</p>
@@ -163,7 +163,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
         {/* Header */}
         <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Vergi Uyum Paneli
             </div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -180,7 +180,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
 
           {/* Compliance score */}
           <div className="p-4 border-r border-[#e8eaef] flex flex-col items-center justify-center">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1 text-center">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1 text-center">
               Uyum Skoru
             </div>
             <div className={`text-5xl font-black tabular-nums leading-none ${scoreColor(dashboard.compliance_score)}`}>
@@ -191,7 +191,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
 
           {/* Next obligation */}
           <div className="p-4 border-r border-[#e8eaef]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
               Bir Sonraki Yükümlülük
             </div>
             {next ? (
@@ -217,19 +217,19 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
           {/* Summary chips */}
           <div className="p-4 space-y-2">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Bekleyen</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Bekleyen</div>
               <div className="text-base font-black tabular-nums text-warn-text">
                 {fmtTRY(dashboard.total_pending_try)}
               </div>
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YTD KDV Ödenen</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">YTD KDV Ödenen</div>
               <div className="text-sm font-black tabular-nums text-[#1e293b]">
                 {fmtTRY(dashboard.kdv_ytd_paid_try)}
               </div>
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KV Karşılık</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">KV Karşılık</div>
               <div className="text-sm font-black tabular-nums text-[#1e293b]">
                 {fmtTRY(dashboard.corporate_tax_provision_try)}
               </div>
@@ -246,12 +246,12 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tür</th>
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Gün</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
-                <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
-                <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Süre</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tür</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Son Gün</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tutar</th>
+                <th className="text-center px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
+                <th className="text-center px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Süre</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

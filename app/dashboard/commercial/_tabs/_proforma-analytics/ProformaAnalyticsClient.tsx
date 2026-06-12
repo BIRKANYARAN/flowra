@@ -43,7 +43,7 @@ function TrendBars({ months }: { months: MonthlyProformaStat[] }) {
   const maxCreated = Math.max(...months.map(m => m.created), 1)
   return (
     <div>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
         Aylık Trend (Kazanma Oranı)
       </div>
       <div className="flex items-end gap-1 h-10">
@@ -96,11 +96,11 @@ function SizeTable({ buckets, total }: { buckets: SizeBucket[]; total: number })
   if (nonEmpty.length === 0) return null
   return (
     <div>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
         Anlaşma Büyüklüğü Dağılımı
       </div>
       <div className="border border-[#e8eaef] rounded overflow-hidden">
-        <div className="grid grid-cols-3 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] px-3 py-1.5 border-b border-[#f1f5f9] bg-[#f8fafc]">
+        <div className="grid grid-cols-3 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] px-3 py-1.5 border-b border-[#f1f5f9] bg-[#f8fafc]">
           <div>Aralık</div>
           <div className="text-right">Teklif</div>
           <div className="text-right">Toplam TL</div>
@@ -133,7 +133,7 @@ function TopProducts({ products }: { products: ProformaProductStat[] }) {
   if (top5.length === 0) return null
   return (
     <div>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
         Tekliflerde En Çok Görünen Ürünler
       </div>
       <div className="space-y-1.5">
@@ -217,7 +217,7 @@ export function ProformaAnalyticsClient() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Proforma Analizi — Son {rpt.period_days} Gün
         </span>
         <span className="text-[9px] text-[#94a3b8]">{rpt.total_pending} bekleyen</span>
@@ -227,7 +227,7 @@ export function ProformaAnalyticsClient() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e8eaef] rounded overflow-hidden">
         {summaryCards.map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
           </div>

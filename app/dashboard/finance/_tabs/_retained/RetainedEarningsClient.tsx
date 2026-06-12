@@ -53,7 +53,7 @@ function KpiCard({ label, value, tone }: { label: string; value: string; tone?: 
     'text-[#0f172a]'
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
     </div>
   )
@@ -145,7 +145,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
       {/* Section header */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <div className="text-[11px] font-black uppercase tracking-widest text-[#64748b]">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#64748b]">
             Özkaynaklar Değişim Tablosu
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -172,7 +172,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
         <div className="bg-[#fef2f2] border border-[#fecaca] rounded px-4 py-3 flex items-start gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626] shrink-0 mt-1.5" />
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-[#dc2626]">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-[#dc2626]">
               Birikmiş zarar tespit edildi
             </div>
             <div className="text-xs text-[#b91c1c] mt-0.5">
@@ -236,7 +236,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
       ) : (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
               Geçmiş Yıllar Kârı Rollforward
             </span>
             <span className="text-[0.6rem] text-[#94a3b8] font-medium">
@@ -259,7 +259,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
                   ].map(col => (
                     <th
                       key={col.label}
-                      className={`px-3 py-2 text-[0.6rem] font-black uppercase tracking-wider text-[#94a3b8] text-${col.align}`}
+                      className={`px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] text-${col.align}`}
                     >
                       {col.label}
                     </th>

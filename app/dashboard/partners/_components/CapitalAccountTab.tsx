@@ -84,7 +84,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Pozisyon</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Pozisyon</div>
           <div className={[
             'text-base font-black tabular-nums',
             acc.net_position_try >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
@@ -96,7 +96,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
 
       {/* Accounting facts */}
       <div className="px-4 py-1">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] py-2">
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] py-2">
           Muhasebe Gerçekleri
         </div>
 
@@ -200,7 +200,7 @@ function ExitScenarioSection({
       {/* Section header — visually distinct from accounting facts */}
       <div className="px-4 py-3 bg-[#fffbeb] border-b border-[#fde68a] flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#d97706]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#d97706]">
             Hipotetik Simülasyon
           </div>
           <div className="text-sm font-bold text-[#92400e] mt-0.5">Çıkış Senaryo Analizi</div>
@@ -212,7 +212,7 @@ function ExitScenarioSection({
 
         {/* Multiple input */}
         <div className="flex flex-col gap-1 min-w-[140px]">
-          <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#92400e]">
+          <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#92400e]">
             Değerleme Çarpanı
           </label>
           <div className="flex items-center gap-2">
@@ -249,17 +249,17 @@ function ExitScenarioSection({
       <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#fafafa]">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Firma Değeri</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Firma Değeri</div>
             <div className="text-sm font-bold text-[#0f172a] tabular-nums mt-1">{fmtTRY(enterpriseValue)}</div>
             <div className="text-[0.65rem] text-[#94a3b8]">{multiple.toFixed(1)}x × Öz sermaye</div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kıdemli Alacaklar</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kıdemli Alacaklar</div>
             <div className="text-sm font-bold text-[#dc2626] tabular-nums mt-1">{fmtTRY(seniorClaims)}</div>
             <div className="text-[0.65rem] text-[#94a3b8]">Ortak borçları</div>
           </div>
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtılabilir</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dağıtılabilir</div>
             <div className="text-sm font-bold text-[#16a34a] tabular-nums mt-1">{fmtTRY(distributable)}</div>
             <div className="text-[0.65rem] text-[#94a3b8]">Kıdemli talepler sonrası</div>
           </div>
@@ -379,15 +379,15 @@ function CapitalCommitmentSection() {
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Taahhüt</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Taahhüt</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ödenen</div>
           <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
         </div>
         <div className={`rounded px-3 py-2.5 shadow-sm border ${data.total_equity_gap_try > 0 ? 'bg-[#fef2f2] border-[#fecaca]' : 'bg-white border-[#e8eaef]'}`}>
-          <div className={`text-[0.65rem] font-black uppercase tracking-widest ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-[0.65rem] font-bold uppercase tracking-wider ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
             Eksik Taahhüt
           </div>
           <div className={`text-sm font-black tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
@@ -405,13 +405,13 @@ function CapitalCommitmentSection() {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
-                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Taahhüt</th>
-                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</th>
-                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Eksik</th>
-                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">TTK 588 Faizi</th>
-                <th className="px-3 py-2 text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+                <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+                <th className="px-3 py-2 text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Pay</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Taahhüt</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ödenen</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eksik</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">TTK 588 Faizi</th>
+                <th className="px-3 py-2 text-center text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -506,17 +506,17 @@ export function CapitalAccountTab() {
       {/* Summary KPI strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Öz Sermaye</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Öz Sermaye</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(total_equity_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Defter değeri</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Bakiyesi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak Borç Bakiyesi</div>
           <div className="text-sm font-black text-[#dc2626] tabular-nums mt-1">{fmtTRY(total_partner_debt_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Aktif trancheler</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Öz Sermaye</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Öz Sermaye</div>
           <div className={[
             'text-sm font-black tabular-nums mt-1',
             (total_equity_try - total_partner_debt_try) >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
@@ -528,7 +528,7 @@ export function CapitalAccountTab() {
       </div>
 
       {/* Section label */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Ortak Bazında Sermaye Hesapları — Muhasebe Gerçekleri
       </div>
 
@@ -540,7 +540,7 @@ export function CapitalAccountTab() {
       </div>
 
       {/* Exit scenario */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Hipotetik Çıkış Senaryosu — Simülasyon
       </div>
 
@@ -553,7 +553,7 @@ export function CapitalAccountTab() {
       />
 
       {/* Taahhüt Takibi section */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
         Sermaye Taahhüt Takibi — TTK 588
       </div>
       <CapitalCommitmentSection />

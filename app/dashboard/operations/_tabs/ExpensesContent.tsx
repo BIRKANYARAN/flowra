@@ -246,7 +246,7 @@ export async function ExpensesContent({ companyId }: Props) {
         {/* Row 1: This month vs last */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Bu Ay</span>
             <span className="text-sm font-black tabular-nums text-neg">{fmt(currentBurn)}</span>
           </div>
           {prevBurn > 0 && (
@@ -265,7 +265,7 @@ export async function ExpensesContent({ companyId }: Props) {
         {/* Row 2: Top categories this month with anomaly flags */}
         {currentBurn > 0 && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 border-b border-[#f1f5f9] text-xs">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kategori</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kategori</span>
             {Array.from(currentCatMap.entries())
               .sort((a, b) => b[1] - a[1])
               .slice(0, 4)
@@ -275,7 +275,7 @@ export async function ExpensesContent({ companyId }: Props) {
                   <span key={cat} className="flex items-center gap-1 text-[#334155]">
                     <span>{CATEGORY_LABELS[cat] ?? cat}: {fmt(total)}</span>
                     {anomaly && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
                         ⚠ ANOMALİ {anomaly.ratio.toFixed(1)}×
                       </span>
                     )}
@@ -288,7 +288,7 @@ export async function ExpensesContent({ companyId }: Props) {
         {/* Row 3: Approval queue */}
         {approvalQueue.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 bg-warn-light/30 text-xs">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Onay</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text">Onay</span>
             <span className="font-semibold text-warn-text">
               {approvalQueue.length} masraf onay bekliyor — {fmt(approvalTotal)}
             </span>
@@ -308,7 +308,7 @@ export async function ExpensesContent({ companyId }: Props) {
           { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-[#94a3b8]' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
@@ -319,11 +319,11 @@ export async function ExpensesContent({ companyId }: Props) {
       {expenseIntelligence && expenseIntelligence.categories.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Gider Analizi
             </span>
             {expenseIntelligence.fastest_growing && (
-              <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded bg-neg-light text-neg-text">
+              <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-neg-light text-neg-text">
                 En Hızlı Büyüyen: {expenseIntelligence.fastest_growing}
                 {expenseIntelligence.fastest_growing_pct !== null && (
                   <span> +%{expenseIntelligence.fastest_growing_pct.toFixed(0)}</span>
@@ -337,10 +337,10 @@ export async function ExpensesContent({ companyId }: Props) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Kategori</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Tutar</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">% Pay</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Değişim</th>
+                  <th className="text-left text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pr-2">Kategori</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">Tutar</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 px-2">% Pay</th>
+                  <th className="text-right text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] pb-1.5 pl-2">Değişim</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
@@ -397,7 +397,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {expenseAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Anormal Gider Artışı</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text">Anormal Gider Artışı</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
@@ -417,7 +417,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {duplicateGroups.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">Olası Kopya Gider — {duplicateGroups.length} Grup</span>
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text">Olası Kopya Gider — {duplicateGroups.length} Grup</span>
             <span className="text-[9px] text-neg">son 90 gün · yüksek güven</span>
           </div>
           <div className="space-y-1.5">
@@ -439,7 +439,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {/* ── Category breakdown (collapsible) — with anomaly badges ───────────── */}
       {categories.length > 0 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Özeti — Son 6 Ay</h3>
+          <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">Kategori Özeti — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
               const barPct    = (cat.total / maxCatTotal) * 100
@@ -470,7 +470,7 @@ export async function ExpensesContent({ companyId }: Props) {
                     <span className="text-[10px] text-[#94a3b8]">%{sharePct.toFixed(0)}</span>
                     <span className={`text-[10px] font-semibold ${trendColor}`}>{trendDir} {anomaly ? 'ANOMALİ' : trendDir === '→' ? 'sabit' : 'normal'}</span>
                     {anomaly && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
                         ort. {fmt(anomaly.avg)}
                       </span>
                     )}
@@ -488,7 +488,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {/* ── Monthly trend ─────────────────────────────────────────────────────── */}
       {trend.length > 1 && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
+          <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {
               const heightPct    = Math.max(4, (t.total / maxTrendTotal) * 100)

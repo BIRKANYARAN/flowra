@@ -181,7 +181,7 @@ export function ProformaInvoice({
 
           {/* Satıcı */}
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
               Satıcı Bilgileri
             </div>
             <div className="font-bold text-sm text-[#0f172a] leading-tight">
@@ -217,7 +217,7 @@ export function ProformaInvoice({
 
           {/* Alıcı */}
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
               Alıcı Bilgileri
             </div>
             <div className="font-bold text-sm text-[#0f172a] leading-tight">
@@ -250,7 +250,7 @@ export function ProformaInvoice({
 
           {/* Belge Detayları */}
           <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 pb-1 border-b border-[#f1f5f9]">
               Belge Bilgileri
             </div>
             <div className="space-y-1.5">

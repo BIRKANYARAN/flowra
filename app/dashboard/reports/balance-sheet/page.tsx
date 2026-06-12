@@ -61,7 +61,7 @@ interface BalanceSheet {
 function Section({ title }: { title: string }) {
   return (
     <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{title}</div>
     </div>
   )
 }
@@ -170,7 +170,7 @@ export default function BalanceSheetPage() {
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden print:border-[#e8eaef]">
             <div className="px-4 py-3 bg-info-light border-b border-info-light">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-widest text-info-text">Varlıklar</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-info-text">Varlıklar</span>
                 <span className="text-sm font-black tabular-nums text-info-text">{fmt(bs.assets.total_assets_try)}</span>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function BalanceSheetPage() {
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden print:border-[#e8eaef]">
               <div className="px-4 py-3 bg-warn-light border-b border-warn/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-widest text-warn">Kaynaklar</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-warn">Kaynaklar</span>
                   <span className="text-sm font-black tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
                 </div>
               </div>
@@ -228,7 +228,7 @@ export default function BalanceSheetPage() {
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden print:border-[#e8eaef]">
               <div className="px-4 py-3 bg-pos-light border-b border-pos-light">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-widest text-pos-text">Özkaynak</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-pos-text">Özkaynak</span>
                   <span className="text-sm font-black tabular-nums text-pos-text">{fmt(bs.equity.total_equity_try)}</span>
                 </div>
               </div>

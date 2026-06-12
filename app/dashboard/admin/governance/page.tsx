@@ -112,7 +112,7 @@ const STATUS_THEME = {
 function MetricCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
     <div className={`rounded border px-4 py-3 ${highlight ? 'border-[#e8eaef] bg-brand-subtle/50' : 'border-[#e8eaef] bg-white'}`}>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
@@ -147,7 +147,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Header strip */}
       <div className={`rounded border px-4 py-3 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
         <div className="min-w-0">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
           <div className={`text-base font-bold mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
           </div>
@@ -176,7 +176,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* P&L snapshot */}
       <section>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Gelir Tablosu</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Dönem Gelir Tablosu</div>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           <MetricCard label="Gelir"      value={fmt(snap.revenue_try)} />
           <MetricCard label="SMMM"       value={fmt(snap.cogs_try)} />
@@ -188,7 +188,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Balance sheet */}
       <section>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti — Dönem Sonu İtibarıyla</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Bilanço Özeti — Dönem Sonu İtibarıyla</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard label="Toplam Varlık"  value={fmt(snap.total_assets_try)} />
           <MetricCard label="Toplam Borç"    value={fmt(snap.total_liabilities_try)} />
@@ -199,7 +199,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Operational metrics */}
       <section>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler — Dönem Sonu İtibarıyla</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Operasyonel Metrikler — Dönem Sonu İtibarıyla</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard
             label="Nakit Pisti"
@@ -226,15 +226,15 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Partner positions */}
       {snap.partner_balances.length > 0 && (
         <section>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
-                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç Bakiyesi</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İmza</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Pay</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Borç Bakiyesi</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">İmza</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -286,7 +286,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Notes */}
       {report.notes && (
         <section>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Notlar</div>
           <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 text-xs text-[#334155]">{report.notes}</div>
         </section>
       )}
@@ -463,10 +463,10 @@ export default function GovernancePage() {
       {/* Generate form */}
       {showGenForm && (
         <div data-print-hide className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1">Yıl</label>
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1">Yıl</label>
               <select
                 value={genYear}
                 onChange={e => setGenYear(Number(e.target.value))}
@@ -478,7 +478,7 @@ export default function GovernancePage() {
               </select>
             </div>
             <div>
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1">Ay</label>
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1">Ay</label>
               <select
                 value={genMonth}
                 onChange={e => setGenMonth(Number(e.target.value))}
@@ -490,7 +490,7 @@ export default function GovernancePage() {
               </select>
             </div>
             <div>
-              <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1">Not (isteğe bağlı)</label>
+              <label className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] block mb-1">Not (isteğe bağlı)</label>
               <input
                 type="text"
                 value={genNotes}
@@ -547,7 +547,7 @@ export default function GovernancePage() {
 
           {/* Report list */}
           <div data-print-hide className="flex flex-col gap-2">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-1 mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] px-1 mb-1">
               {reports.length} Rapor
             </div>
             {reports.map(r => {

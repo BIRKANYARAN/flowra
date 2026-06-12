@@ -157,7 +157,7 @@ export function DividendTab() {
       {/* ── Section 1: Calculator ───────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hesaplama</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Hesaplama</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">TTK 509/519 uyumu · GVK 94 §4 (%10 stopaj) · Ortak bazlı dağılım</p>
         </div>
 
@@ -165,7 +165,7 @@ export function DividendTab() {
           {/* Input row */}
           <div className="flex items-end gap-3">
             <div className="flex-1">
-              <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+              <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
                 Brüt Temettü Tutarı (₺)
               </label>
               <input
@@ -223,7 +223,7 @@ export function DividendTab() {
                   },
                 ].map((card, i) => (
                   <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
-                    <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+                    <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
                     <div className={`text-base font-black tabular-nums ${card.tone}`}>{card.value}</div>
                   </div>
                 ))}
@@ -231,7 +231,7 @@ export function DividendTab() {
 
               {/* Compliance checks */}
               <div className="border border-[#e8eaef] rounded px-3 py-2 space-y-0">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Yasal Uyum</div>
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Yasal Uyum</div>
                 <ComplianceRow
                   ok={calcResult.ttk_509_satisfied}
                   label="TTK 509 — Dağıtılabilir Kâr"
@@ -266,7 +266,7 @@ export function DividendTab() {
               {calcResult.partner_allocations.length > 0 && (
                 <div className="border border-[#e8eaef] rounded overflow-hidden">
                   <div className="px-3 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
-                    <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazlı Dağılım</div>
+                    <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak Bazlı Dağılım</div>
                   </div>
                   <table className="w-full text-xs">
                     <thead>
@@ -304,7 +304,7 @@ export function DividendTab() {
               {/* Notes + declare button */}
               <div className="space-y-2">
                 <div>
-                  <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+                  <label className="block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">
                     Not (isteğe bağlı)
                   </label>
                   <input
@@ -346,7 +346,7 @@ export function DividendTab() {
       {/* ── Section 2: Declaration History ─────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Beyan Geçmişi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Beyan Geçmişi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Onay akışına gönderilmiş temettü beyanları</p>
         </div>
 

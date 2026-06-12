@@ -272,7 +272,7 @@ export function PeriodCloseReadinessClient({ companyId }: { companyId: string })
       {/* ── Full checklist ─────────────────────────────────────────────────── */}
       <div className="px-4 py-3">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Tüm Kontroller
           </span>
           <div className="flex items-center gap-2 text-[10px]">

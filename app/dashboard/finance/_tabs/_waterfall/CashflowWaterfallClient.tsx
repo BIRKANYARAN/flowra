@@ -134,7 +134,7 @@ export function CashflowWaterfallClient({ companyId }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef] flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex-1">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             12 Aylık Nakit Akış Şelalesi
           </div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -215,7 +215,7 @@ export function CashflowWaterfallClient({ companyId }: Props) {
               },
             ].map(item => (
               <div key={item.label} className="px-4 py-3">
-                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+                <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                   {item.label}
                 </div>
                 <div className={`text-base font-black tabular-nums leading-none ${item.tone}`}>
@@ -256,16 +256,16 @@ export function CashflowWaterfallClient({ companyId }: Props) {
             <table className="w-full text-xs min-w-[700px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Açılış</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-green-700">Tahsilat</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-slate-500">Faaliyet</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-amber-600">Vergi</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-red-600">Borç</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#0f172a]">Kapanış</th>
-                  <th className="px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
-                  <th className="px-3 py-2.5 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Katmanlar</th>
+                  <th className="text-left px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ay</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Açılış</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-green-700">Tahsilat</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-slate-500">Faaliyet</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-amber-600">Vergi</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-red-600">Borç</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</th>
+                  <th className="text-right px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#0f172a]">Kapanış</th>
+                  <th className="px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
+                  <th className="px-3 py-2.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Katmanlar</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">

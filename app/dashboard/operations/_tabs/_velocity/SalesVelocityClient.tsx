@@ -93,7 +93,7 @@ export function SalesVelocityClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e8eaef]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Satış Hız Analizi
           </span>
         </div>
@@ -110,7 +110,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Satış Hız Analizi
           </span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">
@@ -137,7 +137,7 @@ export function SalesVelocityClient({ companyId }: Props) {
 
       {/* Alert strip */}
       <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#fafafa] flex items-center gap-3 flex-wrap">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Stok Durumu:
         </span>
         {report.critical_count > 0 && (
@@ -167,7 +167,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       {report.reorder_alerts.length > 0 && (
         <>
           <div className="px-5 py-3 border-b border-[#e8eaef] bg-neg-light flex items-center gap-2">
-            <span className="text-neg-text text-xs font-black uppercase tracking-widest">
+            <span className="text-neg-text text-xs font-bold uppercase tracking-wider">
               Sipariş Gerekiyor — {report.reorder_alerts.length} Ürün
             </span>
             <span className="text-[10px] text-neg-text">
@@ -177,7 +177,7 @@ export function SalesVelocityClient({ companyId }: Props) {
           <div className="overflow-x-auto border-b border-[#e8eaef]">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+                <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Sipariş Noktası</th>
@@ -232,7 +232,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
+            <tr className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-5 py-2.5">Ürün</th>
               <th className="text-left px-4 py-2.5">SKU</th>
               <th className="text-right px-4 py-2.5">Stok</th>

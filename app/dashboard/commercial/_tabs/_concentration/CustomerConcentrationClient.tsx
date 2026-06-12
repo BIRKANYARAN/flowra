@@ -97,11 +97,11 @@ function CustomerTierTable({ customers }: { customers: CustomerConcentrationEntr
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-[#f1f5f9]">
-            <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
-            <th className="text-center px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-20">Seviye</th>
-            <th className="text-right px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-24">Gelir</th>
-            <th className="text-right px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-16">Pay</th>
-            <th className="text-right px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-20">Kümülatif</th>
+            <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Müşteri</th>
+            <th className="text-center px-2 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-20">Seviye</th>
+            <th className="text-right px-2 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-24">Gelir</th>
+            <th className="text-right px-2 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-16">Pay</th>
+            <th className="text-right px-2 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] w-20">Kümülatif</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#f8fafc]">
@@ -114,7 +114,7 @@ function CustomerTierTable({ customers }: { customers: CustomerConcentrationEntr
                   {c.customer_name}
                 </td>
                 <td className="px-2 py-2 text-center">
-                  <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${tierCfg.badge}`}>
+                  <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${tierCfg.badge}`}>
                     {tierCfg.label}
                   </span>
                 </td>
@@ -171,10 +171,10 @@ export default function CustomerConcentrationClient() {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Müşteri Yoğunlaşma Analizi
         </span>
-        <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded ${levelCfg.badge}`}>
+        <span className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${levelCfg.badge}`}>
           {levelCfg.label}
         </span>
       </div>
@@ -184,7 +184,7 @@ export default function CustomerConcentrationClient() {
         {/* HHI score */}
         <div className="flex items-start gap-4 mb-3">
           <div>
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
               HHI Skoru <InfoTip k="HHI" />
             </div>
             <div className={`text-4xl font-black tabular-nums leading-none ${levelCfg.color}`}>
@@ -239,7 +239,7 @@ export default function CustomerConcentrationClient() {
             { label: 'Pareto 80%', value: `${report.pareto_customer_count} müş.` },
           ].map((m, i) => (
             <div key={m.label} className={`px-2 py-2 ${i < 3 ? 'border-r border-[#f1f5f9]' : ''}`}>
-              <div className="text-[0.55rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+              <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 {m.label}
               </div>
               <div className="text-sm font-black tabular-nums text-[#1e293b] leading-none">
@@ -252,7 +252,7 @@ export default function CustomerConcentrationClient() {
         {/* At-risk warning */}
         {report.top1_share_pct > 30 && (
           <div className="mt-3 bg-neg-light border border-neg-light rounded px-3 py-2">
-            <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-neg-text">
               Yoğunlaşma Riski
             </div>
             <div className="text-xs text-neg-text mt-0.5">
@@ -267,7 +267,7 @@ export default function CustomerConcentrationClient() {
       {report.monthly_hhi.length > 0 && (
         <div className="px-4 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               6 Aylık HHI Trendi
             </span>
             <span className={`text-[10px] font-bold ${trendCfg.color}`}>
@@ -282,7 +282,7 @@ export default function CustomerConcentrationClient() {
       <div>
         <div className="px-4 py-2 border-b border-[#f1f5f9]">
           <div className="flex items-center justify-between">
-            <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Müşteri Kademeleri
             </span>
             <div className="flex gap-2 text-[9px] text-[#94a3b8]">

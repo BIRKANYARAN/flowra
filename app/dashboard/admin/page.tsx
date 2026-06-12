@@ -198,7 +198,7 @@ function UsersTab({ members }: { members: CompanyMemberRow[] }) {
     <div className="space-y-4">
       {/* Header row */}
       <div className="flex items-center justify-between px-4 pt-4">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
           {active.length} aktif üye{pending.length > 0 ? ` · ${pending.length} bekleyen` : ''}
         </div>
         <Link href="/dashboard/admin/users"
@@ -308,7 +308,7 @@ function RolesTab() {
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">3 Rol Tanımı</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">3 Rol Tanımı</div>
         <Link href="/dashboard/admin/roles"
           className="text-xs font-semibold text-brand-light hover:text-brand">
           Roller Yönet →
@@ -340,7 +340,7 @@ function WorkflowsTab({ workflows }: { workflows: WorkflowRow[] }) {
     <div className="space-y-0">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
           {workflows.length} onay bekliyor
         </div>
         <Link href="/dashboard/admin/workflows"
@@ -364,7 +364,7 @@ function WorkflowsTab({ workflows }: { workflows: WorkflowRow[] }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
                         {WORKFLOW_TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
                       </span>
                       {w.expires_at && (
@@ -414,7 +414,7 @@ function AuditTab({ logs }: { logs: AuditRow[] }) {
   return (
     <div>
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Son 10 kayıt</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">Son 10 kayıt</div>
         <Link href="/dashboard/admin/audit"
           className="text-xs font-semibold text-brand-light hover:text-brand">
           Tümü →
@@ -456,7 +456,7 @@ function ReconciliationTab({ snapshots }: { snapshots: ReconciliationRow[] }) {
   return (
     <div>
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
           {snapshots.length} mutabakat dosyası
         </div>
         <Link href="/dashboard/admin/reconciliation/new"
@@ -544,7 +544,7 @@ function GlModeSection({ glMode }: { glMode: 'shadow' | 'parallel' | 'gl_primary
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Modu</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">GL Modu</div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${badge.cls}`}>
           {badge.label}
         </span>
@@ -656,7 +656,7 @@ export default async function AdminHubPage({
 
       {/* Quick settings links */}
       <div className="bg-[#f8fafc] border border-[#e8eaef] rounded p-4">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {[
             { href: '/dashboard/settings',        label: 'Genel Ayarlar'  },

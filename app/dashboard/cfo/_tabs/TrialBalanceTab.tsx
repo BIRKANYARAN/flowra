@@ -256,7 +256,7 @@ export function TrialBalanceTab() {
           { label: 'Net Gelir',   value: summary.net_income, color: summary.net_income >= 0 ? 'text-pos-text' : 'text-neg-text' },
         ].map(k => (
           <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
             <div className={`text-xs font-black tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
               {fmtTRY(k.value)}
             </div>
@@ -279,7 +279,7 @@ export function TrialBalanceTab() {
                   onClick={() => toggleGroup(grp.id)}
                   className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] transition-colors border-b border-[#e8eaef]"
                 >
-                  <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+                  <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
                     {grp.label}
                     <span className="ml-2 text-[#94a3b8] font-semibold normal-case">{grpLines.length} hesap</span>
                   </span>
@@ -318,7 +318,7 @@ export function TrialBalanceTab() {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-[#e8eaef] bg-[#f8fafc]">
-                        <td colSpan={2} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#64748b]">
+                        <td colSpan={2} className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
                           Alt Toplam
                         </td>
                         <td className="px-4 py-2 text-right font-mono font-black text-[#0f172a] tabular-nums">
@@ -384,7 +384,7 @@ export function TrialBalanceTab() {
       {/* ── Footer: TOPLAM + balance indicator ────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">TOPLAM</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">TOPLAM</span>
           <div className="flex items-center gap-6 tabular-nums text-xs font-black">
             <div>
               <span className="text-[#94a3b8] font-semibold mr-1.5">Borç:</span>

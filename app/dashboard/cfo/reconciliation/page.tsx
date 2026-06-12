@@ -205,7 +205,7 @@ export default function ReconciliationPage() {
           {reconLines.length > 0 && (
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Mutabakat Değerlendirmesi</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Mutabakat Değerlendirmesi</span>
                 <span className="text-[9px] text-[#94a3b8]">Finansal doğruluk · Dönem kapanış hazırlığı</span>
               </div>
               <div className="space-y-0.5">
@@ -222,22 +222,22 @@ export default function ReconciliationPage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-center">
               <div className="text-xl font-black text-pos-text tabular-nums">{okCount}</div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
               <div className={`text-xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
-              <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
+              <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
               <div className={`text-xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
-              <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
+              <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
 
           {/* Reconciliation items table */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Karşılaştırması</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hesap Karşılaştırması</div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">

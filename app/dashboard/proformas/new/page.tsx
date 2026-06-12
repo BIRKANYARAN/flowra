@@ -11,7 +11,7 @@ import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/produ
 import { resolveCompanyId } from '@/lib/resolve-company'
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
-const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 const KDV_OPTS = [0, 1, 8, 10, 18, 20]
 
 type Line = {
@@ -277,7 +277,7 @@ export default function NewProformaPage() {
               Ürünler / Hizmetler
             </h2>
 
-            <div className="grid grid-cols-12 gap-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2 px-1">
+            <div className="grid grid-cols-12 gap-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 px-1">
               <div className="col-span-3">Ürün Adı</div>
               <div className="col-span-2 text-right">Birim Fiyat ({sym(currency)})</div>
               <div className="col-span-1 text-center">İskonto (%)</div>
@@ -474,7 +474,7 @@ export default function NewProformaPage() {
         <div className="space-y-5">
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Özeti</h2>
+              <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Fiyat Özeti</h2>
               <span className="text-xs font-bold text-brand-light bg-brand-subtle px-2.5 py-0.5 rounded">{currency}</span>
             </div>
             <div className="space-y-2.5">

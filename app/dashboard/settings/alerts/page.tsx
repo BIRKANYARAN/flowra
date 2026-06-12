@@ -104,7 +104,7 @@ export default function AlertSettingsPage() {
       {!loading && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               <span>Kural</span>
               <span>Eşik</span>
               <span>Ciddiyet</span>
@@ -165,7 +165,7 @@ export default function AlertSettingsPage() {
                   <button
                     onClick={() => saveRule(rule)}
                     disabled={saving === rule.rule_type}
-                    className={`text-[0.65rem] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors ${
+                    className={`text-[0.65rem] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-colors ${
                       saving === rule.rule_type
                         ? 'bg-[#f1f5f9] text-[#94a3b8] cursor-wait'
                         : 'bg-brand-light text-white hover:bg-brand'

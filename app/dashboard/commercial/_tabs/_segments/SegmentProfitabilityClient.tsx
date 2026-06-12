@@ -79,7 +79,7 @@ function Skeleton() {
 function PerfBadge({ performance }: { performance: SegmentPerformance }) {
   const cfg = PERF_CFG[performance]
   return (
-    <span className={`inline-block text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>
       {cfg.label}
     </span>
   )
@@ -138,7 +138,7 @@ function OverviewStrip({ report }: OverviewProps) {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
       {cards.map((card, i) => (
         <div key={card.label} className={`p-3 ${i >= 2 ? 'border-t sm:border-t-0' : ''}`}>
-          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+          <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {card.label}
           </div>
           <div className={`text-base font-black tabular-nums leading-none truncate ${card.color}`}>
@@ -166,26 +166,26 @@ function SegmentTable({ segments, showGrowth }: SegmentTableProps) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-[#f1f5f9]">
-            <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Segment
             </th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Gelir
             </th>
-            <th className="px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell w-32">
+            <th className="px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell w-32">
               Gelir Payı
             </th>
-            <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Marj %
             </th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">
               Sipariş
             </th>
-            <th className="text-center px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            <th className="text-center px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Performans
             </th>
             {showGrowth && (
-              <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">
+              <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] hidden sm:table-cell">
                 Büyüme
               </th>
             )}
@@ -302,7 +302,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Segment Kârlılık Analizi
         </span>
         <div className="flex items-center gap-2 flex-wrap">

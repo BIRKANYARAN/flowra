@@ -42,7 +42,7 @@ async function fetchLedger(year?: number): Promise<DividendLedger> {
 function SummaryCard({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="flex flex-col gap-0.5 p-3">
-      <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{label}</div>
+      <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
       <div className={`text-base font-black tabular-nums ${tone ?? 'text-[#0f172a]'}`}>{value}</div>
     </div>
   )
@@ -121,7 +121,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
         </div>
         {summary.dividend_yield_pct !== null && (
           <div className="text-right flex-shrink-0">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Verimi</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Verimi</div>
             <div className="text-sm font-black text-pos-text tabular-nums">
               {fmtPct(summary.dividend_yield_pct)}
             </div>
@@ -130,19 +130,19 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
       </div>
       <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
         <div className="px-3 py-2.5">
-          <div className="text-[0.55rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt</div>
+          <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt</div>
           <div className="text-xs font-black tabular-nums text-[#0f172a] mt-0.5">
             {fmtTRY(summary.total_gross_dividends_try)}
           </div>
         </div>
         <div className="px-3 py-2.5">
-          <div className="text-[0.55rem] font-black uppercase tracking-widest text-[#94a3b8]">Stopaj (%10)</div>
+          <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Stopaj (%10)</div>
           <div className="text-xs font-bold tabular-nums text-warn-text mt-0.5">
             −{fmtTRY(summary.total_withholding_try)}
           </div>
         </div>
         <div className="px-3 py-2.5">
-          <div className="text-[0.55rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</div>
+          <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</div>
           <div className="text-xs font-black tabular-nums text-pos-text mt-0.5">
             {fmtTRY(summary.total_net_dividends_try)}
           </div>
@@ -204,7 +204,7 @@ export function DividendLedgerTab() {
 
       {/* ── Year selector ────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</span>
+        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem</span>
         <div className="flex gap-1">
           {YEAR_OPTIONS.map(y => (
             <button
@@ -226,7 +226,7 @@ export function DividendLedgerTab() {
       {/* ── 1. Summary strip ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Özeti</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Özeti</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">GVK 94 stopaj dahil · TTK 509 uyum takibi</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef]">
@@ -255,7 +255,7 @@ export function DividendLedgerTab() {
       {/* ── 2. Compliance notes ──────────────────────────────────────────────── */}
       {ledger.compliance_notes.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3 space-y-1">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-1">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-warn-text mb-1">
             Yasal Uyum Notları
           </div>
           {ledger.compliance_notes.map((note, i) => (
@@ -270,7 +270,7 @@ export function DividendLedgerTab() {
       {/* ── 3. Per-partner summary cards ─────────────────────────────────────── */}
       {ledger.partner_summaries.length > 0 && (
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
             Ortak Bazında Özet
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -284,7 +284,7 @@ export function DividendLedgerTab() {
       {/* ── 4. Full event ledger table ───────────────────────────────────────── */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hareketleri</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Hareketleri</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Tüm beyan ve ödeme kayıtları · Kronolojik · GVK 94 stopaj
           </p>

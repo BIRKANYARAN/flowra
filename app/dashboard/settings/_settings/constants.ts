@@ -3,7 +3,7 @@
 
 // DS-aligned style tokens (primary instead of indigo, consistent radius)
 export const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors'
-export const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
+export const LAB = 'block text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5'
 
 export type Msg = { text: string; kind: 'success' | 'error' | 'info' }
 

@@ -174,7 +174,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-8">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">İşletme Sermayesi Optimizasyonu</span>
+          <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">İşletme Sermayesi Optimizasyonu</span>
         </div>
         <div className="text-center py-4">
           <div className="w-10 h-10 rounded-full bg-pos-light flex items-center justify-center mx-auto mb-3">
@@ -195,7 +195,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           İşletme Sermayesi Optimizasyonu
         </span>
       </div>
@@ -227,7 +227,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
 
         {/* Total cash impact hero */}
         <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-4 py-3 text-center">
-          <div className="text-[10px] font-black uppercase tracking-wider text-[#16a34a] mb-1">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#16a34a] mb-1">
             Toplam Nakit Optimizasyon Potansiyeli
           </div>
           <div className="text-3xl font-black tabular-nums text-[#15803d]">
@@ -247,7 +247,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
       {/* Summary narrative */}
       {report.top_action && (
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-4 py-3">
-          <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1.5">Öncelikli Aksiyon</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5">Öncelikli Aksiyon</div>
           <p className="text-xs text-[#475569] leading-relaxed">{report.top_action.recommendation}</p>
         </div>
       )}

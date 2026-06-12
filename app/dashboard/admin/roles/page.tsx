@@ -59,7 +59,7 @@ export default async function RolesPage() {
 
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <h2 className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Şirket Üyeleri ve Roller
           </h2>
         </div>

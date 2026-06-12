@@ -119,7 +119,7 @@ export function BurnRateSection() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between flex-wrap gap-2">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Nakit Tüketim Hızı <InfoTip k="Burn" />
           </div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -149,7 +149,7 @@ export function BurnRateSection() {
           },
         ].map(kpi => (
           <div key={kpi.label} className="px-4 py-3">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {kpi.label}
             </div>
             <div className={`text-base font-black tabular-nums leading-none ${kpi.tone}`}>
@@ -164,16 +164,16 @@ export function BurnRateSection() {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Ay
               </th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-neg">
                 Gider
               </th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">
                 Gelir
               </th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
                 Net Nakit Değişimi
               </th>
             </tr>
@@ -193,7 +193,7 @@ export function BurnRateSection() {
       {/* Runway estimate */}
       {runway_estimate_months !== null && (
         <div className="border-t border-[#e8eaef] px-4 py-3 flex items-center gap-2 bg-[#fef9ec]">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#d97706]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#d97706]">
             Tahmini Runway
           </span>
           <span className={[
@@ -215,7 +215,7 @@ export function BurnRateSection() {
       {/* Peak burn callout */}
       {peak_burn_month !== null && peak_burn_try !== null && peak_burn_try > 0 && (
         <div className="border-t border-[#e8eaef] px-4 py-3 flex items-center gap-2 bg-[#fff1f2]">
-          <span className="text-[10px] font-black uppercase tracking-widest text-neg-text">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neg-text">
             En Yüksek Gider Ayı
           </span>
           <span className="text-xs font-bold text-neg-text">

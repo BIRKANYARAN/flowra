@@ -95,7 +95,7 @@ export function CashflowPrediction(_props: Props) {
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akışı Tahmini (30/60/90 Gün)</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Nakit Akışı Tahmini (30/60/90 Gün)</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Başlangıç nakiti: <span className="font-bold text-[#334155]">{fmtTRY(starting_cash_try)}</span>
             {' · '}{new Date(prediction.computed_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -125,7 +125,7 @@ export function CashflowPrediction(_props: Props) {
           const scenario = scenarios[key]
           return (
             <div key={key} className={cn('rounded border px-4 py-3 shadow-sm', bg, border)}>
-              <div className={cn('text-xs font-black uppercase tracking-widest mb-2', titleColor)}>{label}</div>
+              <div className={cn('text-xs font-bold uppercase tracking-wider mb-2', titleColor)}>{label}</div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[#64748b]">30 gün</span>
@@ -152,16 +152,16 @@ export function CashflowPrediction(_props: Props) {
       {/* Period breakdown (base) */}
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e8eaef]">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Bazında Nakit Akışı (Baz Senaryo)</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem Bazında Nakit Akışı (Baz Senaryo)</div>
         </div>
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-              <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Gelecek Gelir</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Çıkış</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-              <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Nakit Sonu</th>
+              <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-pos">Gelecek Gelir</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-neg">Çıkış</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</th>
+              <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-brand-light">Nakit Sonu</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -191,7 +191,7 @@ export function CashflowPrediction(_props: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Tahsilatlar</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Beklenen Tahsilatlar</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Müşteri davranışına göre tahmin edilen ödeme tarihleri</p>
             </div>
             <span className="text-xs font-bold px-2 py-1 rounded bg-[#f1f5f9] text-[#64748b]">
@@ -202,10 +202,10 @@ export function CashflowPrediction(_props: Props) {
             <table className="w-full text-xs min-w-[520px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmini Ödeme</th>
-                  <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Güven</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Müşteri</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tutar</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tahmini Ödeme</th>
+                  <th className="text-center px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Güven</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -234,7 +234,7 @@ export function CashflowPrediction(_props: Props) {
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Çıkışlar (90 Gün)</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Beklenen Çıkışlar (90 Gün)</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Taahhütler ve bilinen yükümlülükler</p>
             </div>
             <span className="text-xs font-bold px-2 py-1 rounded bg-[#f1f5f9] text-[#64748b]">
@@ -245,10 +245,10 @@ export function CashflowPrediction(_props: Props) {
             <table className="w-full text-xs min-w-[480px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Başlık</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
-                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kaynak</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Başlık</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Tutar</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Vade</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Kaynak</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">

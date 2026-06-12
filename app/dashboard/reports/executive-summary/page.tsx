@@ -34,7 +34,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
 }) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
         tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</div>
@@ -154,7 +154,7 @@ export default function ExecutiveSummaryPage() {
             <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-neg-text">
                   Dönem Zararı — {fmt(Math.abs(is.net_income))}
                 </div>
                 <div className="text-xs text-neg-text mt-0.5">
@@ -171,7 +171,7 @@ export default function ExecutiveSummaryPage() {
             <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-neg-text">
                   Negatif Özkaynak — Teknik İflas Riski
                 </div>
                 <div className="text-xs text-neg-text mt-0.5">
@@ -188,7 +188,7 @@ export default function ExecutiveSummaryPage() {
             <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">⚠</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-warn-text">
                   Negatif Faaliyet Nakit Akışı
                 </div>
                 <div className="text-xs text-warn-text mt-0.5">
@@ -203,7 +203,7 @@ export default function ExecutiveSummaryPage() {
 
           {/* P&L Summary */}
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Kâr / Zarar</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Kâr / Zarar</div>
             <div className="grid grid-cols-4 gap-2">
               <KpiCard label="Satış Gelirleri"  value={fmt(is?.revenue ?? 0)} />
               <KpiCard label="Brüt Kâr"         value={fmt(is?.gross_profit ?? 0)}
@@ -255,7 +255,7 @@ export default function ExecutiveSummaryPage() {
 
           {/* Balance Sheet + Cash Flow */}
           <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Finansal Pozisyon</div>
+            <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Finansal Pozisyon</div>
             <div className="grid grid-cols-4 gap-2">
               <KpiCard label="Toplam Varlık"     value={fmt(bs?.total_assets ?? 0)} />
               <KpiCard label="Nakit"             value={fmt(bs?.cash_try ?? 0)} tone="positive" />
@@ -268,7 +268,7 @@ export default function ExecutiveSummaryPage() {
           {/* Cash Flow + Tax */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Nakit Akışı</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Nakit Akışı</div>
               <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
@@ -286,7 +286,7 @@ export default function ExecutiveSummaryPage() {
               </div>
             </div>
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Vergi Özeti</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">Vergi Özeti</div>
               <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },

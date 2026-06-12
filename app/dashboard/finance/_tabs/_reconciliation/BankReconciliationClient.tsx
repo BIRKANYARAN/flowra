@@ -90,7 +90,7 @@ function KpiCard({ label, value, sub, color = 'text-[#0f172a]' }: {
 }) {
   return (
     <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 flex-1 min-w-0">
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-sm font-black tabular-nums ${color}`}>{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
@@ -115,7 +115,7 @@ export default function BankReconciliationClient({ companyId }: Props) {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Banka Mutabakat Raporu
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -223,11 +223,11 @@ export default function BankReconciliationClient({ companyId }: Props) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                  <th className="text-left px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Defter</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Banka</th>
-                  <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fark</th>
-                  <th className="text-center px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+                  <th className="text-left px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Hesap</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Defter</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Banka</th>
+                  <th className="text-right px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Fark</th>
+                  <th className="text-center px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Durum</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
