@@ -557,10 +557,17 @@ export default function CollectionsPressureClient({ initialRows }: Props) {
 
   // ── Empty state ────────────────────────────────────────────────────────────
   if (rows.length === 0) {
+    // When reached via the hero "Tahsilat Kaydet" action (?pay=1), explain that
+    // there's nothing to record rather than silently doing nothing.
+    const viaPayAction = searchParams.get('pay') === '1'
     return (
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-12 text-center shadow-sm">
         <div className="text-xs font-medium text-[#334155] mb-1">Açık tahsilat bulunmuyor</div>
-        <div className="text-[0.65rem] text-[#94a3b8]">Tüm alacaklar tahsil edildi.</div>
+        <div className="text-[0.65rem] text-[#94a3b8]">
+          {viaPayAction
+            ? 'Tahsilat kaydedilecek açık fatura yok — tüm alacaklar tahsil edilmiş.'
+            : 'Tüm alacaklar tahsil edildi.'}
+        </div>
       </div>
     )
   }

@@ -12,7 +12,7 @@
 //   • router.refresh() after successful save to re-run server component
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
@@ -38,6 +38,24 @@ export default function StockAdjustClient({ products }: Props) {
   const [saving,        setSaving]        = useState(false)
   const [err,           setErr]           = useState('')
   const [success,       setSuccess]       = useState(false)
+
+  // Hero "Stok Düzeltme" action (?adjust=1): scroll this form into view + focus.
+  // Retried a few times because Next resets scroll-to-top on navigation; the last
+  // scroll (after that reset settles) wins.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('adjust') !== '1') return
+    let n = 0
+    const iv = setInterval(() => {
+      const el = document.getElementById('stok-duzeltme')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        if (n === 0) (el.querySelector('select') as HTMLSelectElement | null)?.focus()
+      }
+      if (++n >= 3) clearInterval(iv)
+    }, 220)
+    return () => clearInterval(iv)
+  }, [searchParams])
 
   const isStockIn = adjType === 'purchase' || adjType === 'return'
 
@@ -111,7 +129,7 @@ export default function StockAdjustClient({ products }: Props) {
   }
 
   return (
-    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 space-y-4">
+    <div id="stok-duzeltme" className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 space-y-4 scroll-mt-24">
       <div className="flex items-center justify-between border-b border-[#e8eaef] pb-3">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Hareketi Ekle</span>
         {success && (

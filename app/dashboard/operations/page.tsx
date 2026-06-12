@@ -201,7 +201,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
     komuta:   null,
     expenses: { label: '+ Masraf Ekle', href: '/dashboard/operations?tab=expenses&new=1' },
     catalog:  { label: '+ Yeni Ürün',   href: '/dashboard/operations?tab=catalog&new=1' },
-    stock:    null,
+    stock:    { label: 'Stok Düzeltme',  href: '/dashboard/operations?tab=stock&adjust=1' },
     orders:   { label: '+ Yeni Sipariş', href: '/dashboard/operations?tab=orders&new=1' },
   }
 
