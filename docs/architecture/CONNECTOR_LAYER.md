@@ -164,14 +164,22 @@ last sync cursor, status) drives this. **Schema designed below; not applied (DDL
 ### 5a. Activating the live Paraşüt adapter (status: beta)
 The OAuth2 adapter is written (`lib/connectors/adapters/parasut.ts`) with the bug-prone
 JSON:API mapping unit-tested (`parasut-map.ts`). It reads **all credentials from env** — no
-secrets in the repo. To turn it on (you, the owner):
-1. Create a Paraşüt app (Geliştirici → API) → get `client_id` / `client_secret`, complete the
-   OAuth flow once to obtain a `refresh_token`, and note your numeric `company_id`.
-2. Set, server-side only (Vercel env): `PARASUT_COMPANY_ID`, `PARASUT_CLIENT_ID`,
-   `PARASUT_CLIENT_SECRET`, `PARASUT_REFRESH_TOKEN`.
-3. With those present, `createAccountingConnector('parasut')` is live; without them it stays a
-   safe skeleton (NotConfiguredError). **Verify field names against a real company before
-   trusting a sync** — the mapping follows the v4 docs but is untested against live data.
+secrets in the repo.
+
+**Paraşüt has no self-serve API screen.** `client_id` / `client_secret` are issued by Paraşüt
+support, not generated in the UI. To turn the connector on (you, the owner):
+1. **Email destek@parasut.com** from your registered account address and request **API
+   `client_id` + `client_secret`** (mention you'll use the v4 REST API). They reply with both.
+2. Your **`company_id`** is the number in your Paraşüt URL: `https://uygulama.parasut.com/123456/`
+   → `123456`. (Tip: create a dedicated API user in Paraşüt rather than using your own login.)
+3. Set, server-side only (Vercel → Settings → Environment Variables):
+   `PARASUT_COMPANY_ID`, `PARASUT_CLIENT_ID`, `PARASUT_CLIENT_SECRET`,
+   `PARASUT_USERNAME` (account email), `PARASUT_PASSWORD`. The adapter uses the OAuth
+   **password grant** (the standard Paraşüt-v4 path) to get a 2-hour access token automatically;
+   no manual refresh-token dance. (A `PARASUT_REFRESH_TOKEN` is also accepted as an alternative.)
+4. Redeploy → **Muhasebe → Bağlanabilir Sistemler → Paraşüt → "Bağlantıyı Test Et"**. Without
+   the env vars it stays a safe skeleton (NotConfiguredError). **Verify field names against your
+   real company** — the mapping follows the v4 docs but is untested against live data.
 
 ---
 

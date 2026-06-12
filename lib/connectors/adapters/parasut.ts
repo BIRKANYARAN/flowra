@@ -6,7 +6,10 @@
 // (NotConfiguredError), so importing/constructing it is always safe.
 //
 // Env (server-side only): PARASUT_COMPANY_ID, PARASUT_CLIENT_ID,
-// PARASUT_CLIENT_SECRET, PARASUT_REFRESH_TOKEN (and optional PARASUT_ACCESS_TOKEN).
+// PARASUT_CLIENT_SECRET, plus EITHER PARASUT_USERNAME + PARASUT_PASSWORD (primary,
+// password grant) OR PARASUT_REFRESH_TOKEN (and optional PARASUT_ACCESS_TOKEN).
+// client_id/client_secret are issued by destek@parasut.com — there is no self-serve
+// API screen. company_id is the number in https://uygulama.parasut.com/{id}/.
 //
 // ⚠️ Untested against a live account — field names follow the Paraşüt v4 docs;
 // verify with a real company + a granted token before production sync.
@@ -23,6 +26,10 @@ export interface ParasutConfig {
   companyId:     string
   clientId:      string
   clientSecret:  string
+  /** Primary path: Paraşüt account email + password (OAuth password grant). */
+  username?:     string
+  password?:     string
+  /** Renewal / alternative path. */
   refreshToken?: string
   accessToken?:  string
 }
@@ -34,6 +41,8 @@ function configFromEnv(): ParasutConfig | null {
   if (!companyId || !clientId || !clientSecret) return null
   return {
     companyId, clientId, clientSecret,
+    username:     process.env.PARASUT_USERNAME,
+    password:     process.env.PARASUT_PASSWORD,
     refreshToken: process.env.PARASUT_REFRESH_TOKEN,
     accessToken:  process.env.PARASUT_ACCESS_TOKEN,
   }
@@ -56,15 +65,25 @@ export class ParasutConnector implements AccountingConnector {
     return this.cfg
   }
 
-  // ── OAuth: exchange the refresh token for an access token ──────────────────
+  // ── OAuth: obtain an access token ──────────────────────────────────────────
+  // Primary: password grant (account email + password). Alt: refresh_token grant.
   private async accessToken(): Promise<string> {
     if (this.token) return this.token
     const cfg = this.require()
-    if (!cfg.refreshToken) throw new NotConfiguredError('parasut', 'refresh token gerekli')
-    const body = new URLSearchParams({
-      grant_type: 'refresh_token', refresh_token: cfg.refreshToken,
-      client_id: cfg.clientId, client_secret: cfg.clientSecret,
-    })
+    let body: URLSearchParams
+    if (cfg.refreshToken) {
+      body = new URLSearchParams({
+        grant_type: 'refresh_token', refresh_token: cfg.refreshToken,
+        client_id: cfg.clientId, client_secret: cfg.clientSecret,
+      })
+    } else if (cfg.username && cfg.password) {
+      body = new URLSearchParams({
+        grant_type: 'password', username: cfg.username, password: cfg.password,
+        client_id: cfg.clientId, client_secret: cfg.clientSecret,
+      })
+    } else {
+      throw new NotConfiguredError('parasut', 'kullanıcı adı/şifre ya da refresh token gerekli')
+    }
     const res = await fetch(TOKEN_URL, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body })
     if (!res.ok) throw new Error(`Paraşüt OAuth başarısız (${res.status})`)
     const json = await res.json() as { access_token?: string }
