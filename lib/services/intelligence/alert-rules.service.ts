@@ -476,7 +476,7 @@ export class AlertRulesService {
         'Kritik Stok Seviyesi',
         `${criticalCount} üründe stok kritik seviyede veya tükenmiş.`,
         {
-          action_href:  '/dashboard/inventory',
+          action_href:  '/dashboard/operations?tab=stock',
           action_label: 'Stok Durumunu Gör',
         },
       ))
@@ -488,7 +488,7 @@ export class AlertRulesService {
         'Stok Sipariş Noktası',
         `${reorderCount} üründe sipariş noktasına yakın stok seviyesi.`,
         {
-          action_href:  '/dashboard/inventory',
+          action_href:  '/dashboard/operations?tab=stock',
           action_label: 'Stok Durumunu Gör',
         },
       ))

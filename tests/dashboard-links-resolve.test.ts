@@ -51,10 +51,11 @@ function redirectKeys(): Set<string> {
   return new Set([...txt.matchAll(/'(\/dashboard\/[^']+)':/g)].map(m => m[1]))
 }
 
-// Static /dashboard hrefs across the source (no template literals).
+// Static /dashboard hrefs across the source (no template literals). Covers JSX
+// (href="…" / href={"…"}) AND object-literal forms (href: '…', action_href: '…').
 function staticDashboardHrefs(): Set<string> {
   const out = new Set<string>()
-  const re = /href=\{?["'](\/dashboard\/[a-zA-Z0-9/_-]+)["']/g
+  const re = /href[=:]\s*\{?["'](\/dashboard\/[a-zA-Z0-9/_-]+)["']/g
   for (const dir of ['app', 'components', 'lib']) {
     for (const f of walk(resolve(ROOT, dir))) {
       const txt = readFileSync(f, 'utf8')
