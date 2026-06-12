@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseTrNumber, parseStmtDate, parseBankStatementCsv } from '@/lib/connectors/bank-statement'
+import { parseTrNumber, parseStmtDate, parseBankStatementCsv, parseMt940, parseBankStatement } from '@/lib/connectors/bank-statement'
 import { reconcileBankToBook, type BankLine, type BookEntry } from '@/lib/connectors/reconcile'
 
 describe('bank-statement — TR number + date parsing', () => {
@@ -53,6 +53,33 @@ describe('bank-statement — CSV parse (Borç/Alacak + single Tutar)', () => {
     const { transactions, skipped } = parseBankStatementCsv(csv)
     expect(transactions).toHaveLength(1)
     expect(skipped).toBe(2)
+  })
+})
+
+describe('bank-statement — MT940 (SWIFT) parse + auto-detect', () => {
+  const mt940 = [
+    ':20:STMT',
+    ':25:TR000001',
+    ':60F:C260601TRY100000,00',
+    ':61:2606010601C31500,00NTRF',
+    ':86:ABC tahsilat',
+    ':61:2606030603D25000,00NTRF',
+    ':86:Kira odemesi',
+    ':62F:C260603TRY106500,00',
+  ].join('\n')
+
+  it('parses :61:/:86: into signed, dated transactions', () => {
+    const { transactions, skipped } = parseMt940(mt940)
+    expect(skipped).toBe(0)
+    expect(transactions).toHaveLength(2)
+    expect(transactions[0]).toMatchObject({ date: '2026-06-01', amount: 31500, description: 'ABC tahsilat' })
+    expect(transactions[1]).toMatchObject({ date: '2026-06-03', amount: -25000, description: 'Kira odemesi' })
+  })
+
+  it('parseBankStatement auto-detects MT940 vs CSV', () => {
+    expect(parseBankStatement(mt940).transactions).toHaveLength(2)
+    const csv = 'Tarih;Açıklama;Tutar\n2026-06-02;Gelen;1.000,00'
+    expect(parseBankStatement(csv).transactions).toHaveLength(1)
   })
 })
 

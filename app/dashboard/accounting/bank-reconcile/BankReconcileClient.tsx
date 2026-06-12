@@ -6,7 +6,7 @@
 // owner can run before a real connector + storage exist (roadmap step 3).
 
 import { useMemo, useRef, useState } from 'react'
-import { parseBankStatementCsv, reconcileBankToBook, type BookEntry, type BankLine } from '@/lib/connectors'
+import { parseBankStatement, reconcileBankToBook, type BookEntry, type BankLine } from '@/lib/connectors'
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -21,7 +21,7 @@ export default function BankReconcileClient() {
 
   const parsed = useMemo(() => {
     if (!text.trim()) return { transactions: [], skipped: 0 }
-    try { return parseBankStatementCsv(text) } catch { return { transactions: [], skipped: 0 } }
+    try { return parseBankStatement(text) } catch { return { transactions: [], skipped: 0 } }
   }, [text])
 
   const result = useMemo(() => {
@@ -53,14 +53,14 @@ export default function BankReconcileClient() {
     <div className="flex flex-col gap-4 max-w-4xl">
       {/* Step 1 — upload */}
       <div className="fl-card p-4 flex flex-col gap-3">
-        <div className="text-sm font-bold text-[#0f172a]">1 · Banka ekstresini yükle (CSV)</div>
+        <div className="text-sm font-bold text-[#0f172a]">1 · Banka ekstresini yükle (CSV / MT940)</div>
         <p className="text-[11px] text-[#64748b]">
-          Bankanızın CSV ekstresini yükleyin ya da yapıştırın. Tarih · Açıklama · Tutar (veya Borç/Alacak)
-          sütunları otomatik tanınır. Hiçbir veri kaydedilmez — bu bir önizlemedir.
+          Bankanızın CSV veya MT940 (.sta) ekstresini yükleyin ya da yapıştırın. Format ve sütunlar
+          (Tarih · Açıklama · Tutar veya Borç/Alacak) otomatik tanınır. Hiçbir veri kaydedilmez — bu bir önizlemedir.
         </p>
         <div className="flex items-center gap-2">
-          <button onClick={() => fileRef.current?.click()} className="border border-[#e8eaef] px-3 py-1.5 rounded text-xs font-semibold text-[#334155] hover:bg-[#f8fafc]">Dosya Seç (.csv)</button>
-          <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" onChange={onFile} className="hidden" />
+          <button onClick={() => fileRef.current?.click()} className="border border-[#e8eaef] px-3 py-1.5 rounded text-xs font-semibold text-[#334155] hover:bg-[#f8fafc]">Dosya Seç (.csv / .sta)</button>
+          <input ref={fileRef} type="file" accept=".csv,.sta,.txt,text/csv,text/plain" onChange={onFile} className="hidden" />
           <span className="text-[10px] text-[#94a3b8]">veya yapıştır</span>
         </div>
         <textarea

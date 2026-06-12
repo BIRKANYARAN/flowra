@@ -114,3 +114,66 @@ export function parseBankStatementCsv(text: string, accountId = 'imported'): Par
 
   return { transactions, skipped }
 }
+
+// ── MT940 (SWIFT) — the .sta format banks export alongside CSV ─────────────────
+// Parses :61: statement lines (+ the following :86: description). The :61: body is
+//   <YYMMDD value><MMDD entry?><[R]C|D mark><amount,decimals>N<type><refs>
+// C = credit (inflow +), D = debit (outflow −); an R prefix marks a reversal (flip).
+
+const MT940_61 = /^(\d{6})(\d{4})?(R?[CD])([0-9.,]+)/
+
+export function parseMt940(text: string, accountId = 'imported'): ParsedStatement {
+  const lines = text.replace(/\r/g, '').split('\n')
+  const transactions: ExternalBankTransaction[] = []
+  let skipped = 0
+  let i = 0
+
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li].trim()
+    if (!line.startsWith(':61:')) continue
+    const m = line.slice(4).match(MT940_61)
+    if (!m) { skipped++; continue }
+
+    const [, vdate, , markRaw, amtRaw] = m
+    const yr = `20${vdate.slice(0, 2)}`
+    const date = `${yr}-${vdate.slice(2, 4)}-${vdate.slice(4, 6)}`
+    const reversal = markRaw.startsWith('R')
+    const isDebit  = markRaw.endsWith('D')
+    let amount = parseTrNumber(amtRaw)
+    if (!isFinite(amount) || amount === 0) { skipped++; continue }
+    amount = Math.abs(amount) * (isDebit ? -1 : 1) * (reversal ? -1 : 1)
+
+    // description: the following :86: line(s) until the next tag
+    let desc = ''
+    for (let dj = li + 1; dj < lines.length; dj++) {
+      const dl = lines[dj].trim()
+      if (dl.startsWith(':86:')) { desc = dl.slice(4).trim(); }
+      else if (dl.startsWith(':')) break
+      else if (desc) desc += ' ' + dl
+      if (dl.startsWith(':86:')) continue
+      if (dl.startsWith(':')) break
+    }
+
+    i++
+    transactions.push({
+      external_id:        `${accountId}:${i}:${date}:${amount}`,
+      account_external_id: accountId,
+      date,
+      currency:           'TRY',
+      amount:             Math.round(amount * 100) / 100,
+      description:        desc.replace(/\s+/g, ' ').trim(),
+      counterparty:       null,
+      reference:          null,
+      balance_after:      null,
+    })
+  }
+
+  return { transactions, skipped }
+}
+
+/** Auto-detect MT940 vs CSV and parse accordingly. */
+export function parseBankStatement(text: string, accountId = 'imported'): ParsedStatement {
+  const head = text.slice(0, 400)
+  const isMt940 = /(^|\n)\s*:(20|25|28C?|60F|61):/.test(head) || text.includes('\n:61:') || text.startsWith(':61:')
+  return isMt940 ? parseMt940(text, accountId) : parseBankStatementCsv(text, accountId)
+}
