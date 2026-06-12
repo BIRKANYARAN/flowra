@@ -169,7 +169,7 @@ export function TrialBalanceTab() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-[#0f172a] tracking-tight">
+          <h2 className="text-lg font-bold text-[#0f172a] tracking-tight">
             Mizan · {activePeriodLabel}
           </h2>
           <p className="text-[0.65rem] text-[#94a3b8] mt-0.5 font-medium uppercase tracking-widest">

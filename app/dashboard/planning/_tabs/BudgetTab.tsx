@@ -483,7 +483,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-[#0f172a]">Bütçe vs Gerçekleşen</h2>
+          <h2 className="text-base font-bold text-[#0f172a]">Bütçe vs Gerçekleşen</h2>
           <p className="text-xs text-[#94a3b8] mt-0.5">12 aylık bütçe hedefleri ve varyans analizi</p>
         </div>
         <span className={`text-xs font-black px-3 py-1.5 rounded border ${badge.cls}`}>

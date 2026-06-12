@@ -278,13 +278,13 @@ export function DistributionSimulatorTab() {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
           <p className="text-[0.65rem] text-[#64748b] font-semibold">Net Kâr</p>
-          <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
+          <p className="text-base font-bold text-[#0f172a] tabular-nums mt-1">
             {fmtTRY(input_summary.net_profit_try)}
           </p>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
           <p className="text-[0.65rem] text-[#64748b] font-semibold">Azami Dağıtılabilir</p>
-          <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
+          <p className="text-base font-bold text-[#0f172a] tabular-nums mt-1">
             {fmtTRY(input_summary.max_distributable_try)}
           </p>
         </div>

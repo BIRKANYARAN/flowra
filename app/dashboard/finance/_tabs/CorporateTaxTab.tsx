@@ -118,18 +118,18 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
                 Kurumlar Vergisi
               </div>
-              <h2 className="text-base font-black text-[#0f172a]">
+              <h2 className="text-base font-bold text-[#0f172a]">
                 KURUMLAR VERGİSİ {year}
               </h2>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">YTD Vergi Karşılığı</div>
-                <div className="text-xl font-black text-[#0f172a]">{fmtTRY(dashboard.corporate_tax_provision_try)}</div>
+                <div className="text-xl font-bold text-[#0f172a]">{fmtTRY(dashboard.corporate_tax_provision_try)}</div>
               </div>
               <div className="text-right">
                 <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Uyum Skoru</div>
-                <div className="text-xl font-black text-[#0f172a]">{dashboard.compliance_score} / 100</div>
+                <div className="text-xl font-bold text-[#0f172a]">{dashboard.compliance_score} / 100</div>
               </div>
             </div>
           </div>
@@ -180,7 +180,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             Vergi Takvimi
           </div>
-          <h2 className="text-base font-black text-[#0f172a]">Sonraki 90 Gün</h2>
+          <h2 className="text-base font-bold text-[#0f172a]">Sonraki 90 Gün</h2>
         </div>
         <div className="px-5 py-4">
           {calendar.length === 0 ? (

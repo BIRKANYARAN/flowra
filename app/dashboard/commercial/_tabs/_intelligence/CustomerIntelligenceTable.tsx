@@ -82,7 +82,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
         <div className="flex items-start justify-between">
           <div>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Müşteri Profili</div>
-            <h2 className="text-lg font-black text-[#0f172a] leading-tight">{p.customer_name}</h2>
+            <h2 className="text-lg font-bold text-[#0f172a] leading-tight">{p.customer_name}</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className={cn('text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded', tier.badge)}>

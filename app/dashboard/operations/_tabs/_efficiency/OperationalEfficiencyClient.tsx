@@ -93,7 +93,7 @@ function KpiCard({ label, value, target, status, note }: KpiCardProps) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 flex flex-col gap-1">
       <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">{label}</span>
       <div className="flex items-baseline gap-2">
-        <span className="text-xl font-black text-[#0f172a]">{value}</span>
+        <span className="text-xl font-bold text-[#0f172a]">{value}</span>
         <span className={`text-[12px] font-bold ${statusCls}`}>{indicator}</span>
       </div>
       <span className="text-[11px] text-[#94a3b8]">Hedef: {target}</span>
@@ -224,7 +224,7 @@ export function OperationalEfficiencyClient({ companyId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-[#0f172a]">Operasyonel Verimlilik</h2>
+          <h2 className="text-base font-bold text-[#0f172a]">Operasyonel Verimlilik</h2>
           <p className="text-[12px] text-[#64748b]">Türk KOBİ Benchmarkına Göre</p>
         </div>
         <EfficiencyBadge value={efficiency_class} />

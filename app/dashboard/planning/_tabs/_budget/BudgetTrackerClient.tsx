@@ -216,7 +216,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
         {/* Period selector */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-black text-[#0f172a]">Bütçe Takibi</h2>
+            <h2 className="text-base font-bold text-[#0f172a]">Bütçe Takibi</h2>
             <p className="text-xs text-[#94a3b8] mt-0.5">Aylık bütçe hedefleri ve varyans analizi</p>
           </div>
           <select
@@ -263,7 +263,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       {/* Header + Period selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-[#0f172a]">Bütçe Takibi</h2>
+          <h2 className="text-base font-bold text-[#0f172a]">Bütçe Takibi</h2>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             Aylık bütçe hedefleri ve varyans analizi — {report.period_label}
           </p>
@@ -312,7 +312,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
               <div className="text-[10px] font-bold uppercase tracking-wide text-neg-text mb-0.5">
                 Bütçe Aşımı
               </div>
-              <div className="text-lg font-black text-[#0f172a]">
+              <div className="text-lg font-bold text-[#0f172a]">
                 {report.off_track_items.length}
               </div>
               <div className="text-[9px] text-[#94a3b8]">kalem</div>
@@ -321,7 +321,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
               <div className="text-[10px] font-bold uppercase tracking-wide text-warn-text mb-0.5">
                 Risk
               </div>
-              <div className="text-lg font-black text-[#0f172a]">
+              <div className="text-lg font-bold text-[#0f172a]">
                 {report.at_risk_items.length}
               </div>
               <div className="text-[9px] text-[#94a3b8]">kalem</div>

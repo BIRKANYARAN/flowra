@@ -226,7 +226,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
               Pipeline'dan Toplam Gelir
             </div>
-            <div className="text-lg font-black text-[#0f172a] tabular-nums mt-0.5">
+            <div className="text-lg font-bold text-[#0f172a] tabular-nums mt-0.5">
               {fmtTRY(summary.total_revenue_from_pipeline, 0)}
             </div>
           </div>

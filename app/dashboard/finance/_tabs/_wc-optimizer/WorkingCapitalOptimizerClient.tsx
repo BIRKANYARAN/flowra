@@ -123,7 +123,7 @@ function GapCard({ gap }: { gap: WorkingCapitalGap }) {
       {/* Cash impact */}
       <div className="px-4 py-3 flex items-center justify-between border-t border-[#f1f5f9]">
         <span className="text-[11px] font-semibold text-[#64748b]">Tahmini Nakit Etkisi</span>
-        <span className="text-base font-black text-[#0f172a] tabular-nums">
+        <span className="text-base font-bold text-[#0f172a] tabular-nums">
           {fmtTRY(gap.cash_impact_try, 0)}
         </span>
       </div>

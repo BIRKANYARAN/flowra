@@ -85,7 +85,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
         {/* Bugün */}
         <div className="px-4 py-4">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Bugün</div>
-          <div className="text-xl font-black text-[#0f172a]">
+          <div className="text-xl font-bold text-[#0f172a]">
             ₺{(m.today_sales_try / 1000).toFixed(0)}K
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">{m.today_sales_count} satış</div>

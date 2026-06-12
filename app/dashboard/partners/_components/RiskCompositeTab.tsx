@@ -260,7 +260,7 @@ function PartnerRiskCard({ partner }: { partner: PartnerRiskResult }) {
         <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
           Kompozit Skor
         </span>
-        <span className="text-lg font-black text-[#0f172a]">
+        <span className="text-lg font-bold text-[#0f172a]">
           {partner.composite_score.toFixed(1)}
         </span>
       </div>

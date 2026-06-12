@@ -174,7 +174,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] leading-none">
               Ticari
             </div>
-            <div className="text-base font-black text-[#0f172a] mt-1">Yeni Satış</div>
+            <div className="text-base font-bold text-[#0f172a] mt-1">Yeni Satış</div>
           </div>
           <button
             onClick={onClose}

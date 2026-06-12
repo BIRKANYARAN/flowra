@@ -63,7 +63,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-[#0f172a]">Başabaş Analizi</h2>
+          <h2 className="text-base font-bold text-[#0f172a]">Başabaş Analizi</h2>
           <p className="text-xs text-[#94a3b8] mt-0.5">{period_from} — {period_to}</p>
         </div>
         {/* Above / Below break-even badge */}

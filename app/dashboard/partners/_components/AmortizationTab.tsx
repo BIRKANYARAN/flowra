@@ -136,7 +136,7 @@ function SummaryStrip({ report }: { report: LoanAmortizationReport }) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             {label}
           </div>
-          <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
+          <div className="text-base font-bold text-[#0f172a] leading-tight tabular-nums">
             {value}
           </div>
         </div>
@@ -370,7 +370,7 @@ function FaizTahakkuku() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Anapara
           </div>
-          <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
+          <div className="text-base font-bold text-[#0f172a] leading-tight tabular-nums">
             {fmtTRY(report.total_outstanding_principal)}
           </div>
         </div>
@@ -386,7 +386,7 @@ function FaizTahakkuku() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ödenmemiş Faiz
           </div>
-          <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
+          <div className="text-base font-bold text-[#0f172a] leading-tight tabular-nums">
             {fmtTRY(report.total_outstanding_interest)}
           </div>
         </div>
@@ -670,7 +670,7 @@ function FullAmortizationSchedule() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Aylık Toplam Servis
           </div>
-          <div className="text-base font-black text-[#0f172a] tabular-nums">
+          <div className="text-base font-bold text-[#0f172a] tabular-nums">
             {fmtTRY(report.total_monthly_debt_service_try)}
           </div>
         </div>
@@ -678,7 +678,7 @@ function FullAmortizationSchedule() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Kalan Bakiye
           </div>
-          <div className="text-base font-black text-[#0f172a] tabular-nums">
+          <div className="text-base font-bold text-[#0f172a] tabular-nums">
             {fmtTRY(report.total_remaining_balance_try)}
           </div>
         </div>

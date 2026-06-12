@@ -144,7 +144,7 @@ export function FifoAuditClient({ companyId }: Props) {
         </div>
         <div className="ml-4 flex gap-4 text-xs">
           <div className="text-center">
-            <div className="text-lg font-black text-[#0f172a] tabular-nums">{audit.total_lots}</div>
+            <div className="text-lg font-bold text-[#0f172a] tabular-nums">{audit.total_lots}</div>
             <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Toplam Lot</div>
           </div>
           <div className="text-center">

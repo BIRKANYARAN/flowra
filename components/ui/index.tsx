@@ -238,7 +238,7 @@ export function PageHeader({ title, sub, action }: {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-xl font-black text-[#0f172a] tracking-tight">{title}</h1>
+        <h1 className="text-xl font-bold text-[#0f172a] tracking-tight">{title}</h1>
         {sub && <p className="text-sm text-[#64748b] mt-0.5">{sub}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
