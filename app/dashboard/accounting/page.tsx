@@ -56,6 +56,8 @@ const GROUPS: Group[] = [
   },
 ]
 
+export const metadata = { title: 'Muhasebe' }
+
 export default function AccountingHubPage() {
   return (
     <div className="flex flex-col gap-6 w-full">

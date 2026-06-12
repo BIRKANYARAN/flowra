@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Yönetim' }
 
 import Link from 'next/link'
 import { createClient }     from '@/lib/supabase-server'

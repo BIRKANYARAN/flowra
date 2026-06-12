@@ -4,6 +4,7 @@
 // Active tab read from ?tab= searchParam → renders real content server-side.
 
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Planlama' }
 
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase-server'

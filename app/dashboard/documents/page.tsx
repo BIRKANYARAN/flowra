@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Belgeler' }
 
 import DocumentsClient from './DocumentsClient'
 

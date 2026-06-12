@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'AI Analiz' }
 
 // ── /dashboard/insights — AI Analiz Merkezi ──────────────────────────────────
 // Üç motor birlikte:
