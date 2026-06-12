@@ -232,9 +232,6 @@ export async function ExpensesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl space-y-4">
-      {/* ── Operational Efficiency (ops-wide benchmarking) ─────────────────────── */}
-      <OperationalEfficiencyClient companyId={companyId} />
-
       <ObservationRail context="expenses" maxItems={3} />
 
       <Suspense fallback={<CommandBarSkeleton />}>
@@ -532,6 +529,11 @@ export async function ExpensesContent({ companyId }: Props) {
           workflow_instance: (e as ExpenseRow).workflow_instance ?? null,
         }))}
       />
+
+      {/* ── Operasyonel Verimlilik (expand-in-place — moved below the work surface) ── */}
+      <DetailSection title="Operasyonel Verimlilik" subtitle="Operasyon geneli kıyaslama göstergeleri">
+        <OperationalEfficiencyClient companyId={companyId} />
+      </DetailSection>
 
       {/* ── Detaylı Analiz — deep panels, collapsed by default (load on demand) ── */}
       <DetailSection title="Detaylı Gider Analizi" subtitle="Borç yaşlandırma · anomali · tedarikçi · bordro">
