@@ -208,14 +208,25 @@ export async function SalesContent({ companyId }: Props) {
       })()}
 
       {/* ── Satış Kayıtları — asıl iş yüzeyi (ön planda) ─────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-[#94a3b8]">{list.length} satış kaydı · tüm dönemler</p>
-        <Link
-          href="/dashboard/commercial?tab=collections"
-          className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
-        >
-          Tahsilatlar →
-        </Link>
+        <div className="flex items-center gap-2">
+          {list.length > 0 && (
+            <a
+              href="/api/export/sales"
+              download
+              className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors whitespace-nowrap"
+            >
+              Dışa Aktar
+            </a>
+          )}
+          <Link
+            href="/dashboard/commercial?tab=collections"
+            className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors whitespace-nowrap"
+          >
+            Tahsilatlar →
+          </Link>
+        </div>
       </div>
       <SalesTable rows={list} />
 
