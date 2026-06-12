@@ -66,6 +66,16 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             className={`flex items-center gap-2.5 ${hasMultiCompany ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
             onClick={hasMultiCompany ? () => setShowSwitcher(s => !s) : undefined}
             title={hasMultiCompany ? 'Şirket değiştir' : undefined}
+            {...(hasMultiCompany ? {
+              role: 'button' as const,
+              tabIndex: 0,
+              'aria-haspopup': true as const,
+              'aria-expanded': showSwitcher,
+              'aria-label': 'Şirket değiştir',
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSwitcher(s => !s) }
+              },
+            } : {})}
           >
             <div className="w-8 h-8 rounded bg-brand-light flex items-center justify-center flex-shrink-0 overflow-hidden relative">
               {logoUrl ? (
