@@ -381,7 +381,15 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
             className="border border-[#e8eaef] rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 w-56"
           />
 
-          {/* Import + New product */}
+          {/* Export + Import + New product */}
+          {products.length > 0 && (
+            <a
+              href="/api/export/products"
+              download
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8eaef] text-[#334155] text-sm font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
+              Dışa Aktar
+            </a>
+          )}
           <button
             onClick={() => setShowImport(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8eaef] text-[#334155] text-sm font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">

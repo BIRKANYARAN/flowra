@@ -118,6 +118,15 @@ export default function CustomersClient({ initialCustomers }: Props) {
         </h2>
         {!showForm && (
           <div className="flex items-center gap-2">
+            {list.length > 0 && (
+              <a
+                href="/api/export/customers"
+                download
+                className="border border-[#e8eaef] text-[#334155] px-3 py-2 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+              >
+                Dışa Aktar
+              </a>
+            )}
             <button
               onClick={() => setShowImport(true)}
               className="border border-[#e8eaef] text-[#334155] px-3 py-2 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
