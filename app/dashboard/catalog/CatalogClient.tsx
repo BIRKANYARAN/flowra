@@ -8,6 +8,30 @@
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
+import { CsvImportModal } from '@/components/import/CsvImportModal'
+
+// Header synonyms (TR + EN) for the product CSV importer.
+const PRODUCT_SYNONYMS: Record<string, string> = {
+  'ürün': 'name', 'ürün adı': 'name', 'urun': 'name', 'urun adi': 'name', 'ad': 'name', 'adı': 'name',
+  'isim': 'name', 'name': 'name', 'product': 'name', 'açıklama': 'name', 'aciklama': 'name',
+  'stok kodu': 'sku', 'kod': 'sku', 'sku': 'sku', 'barkod': 'sku', 'ürün kodu': 'sku',
+  'birim': 'unit', 'unit': 'unit',
+  'birim maliyet': 'unit_cost', 'maliyet': 'unit_cost', 'alış': 'unit_cost', 'alış fiyatı': 'unit_cost',
+  'cost': 'unit_cost', 'unit_cost': 'unit_cost', 'alis fiyati': 'unit_cost',
+  'satış fiyatı': 'default_sale_price', 'satış': 'default_sale_price', 'fiyat': 'default_sale_price',
+  'liste fiyatı': 'default_sale_price', 'price': 'default_sale_price', 'sale price': 'default_sale_price',
+  'satis fiyati': 'default_sale_price', 'default_sale_price': 'default_sale_price',
+  'kategori': 'category', 'category': 'category', 'grup': 'category',
+  'kritik stok': 'stock_alert_qty', 'uyarı': 'stock_alert_qty', 'min stok': 'stock_alert_qty',
+}
+const PRODUCT_FIELDS = [
+  { key: 'name', label: 'Ürün Adı', required: true },
+  { key: 'sku', label: 'Stok Kodu' },
+  { key: 'unit', label: 'Birim' },
+  { key: 'unit_cost', label: 'Birim Maliyet' },
+  { key: 'default_sale_price', label: 'Satış Fiyatı' },
+  { key: 'category', label: 'Kategori' },
+]
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { fmtNum as fmt, fmtDate } from '@/lib/format'
@@ -108,6 +132,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
 
   // ── New-product modal state ───────────────────────────────────────────────
   const [showCreate, setShowCreate] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [creating,   setCreating]   = useState(false)
   const [createErr,  setCreateErr]  = useState('')
   const [np, setNp] = useState({ name: '', unit: 'adet', category: '', catalog_price: '', unit_cost: '', stock_qty: '', stock_alert_qty: '' })
@@ -356,7 +381,12 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
             className="border border-[#e8eaef] rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 w-56"
           />
 
-          {/* New product */}
+          {/* Import + New product */}
+          <button
+            onClick={() => setShowImport(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8eaef] text-[#334155] text-sm font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
+            İçe Aktar
+          </button>
           <button
             onClick={() => { resetNp(); setShowCreate(true) }}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-sm font-semibold hover:bg-brand-light transition-colors whitespace-nowrap">
@@ -364,6 +394,17 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
           </button>
         </div>
       </div>
+
+      <CsvImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onDone={() => router.refresh()}
+        title="Ürünleri İçe Aktar (CSV)"
+        endpoint="/api/products/import"
+        synonyms={PRODUCT_SYNONYMS}
+        fields={PRODUCT_FIELDS}
+        sampleHeaders="Ürün Adı;Stok Kodu;Birim;Birim Maliyet;Satış Fiyatı;Kategori"
+      />
 
       {/* ── New product modal ────────────────────────────────────────── */}
       {showCreate && (

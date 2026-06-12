@@ -8,8 +8,29 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Customer } from '@/types'
+import { CsvImportModal } from '@/components/import/CsvImportModal'
 
 export type { Customer }
+
+// Header synonyms (TR + EN) for the CSV importer.
+const CUSTOMER_SYNONYMS: Record<string, string> = {
+  'ad': 'name', 'isim': 'name', 'adı': 'name', 'ad soyad': 'name', 'müşteri': 'name', 'müşteri adı': 'name',
+  'unvan': 'name', 'ünvan': 'name', 'firma': 'name', 'firma adı': 'name', 'name': 'name', 'customer': 'name', 'company': 'name',
+  'e-posta': 'email', 'eposta': 'email', 'e posta': 'email', 'email': 'email', 'mail': 'email', 'e-mail': 'email',
+  'telefon': 'phone', 'tel': 'phone', 'gsm': 'phone', 'cep': 'phone', 'telefon no': 'phone', 'phone': 'phone',
+  'vergi no': 'tax_number', 'vergi numarası': 'tax_number', 'vkn': 'tax_number', 'tckn': 'tax_number',
+  'vergi kimlik no': 'tax_number', 'tax number': 'tax_number', 'tax_number': 'tax_number',
+  'vergi dairesi': 'tax_office', 'vd': 'tax_office', 'tax office': 'tax_office', 'tax_office': 'tax_office',
+  'adres': 'address', 'adresi': 'address', 'address': 'address',
+}
+const CUSTOMER_FIELDS = [
+  { key: 'name', label: 'Ad', required: true },
+  { key: 'tax_number', label: 'Vergi No' },
+  { key: 'tax_office', label: 'Vergi Dairesi' },
+  { key: 'email', label: 'E-posta' },
+  { key: 'phone', label: 'Telefon' },
+  { key: 'address', label: 'Adres' },
+]
 
 const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
@@ -34,6 +55,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
   const [err,       setErr]       = useState('')
   const [search,    setSearch]    = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [showImport, setShowImport] = useState(false)
 
   function openNew() {
     setForm({ ...EMPTY }); setEditId(null); setErr(''); setShowForm(true)
@@ -95,14 +117,33 @@ export default function CustomersClient({ initialCustomers }: Props) {
           {list.length} Müşteri
         </h2>
         {!showForm && (
-          <button
-            onClick={openNew}
-            className="bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
-          >
-            + Yeni Müşteri
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="border border-[#e8eaef] text-[#334155] px-3 py-2 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+            >
+              İçe Aktar
+            </button>
+            <button
+              onClick={openNew}
+              className="bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
+            >
+              + Yeni Müşteri
+            </button>
+          </div>
         )}
       </div>
+
+      <CsvImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onDone={() => router.refresh()}
+        title="Müşterileri İçe Aktar (CSV)"
+        endpoint="/api/customers/import"
+        synonyms={CUSTOMER_SYNONYMS}
+        fields={CUSTOMER_FIELDS}
+        sampleHeaders="Ad;Vergi No;Vergi Dairesi;E-posta;Telefon;Adres"
+      />
 
       {/* ── Add/Edit Form ─────────────────────────────────────────────────── */}
       {showForm && (
