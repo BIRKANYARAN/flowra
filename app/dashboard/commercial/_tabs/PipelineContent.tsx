@@ -306,14 +306,14 @@ export async function PipelineContent({ companyId }: Props) {
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Link
-                            href={`/dashboard/commercial/proformas/${p.id}`}
+                            href={`/dashboard/proformas/${p.id}`}
                             className="text-[10px] font-bold text-info-text hover:underline whitespace-nowrap"
                           >
                             Görüntüle
                           </Link>
                           {p.status === 'accepted' && (
                             <Link
-                              href={`/dashboard/commercial/proformas/${p.id}/convert`}
+                              href={`/dashboard/proformas/${p.id}`}
                               className="text-[10px] font-bold text-brand hover:underline whitespace-nowrap ml-2"
                             >
                               Satışa Dönüştür
@@ -328,8 +328,14 @@ export async function PipelineContent({ companyId }: Props) {
             </table>
           </div>
         ) : (
-          <div className="px-4 py-6 text-center text-[11px] text-[#94a3b8]">
-            Henüz proforma kaydı bulunmuyor.
+          <div className="px-4 py-8 text-center">
+            <div className="text-[11px] text-[#94a3b8] mb-2.5">Henüz proforma kaydı bulunmuyor.</div>
+            <Link
+              href="/dashboard/proformas/new"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors shadow-sm"
+            >
+              + İlk teklifini oluştur
+            </Link>
           </div>
         )}
       </div>
