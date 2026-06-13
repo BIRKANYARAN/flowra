@@ -23,10 +23,10 @@ export function Header({ companyName }: Props) {
 
       {/* LEFT — mobile brand */}
       <div className="flex items-center gap-2 md:hidden flex-shrink-0">
-        <div className="w-5 h-5 rounded-md bg-brand-light flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-[9px]">FL</span>
+        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <span className="text-white font-bold text-[10px] tracking-tight">FL</span>
         </div>
-        <span className="font-bold text-sm text-[#0f172a]">Flowra</span>
+        <span className="font-bold text-sm text-[#0f172a] tracking-tight">Flowra</span>
       </div>
 
       {/* LEFT — desktop breadcrumb title (pathname + ?tab aware) */}
