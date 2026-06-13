@@ -55,7 +55,7 @@ function SermayeMaliyetiSection() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-extrabold tabular-nums text-warn-text">
+          <div className="text-2xl font-bold tabular-nums text-warn-text">
             %{(wacdPct).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="text-[10px] text-[#94a3b8]">WACD yıllık</div>
@@ -66,15 +66,15 @@ function SermayeMaliyetiSection() {
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Borç</div>
-          <div className="text-sm font-extrabold tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</div>
+          <div className="text-sm font-bold tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</div>
         </div>
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
-          <div className="text-sm font-extrabold tabular-nums text-neg-text">{fmtTRY(data.total_annual_interest_try)}</div>
+          <div className="text-sm font-bold tabular-nums text-neg-text">{fmtTRY(data.total_annual_interest_try)}</div>
         </div>
         <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD Tahakkuk</div>
-          <div className="text-sm font-extrabold tabular-nums text-neg-text">{fmtTRY(data.ytd_interest_accrued_try)}</div>
+          <div className="text-sm font-bold tabular-nums text-neg-text">{fmtTRY(data.ytd_interest_accrued_try)}</div>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ function SermayeMaliyetiSection() {
             ))}
           </tbody>
           <tfoot>
-            <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef] font-black">
+            <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef] font-bold">
               <td className="px-3 py-2 text-[#0f172a]">TOPLAM</td>
               <td className="px-3 py-2 text-right font-mono tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</td>
               <td className="px-3 py-2 text-right font-mono tabular-nums text-[#0f172a]">
@@ -394,17 +394,17 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white border border-warn-light rounded px-4 py-3">
               <div className="text-[10px] font-bold uppercase tracking-widest text-warn mb-1">Toplam Açık Borç</div>
-              <div className="text-xl font-extrabold tabular-nums text-warn-text">{fmt(waterfall.total_debt_try)}</div>
+              <div className="text-xl font-bold tabular-nums text-warn-text">{fmt(waterfall.total_debt_try)}</div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aktif Borç Dilimi</div>
-              <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
+              <div className="text-xl font-bold tabular-nums text-[#0f172a]">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kapanma Tahmini</div>
-              <div className={`text-xl font-extrabold tabular-nums ${
+              <div className={`text-xl font-bold tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
                   ? waterfall.debt_clearance_months! <= 3 ? 'text-pos-text' : waterfall.debt_clearance_months! <= 12 ? 'text-warn-text' : 'text-neg-text'
                   : 'text-[#94a3b8]'
@@ -430,15 +430,15 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 <div className="grid grid-cols-3">
                   <div className="px-4 py-3">
                     <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kalan Ana Para</div>
-                    <div className="text-base font-extrabold tabular-nums text-warn-text">{fmt(totalPrincipal)}</div>
+                    <div className="text-base font-bold tabular-nums text-warn-text">{fmt(totalPrincipal)}</div>
                   </div>
                   <div className="px-4 py-3">
                     <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aylık Faiz Maliyeti</div>
-                    <div className="text-base font-extrabold tabular-nums text-neg-text">{fmt(totalMonthly)}</div>
+                    <div className="text-base font-bold tabular-nums text-neg-text">{fmt(totalMonthly)}</div>
                   </div>
                   <div className="px-4 py-3">
                     <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Tahakkuk</div>
-                    <div className="text-base font-extrabold tabular-nums text-neg-text">{fmt(totalAccrued)}</div>
+                    <div className="text-base font-bold tabular-nums text-neg-text">{fmt(totalAccrued)}</div>
                   </div>
                 </div>
               </div>
@@ -478,7 +478,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                         <div className="text-[10px] text-[#94a3b8] mt-0.5">{t.days_outstanding} gündür açık</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-base font-extrabold tabular-nums text-warn-text">{fmt(t.remaining_principal_try)}</div>
+                        <div className="text-base font-bold tabular-nums text-warn-text">{fmt(t.remaining_principal_try)}</div>
                         <div className="text-[10px] text-[#94a3b8]">kalan anapara</div>
                       </div>
                     </div>

@@ -109,7 +109,7 @@ function KpiCard({ label, value, sub, color = 'text-[#0f172a]' }: KpiCardProps) 
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
         {label}
       </div>
-      <div className={`text-xl font-extrabold tabular-nums leading-none ${color}`}>
+      <div className={`text-xl font-bold tabular-nums leading-none ${color}`}>
         {value}
       </div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}

@@ -218,7 +218,7 @@ export function CashflowWaterfallClient({ companyId }: Props) {
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                   {item.label}
                 </div>
-                <div className={`text-base font-extrabold tabular-nums leading-none ${item.tone}`}>
+                <div className={`text-base font-bold tabular-nums leading-none ${item.tone}`}>
                   {item.value}
                 </div>
               </div>
@@ -228,7 +228,7 @@ export function CashflowWaterfallClient({ companyId }: Props) {
           {/* Crisis alert */}
           {proj.crisis_month !== null && (
             <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center gap-2">
-              <span className="text-red-500 font-black text-sm">!</span>
+              <span className="text-red-500 font-bold text-sm">!</span>
               <p className="text-xs font-bold text-red-700">
                 {proj.crisis_month_label} ayında nakit negatife düşme riski — senaryo ve tahsilat planını gözden geçirin.
               </p>
@@ -296,7 +296,7 @@ export function CashflowWaterfallClient({ companyId }: Props) {
                       <td className={`px-3 py-2.5 text-right tabular-nums font-mono font-bold ${mo.net_cash_try >= 0 ? 'text-green-700' : 'text-red-600'}`}>
                         {fmtTRY(mo.net_cash_try, 0)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right tabular-nums font-extrabold ${isNeg ? 'text-red-700' : 'text-[#0f172a]'}`}>
+                      <td className={`px-3 py-2.5 text-right tabular-nums font-bold ${isNeg ? 'text-red-700' : 'text-[#0f172a]'}`}>
                         {fmtTRY(mo.ending_cash_try, 0)}
                       </td>
                       <td className="px-3 py-2.5">

@@ -132,7 +132,7 @@ export function ProductProfitabilityWaterfall() {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
           </div>
         ))}
       </div>
@@ -144,7 +144,7 @@ export function ProductProfitabilityWaterfall() {
           const cfg = TIER_CONFIG[key]
           return (
             <span key={key} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
-              {cfg.label} <span className="font-black">{count}</span>
+              {cfg.label} <span className="font-bold">{count}</span>
             </span>
           )
         })}
@@ -183,7 +183,7 @@ export function ProductProfitabilityWaterfall() {
                         <div className="font-semibold text-[#0f172a]">{p.product_name}</div>
                         {p.category && <div className="text-[10px] text-[#94a3b8]">{p.category}</div>}
                       </div>
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black ${cfg.bg} ${cfg.text}`}>
+                      <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${cfg.bg} ${cfg.text}`}>
                         {cfg.label}
                       </span>
                     </div>
@@ -195,7 +195,7 @@ export function ProductProfitabilityWaterfall() {
                   <td className={`px-4 py-2 text-right tabular-nums font-semibold ${marginColor(p.gross_margin_pct)}`}>
                     {fmtPct(p.gross_margin_pct)}
                   </td>
-                  <td className={`px-4 py-2 text-right tabular-nums font-extrabold text-sm ${cmColor}`}>
+                  <td className={`px-4 py-2 text-right tabular-nums font-bold text-sm ${cmColor}`}>
                     {fmtTRY(p.contribution_margin)}
                   </td>
                   <td className={`px-4 py-2 text-right tabular-nums font-semibold ${cmColor}`}>

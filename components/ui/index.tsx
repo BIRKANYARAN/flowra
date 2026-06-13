@@ -6,6 +6,7 @@ import { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttribu
 import { cva, type VariantProps } from 'class-variance-authority'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { Icon } from './Icon'
 
 export function cn(...args: unknown[]) { return twMerge(clsx(args)) }
 
@@ -193,7 +194,7 @@ export function Money({
   const emph = {
     normal: 'text-sm font-semibold',
     strong: 'text-sm font-bold',
-    xl:     'text-lg font-black',
+    xl:     'text-lg font-bold',
     kpi:    'text-2xl font-bold tracking-tight',
   }[emphasis]
   const toneCls = {
@@ -223,7 +224,7 @@ export function StatCard({ label, value, sub, accent }: {
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-brand-light' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
-      <div className={`text-2xl font-extrabold tabular-nums ${accent ? 'text-brand' : 'text-[#0f172a]'}`}>
+      <div className={`text-2xl font-bold tabular-nums tracking-tight ${accent ? 'text-brand' : 'text-[#0f172a]'}`}>
         {value}
       </div>
       {sub && <div className="text-xs text-[#94a3b8] mt-1">{sub}</div>}
@@ -247,14 +248,19 @@ export function PageHeader({ title, sub, action }: {
 }
 
 /* ── Empty state ─────────────────────────────────────────────────────────── */
+// `icon` accepts a Lucide key OR a legacy emoji string (routed through <Icon>,
+// which aliases known emoji → Lucide and falls back gracefully). Rendered in a
+// soft icon-tile rather than a giant emoji — a premium, intentional empty state.
 export function EmptyState({ icon, title, sub, action }: {
   icon: string; title: string; sub?: string; action?: ReactNode
 }) {
   return (
-    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-16 px-6">
-      <div className="text-5xl mb-3">{icon}</div>
+    <div className="fl-card text-center py-14 px-6">
+      <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-[#f8fafc] border border-[#edeef2] flex items-center justify-center text-[#94a3b8]">
+        <Icon name={icon} size={26} strokeWidth={1.75} />
+      </div>
       <p className="font-semibold text-[#334155] mb-1">{title}</p>
-      {sub && <p className="text-sm text-[#94a3b8] mb-5">{sub}</p>}
+      {sub && <p className="text-sm text-[#94a3b8] mb-5 max-w-sm mx-auto leading-relaxed">{sub}</p>}
       {action}
     </div>
   )

@@ -106,8 +106,8 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
         selected ? 'shadow-sm ring-2 ring-offset-1 ring-brand/30' : 'group-hover:shadow-sm group-hover:border-[#e8eaef]'
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
-        <div className="font-black text-base leading-tight mb-2">{label}</div>
-        <div className="text-2xl font-extrabold tabular-nums leading-none mb-1">{fmt(value)}</div>
+        <div className="font-bold text-base leading-tight mb-2">{label}</div>
+        <div className="text-2xl font-bold tabular-nums leading-none mb-1">{fmt(value)}</div>
         <div className="text-xs opacity-70">{count} kayıt{sub ? ` · ${sub}` : ''}</div>
         <div className={`text-[10px] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity ${selected ? '!opacity-100' : ''}`}>
           {selected ? '▲ Gizle' : '▼ Detay'}
@@ -154,7 +154,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
         <tfoot>
           <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]" colSpan={3}>Toplam FIFO maliyet</td>
-            <td className="px-4 py-2 text-right font-extrabold tabular-nums text-[#0f172a]">{fmt(total)}</td>
+            <td className="px-4 py-2 text-right font-bold tabular-nums text-[#0f172a]">{fmt(total)}</td>
             <td />
           </tr>
         </tfoot>
@@ -238,7 +238,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
         <tfoot>
           <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]">Toplam</td>
-            <td className="px-4 py-2 text-right font-extrabold tabular-nums text-brand">{fmt(total)}</td>
+            <td className="px-4 py-2 text-right font-bold tabular-nums text-brand">{fmt(total)}</td>
             <td colSpan={2} />
           </tr>
         </tfoot>
@@ -260,14 +260,14 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
         <div className="flex items-center gap-1.5 bg-warn-light rounded px-3 py-1.5">
           <span className="w-2 h-2 bg-warn rounded-full" />
           <span className="text-xs font-bold text-warn-text">{unpaid.length} bekliyor</span>
-          <span className="text-xs tabular-nums text-warn-text font-black ml-1">
+          <span className="text-xs tabular-nums text-warn-text font-bold ml-1">
             {fmt(unpaid.reduce((s, r) => s + Number(r.total_try ?? 0), 0))}
           </span>
         </div>
         <div className="flex items-center gap-1.5 bg-pos-light rounded px-3 py-1.5">
           <span className="w-2 h-2 bg-pos rounded-full" />
           <span className="text-xs font-bold text-pos-text">{paid.length} tahsil</span>
-          <span className="text-xs tabular-nums text-pos-text font-black ml-1">
+          <span className="text-xs tabular-nums text-pos-text font-bold ml-1">
             {fmt(paid.reduce((s, r) => s + Number(r.total_try ?? 0), 0))}
           </span>
         </div>
@@ -318,15 +318,15 @@ function KarPanel({ sales }: { sales: Sale[] }) {
       <div className="flex gap-3 px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
           <span className="text-xs text-[#64748b]">Ciro</span>
-          <span className="text-xs font-extrabold tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
+          <span className="text-xs font-bold tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
         </div>
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
           <span className="text-xs text-[#64748b]">SMM</span>
-          <span className="text-xs font-extrabold tabular-nums text-neg">{fmt(totalCogs)}</span>
+          <span className="text-xs font-bold tabular-nums text-neg">{fmt(totalCogs)}</span>
         </div>
         <div className={`flex items-center gap-1.5 rounded px-3 py-1.5 ${grossProfit >= 0 ? 'bg-pos-light' : 'bg-neg-light'}`}>
           <span className="text-xs text-[#64748b]">Brüt Kâr</span>
-          <span className={`text-xs font-extrabold tabular-nums ${grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(grossProfit)}</span>
+          <span className={`text-xs font-bold tabular-nums ${grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(grossProfit)}</span>
           <span className="text-[10px] text-[#94a3b8]">%{margin.toFixed(1)}</span>
         </div>
       </div>
@@ -433,23 +433,23 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
           count={stockLots.length} value={stockValue}
           color="bg-[#f8fafc] border-[#e8eaef] text-[#1e293b]" sub="FIFO maliyet"
           selected={selected === 'stok'} onClick={() => toggle('stok')} />
-        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-bold select-none px-0.5">→</div>
         <Stage stageKey="teklif" step="2. Teklif" label="Açık Teklifler"
           count={sent.length + accepted.length} value={pipelineVal}
           color="bg-info-light border-info-light text-info-text" sub="gönderildi + onay"
           selected={selected === 'teklif'} onClick={() => toggle('teklif')} />
-        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-bold select-none px-0.5">→</div>
         <Stage stageKey="satis" step="3. Satış" label="Faturalanan"
           count={converted.length} value={sumTotal(converted)}
           color="bg-brand-subtle border-[#e8eaef] text-brand" sub="proforma → satış"
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
-        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-bold select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"
           count={sales.length} value={collectedTotal}
           color={unpaidTotal > 0 ? 'bg-warn-light border-warn-light text-warn-text' : 'bg-teal-50 border-teal-200 text-teal-900'}
           sub={unpaidTotal > 0 ? `${fmt(unpaidTotal)} bekliyor` : 'Tahsilat güncel'}
           selected={selected === 'tahsilat'} onClick={() => toggle('tahsilat')} />
-        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-bold select-none px-0.5">→</div>
         <Stage stageKey="kar" step="5. Kâr" label="Brüt Kâr"
           count={sales.length} value={grossProfit}
           color={grossProfit >= 0 ? 'bg-pos-light border-pos-light text-pos-text' : 'bg-neg-light border-neg-light text-neg-text'}
@@ -473,7 +473,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
             ].map(c => (
               <button key={c.label} onClick={() => c.stage && toggle(c.stage)}
                 className="focus:outline-none group" type="button">
-                <div className={`text-2xl font-extrabold tabular-nums ${c.color} group-hover:underline`}>
+                <div className={`text-2xl font-bold tabular-nums ${c.color} group-hover:underline`}>
                   {`%${((c.count / proformas.length) * 100).toFixed(0)}`}
                 </div>
                 <div className="text-[11px] text-[#94a3b8] mt-0.5">{c.label}</div>

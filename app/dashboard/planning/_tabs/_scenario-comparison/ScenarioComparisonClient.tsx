@@ -102,14 +102,14 @@ function ComparisonMatrix({
       <table className="w-full text-[10px] min-w-[500px]">
         <thead>
           <tr className="bg-[#f8fafc]">
-            <th className="text-left px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap w-44">
+            <th className="text-left px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap w-44">
               Metrik
             </th>
             {selectedScenarios.map(s => (
               <th key={s.id} className="text-right px-4 py-2.5 whitespace-nowrap">
-                <div className="flex items-center justify-end gap-1 font-black text-[#0f172a]">
+                <div className="flex items-center justify-end gap-1 font-bold text-[#0f172a]">
                   {s.is_baseline && (
-                    <span className="text-[8px] font-black text-brand-light uppercase tracking-wide">BZ</span>
+                    <span className="text-[8px] font-bold text-brand-light uppercase tracking-wide">BZ</span>
                   )}
                   {s.name}
                 </div>
@@ -140,7 +140,7 @@ function ComparisonMatrix({
                     <td key={s.id} className="px-4 py-2.5 text-right tabular-nums">
                       <div
                         className={[
-                          'font-black',
+                          'font-bold',
                           isBest ? 'text-pos-text' : 'text-[#334155]',
                         ].join(' ')}
                       >
@@ -249,9 +249,9 @@ export function ScenarioComparisonClient() {
       {/* Recommendation banner */}
       {recommended && (
         <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded flex items-start gap-2">
-          <span className="text-brand font-black text-sm mt-0.5">✓</span>
+          <span className="text-brand font-bold text-sm mt-0.5">✓</span>
           <div>
-            <span className="text-xs font-black text-brand">Önerilen: {recommended.name}</span>
+            <span className="text-xs font-bold text-brand">Önerilen: {recommended.name}</span>
             <p className="text-[10px] text-brand-light mt-0.5 leading-relaxed max-w-xl">
               {report.recommendation_reason}
             </p>

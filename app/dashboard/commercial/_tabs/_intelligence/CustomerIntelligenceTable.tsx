@@ -108,7 +108,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
           ].map(row => (
             <div key={row.label} className="bg-[#f8fafc] rounded p-3">
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{row.label}</div>
-              <div className={cn('text-sm font-extrabold tabular-nums mt-0.5', row.neg ? 'text-neg' : 'text-[#0f172a]')}>{row.value}</div>
+              <div className={cn('text-sm font-bold tabular-nums mt-0.5', row.neg ? 'text-neg' : 'text-[#0f172a]')}>{row.value}</div>
             </div>
           ))}
         </div>

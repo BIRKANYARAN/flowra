@@ -109,16 +109,16 @@ export default function BankReconcileClient() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-[#f8fafc] rounded-lg p-3">
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eşleşme</div>
-                <div className={`text-xl font-extrabold tabular-nums ${matchPct >= 80 ? 'text-pos-text' : matchPct >= 50 ? 'text-warn-text' : 'text-neg'}`}>%{matchPct}</div>
+                <div className={`text-xl font-bold tabular-nums ${matchPct >= 80 ? 'text-pos-text' : matchPct >= 50 ? 'text-warn-text' : 'text-neg'}`}>%{matchPct}</div>
                 <div className="text-[10px] text-[#94a3b8]">{result.matched.length} / {parsed.transactions.length} hareket</div>
               </div>
               <div className="bg-[#f8fafc] rounded-lg p-3">
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Eşleşen Tutar</div>
-                <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">₺{fmt(result.matchedAmountTry)}</div>
+                <div className="text-xl font-bold tabular-nums text-[#0f172a]">₺{fmt(result.matchedAmountTry)}</div>
               </div>
               <div className="bg-[#f8fafc] rounded-lg p-3">
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Açık Kalem</div>
-                <div className="text-xl font-extrabold tabular-nums text-neg">{result.unmatchedBank.length}</div>
+                <div className="text-xl font-bold tabular-nums text-neg">{result.unmatchedBank.length}</div>
                 <div className="text-[10px] text-[#94a3b8]">eşleşmeyen banka hareketi</div>
               </div>
             </div>

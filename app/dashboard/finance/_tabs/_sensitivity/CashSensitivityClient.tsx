@@ -129,7 +129,7 @@ export function CashSensitivityClient({ companyId }: Props) {
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                   {item.label}
                 </div>
-                <div className={`text-base font-extrabold tabular-nums leading-none ${item.tone}`}>
+                <div className={`text-base font-bold tabular-nums leading-none ${item.tone}`}>
                   {item.value}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export function CashSensitivityClient({ companyId }: Props) {
                       <td className={`px-3 py-2.5 font-semibold ${isWorstCase ? 'text-red-700' : 'text-[#334155]'}`}>
                         {scenario.scenario_name}
                         {isWorstCase && (
-                          <span className="ml-1.5 text-[9px] font-black text-red-600 uppercase">
+                          <span className="ml-1.5 text-[9px] font-bold text-red-600 uppercase">
                             En Kötü
                           </span>
                         )}

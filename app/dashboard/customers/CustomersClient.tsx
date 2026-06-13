@@ -7,6 +7,7 @@
 
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Icon } from '@/components/ui/Icon'
 import type { Customer } from '@/types'
 import { CsvImportModal } from '@/components/import/CsvImportModal'
 
@@ -215,7 +216,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
-            <div className="text-3xl opacity-50">👤</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] border border-[#edeef2] flex items-center justify-center text-[#94a3b8]"><Icon name="customers" size={22} strokeWidth={1.75} /></div>
             <div className="text-sm font-semibold text-[#334155]">
               {search ? 'Eşleşen müşteri bulunamadı' : 'Henüz müşteri eklenmedi'}
             </div>

@@ -50,8 +50,8 @@ function statusDot(s: 'good' | 'warning' | 'critical' | 'neutral'): string {
 function GradeBadge({ grade, size = 'sm' }: { grade: string | null; size?: 'sm' | 'lg' }) {
   const base  = gradeBg(grade)
   const cls   = size === 'lg'
-    ? `w-20 h-20 text-5xl font-black rounded-2xl border-2 flex items-center justify-center ${base}`
-    : `w-8 h-8 text-base font-black rounded-lg border flex items-center justify-center ${base}`
+    ? `w-20 h-20 text-5xl font-bold rounded-2xl border-2 flex items-center justify-center ${base}`
+    : `w-8 h-8 text-base font-bold rounded-lg border flex items-center justify-center ${base}`
   return <div className={cls}>{grade ?? '—'}</div>
 }
 
@@ -147,7 +147,7 @@ export default async function HealthReportPage() {
         {/* ── HEADER ────────────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-6 pb-4 border-b border-[#e8eaef]">
           <div>
-            <div className="text-[10px] uppercase tracking-widest font-black text-[#94a3b8] mb-1">
+            <div className="text-[10px] uppercase tracking-widest font-bold text-[#94a3b8] mb-1">
               Mali Sağlık Raporu
             </div>
             <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">{r.company_name}</h1>
@@ -195,7 +195,7 @@ export default async function HealthReportPage() {
 
         {/* ── EXECUTIVE SUMMARY ─────────────────────────────────────────────── */}
         <div className={`rounded-lg border-2 p-4 mb-4 ${overallBg}`}>
-          <div className="text-[10px] uppercase tracking-widest font-black mb-2 opacity-70">
+          <div className="text-[10px] uppercase tracking-widest font-bold mb-2 opacity-70">
             Yönetici Özeti
           </div>
           <p className="text-sm font-medium leading-relaxed">{r.executive_summary}</p>

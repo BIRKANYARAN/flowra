@@ -70,8 +70,8 @@ function BridgeRow({
       : 'border-b border-dashed border-[#e8eaef] pb-2 mb-2'
     return (
       <div className={`flex items-center justify-between gap-3 py-2 ${borderCls}`}>
-        <span className="text-[11px] font-black text-[#0f172a]">{label}</span>
-        <span className={`text-sm font-extrabold tabular-nums ${v >= 0 ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
+        <span className="text-[11px] font-bold text-[#0f172a]">{label}</span>
+        <span className={`text-sm font-bold tabular-nums ${v >= 0 ? 'text-[#059669]' : 'text-[#dc2626]'}`}>
           {fmtTRY(v, 0)}
         </span>
       </div>
@@ -140,13 +140,13 @@ function PeriodTable({ report }: { report: EbitdaBridgeReport }) {
         <tbody>
           {rows.map(row => (
             <tr key={row.label} className={`border-t ${row.isBold ? 'border-dashed border-[#e8eaef] bg-[#f8fafc]' : 'border-[#f1f5f9]'}`}>
-              <td className={`py-1.5 px-2 ${row.isBold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'} text-[11px]`}>
+              <td className={`py-1.5 px-2 ${row.isBold ? 'font-bold text-[#0f172a]' : 'font-medium text-[#64748b]'} text-[11px]`}>
                 {row.label}
               </td>
               <td className="py-1.5 px-2 text-right text-[11px] tabular-nums text-[#475569]">
                 {fmtTRY(row.pri, 0)}
               </td>
-              <td className={`py-1.5 px-2 text-right text-[11px] tabular-nums ${row.isBold ? 'font-black' : 'font-medium'} ${row.cur >= 0 ? 'text-[#1e293b]' : 'text-[#dc2626]'}`}>
+              <td className={`py-1.5 px-2 text-right text-[11px] tabular-nums ${row.isBold ? 'font-bold' : 'font-medium'} ${row.cur >= 0 ? 'text-[#1e293b]' : 'text-[#dc2626]'}`}>
                 {fmtTRY(row.cur, 0)}
               </td>
               <td className={`py-1.5 px-2 text-right text-[11px] tabular-nums font-bold ${deltaColor(row.cur, row.pri)}`}>
@@ -290,7 +290,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
             <div className="text-[10px] text-[#94a3b8] mt-1.5">Birincil Etken</div>
           </div>
           <div>
-            <div className="text-2xl font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-2xl font-bold tabular-nums text-[#0f172a]">
               {bridge.total_ebitda_change >= 0 ? '+' : ''}{fmtTRY(bridge.total_ebitda_change, 0)}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1">FAVÖK Değişimi</div>

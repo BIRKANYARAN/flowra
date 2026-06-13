@@ -61,7 +61,7 @@ function StatusIcon({ status }: { status: CheckStatus }) {
   const { icon, cls } = map[status]
   return (
     <span
-      className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-black shrink-0 ${cls}`}
+      className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 ${cls}`}
     >
       {icon}
     </span>
@@ -102,7 +102,7 @@ function ScoreRing({ score, readiness }: { score: number; readiness: PeriodClose
   }
   return (
     <div className={`w-20 h-20 rounded-full border-4 flex flex-col items-center justify-center ${bgMap[readiness]}`}>
-      <span className={`text-2xl font-extrabold tabular-nums leading-none ${colorMap[readiness]}`}>{score}</span>
+      <span className={`text-2xl font-bold tabular-nums leading-none ${colorMap[readiness]}`}>{score}</span>
       <span className="text-[0.6rem] text-[#94a3b8] font-semibold leading-none mt-0.5">/100</span>
     </div>
   )

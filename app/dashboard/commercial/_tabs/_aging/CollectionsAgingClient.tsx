@@ -122,7 +122,7 @@ function BucketBar({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between text-[10px]">
         <span className="text-[#64748b] font-medium">{cfg.label}</span>
-        <span className={`font-extrabold tabular-nums ${cfg.textColor}`}>
+        <span className={`font-bold tabular-nums ${cfg.textColor}`}>
           {show ? fmtPct(pct) : '—'}
         </span>
       </div>
@@ -145,7 +145,7 @@ function ActionBadge({ bucket }: { bucket: AgingBucket }) {
   const cfg = BUCKET_CFG[bucket]
   return (
     <span
-      className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.textColor}`}
+      className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.textColor}`}
     >
       {cfg.label}
     </span>
@@ -206,18 +206,18 @@ export default function CollectionsAgingClient({ companyId }: Props) {
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-            <div className="font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(total)}</div>
+            <div className="font-bold tabular-nums text-[#0f172a]">{fmtTRY(total)}</div>
           </div>
           {dso !== null && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">DSO</div>
-              <div className="font-extrabold tabular-nums text-[#0f172a]">{dso} gün</div>
+              <div className="font-bold tabular-nums text-[#0f172a]">{dso} gün</div>
             </div>
           )}
           {aging_summary.concentration.critical_pct > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Kritik (%)</div>
-              <div className="font-extrabold tabular-nums text-neg">
+              <div className="font-bold tabular-nums text-neg">
                 {fmtPct(aging_summary.concentration.critical_pct)}
               </div>
             </div>
@@ -249,24 +249,24 @@ export default function CollectionsAgingClient({ companyId }: Props) {
 
       {/* ── Recovery & Write-off strip ─────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 px-4 py-2 border-t border-[#f1f5f9]">
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fdf4] text-[10px] font-black text-[#15803d]">
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fdf4] text-[10px] font-bold text-[#15803d]">
           <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
           Tahmini Tahsilat: {fmtTRY(expected_recovery)} ({fmtPct(recoveryRate)})
         </div>
         {write_off_risk.high_risk_amount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef2f2] text-[10px] font-black text-neg">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef2f2] text-[10px] font-bold text-neg">
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
             Yüksek Silme Riski: {fmtTRY(write_off_risk.high_risk_amount)}
           </div>
         )}
         {write_off_risk.medium_risk_amount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff7ed] text-[10px] font-black text-[#c2410c]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff7ed] text-[10px] font-bold text-[#c2410c]">
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
             Orta Risk: {fmtTRY(write_off_risk.medium_risk_amount)}
           </div>
         )}
         {write_off_risk.low_risk_amount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fefce8] text-[10px] font-black text-[#b45309]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fefce8] text-[10px] font-bold text-[#b45309]">
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
             Düşük Risk: {fmtTRY(write_off_risk.low_risk_amount)}
           </div>
@@ -289,7 +289,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
               >
                 {/* Rank */}
                 <div className="w-5 h-5 rounded-full bg-[#f1f5f9] flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-[9px] font-black text-[#64748b]">{idx + 1}</span>
+                  <span className="text-[9px] font-bold text-[#64748b]">{idx + 1}</span>
                 </div>
 
                 {/* Customer + action */}
@@ -311,7 +311,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
 
                 {/* Amount */}
                 <div className="text-right shrink-0">
-                  <div className="font-extrabold tabular-nums text-sm text-[#0f172a]">{fmtTRY(action.amount)}</div>
+                  <div className="font-bold tabular-nums text-sm text-[#0f172a]">{fmtTRY(action.amount)}</div>
                 </div>
               </div>
             ))}
@@ -353,7 +353,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
                       {c.oldest_invoice_days > 0 ? `${c.oldest_invoice_days}g` : '—'}
                     </td>
                     <td className="px-2 py-2">
-                      <span className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.textColor}`}>
+                      <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.textColor}`}>
                         {cfg.label}
                       </span>
                     </td>

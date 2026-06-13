@@ -87,7 +87,7 @@ export default function NewReconciliationPage() {
       <div className="max-w-2xl mx-auto px-6 py-8">
         <form onSubmit={handleSubmit} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-            <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">
+            <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">
               Mutabakat Bilgileri
             </span>
           </div>

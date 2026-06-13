@@ -143,7 +143,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${c.tone}`}>{c.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
         ))}
       </div>
@@ -184,7 +184,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                 <div key={sig.month} className={`px-4 py-3 flex items-start gap-3 ${isCritical ? 'bg-neg-light/50' : 'bg-warn-light/30'}`}>
                   <div className={`mt-0.5 flex-shrink-0 w-2 h-2 rounded-full ${isCritical ? 'bg-neg-light' : 'bg-warn'}`} />
                   <div>
-                    <div className={`text-xs font-black ${isCritical ? 'text-neg-text' : 'text-warn-text'}`}>
+                    <div className={`text-xs font-bold ${isCritical ? 'text-neg-text' : 'text-warn-text'}`}>
                       {fmtMonth(sig.month)}
                     </div>
                     <ul className="mt-0.5 space-y-0.5">
@@ -260,7 +260,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                   <span className="text-base">{section.icon}</span>
                   <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{section.label}</span>
                 </div>
-                <div className={`text-lg font-extrabold tabular-nums leading-none ${tone}`}>
+                <div className={`text-lg font-bold tabular-nums leading-none ${tone}`}>
                   {fmt(section.value)}
                 </div>
                 <div className="text-[10px] text-[#94a3b8] mt-0.5">{section.sub}</div>
@@ -333,7 +333,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                   <span className="text-sm">{item.icon}</span>
                   <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</span>
                 </div>
-                <div className={`text-base font-extrabold tabular-nums leading-none ${tone}`}>
+                <div className={`text-base font-bold tabular-nums leading-none ${tone}`}>
                   {fmt(item.value)}
                 </div>
               </div>
@@ -412,7 +412,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                   return (
                     <span
                       key={p.month}
-                      className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-black ${isPos ? 'bg-pos text-white' : 'bg-neg text-white'}`}
+                      className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-bold ${isPos ? 'bg-pos text-white' : 'bg-neg text-white'}`}
                       title={`${p.label}: ${fmt(p.net_change_try)}`}
                     >
                       {isPos ? '↑' : '↓'}
@@ -492,7 +492,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                     <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-[#334155]' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-extrabold tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
+                    <td className={`px-4 py-2.5 text-right font-bold tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>

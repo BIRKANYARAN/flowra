@@ -9,32 +9,33 @@ import Link               from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useWorkspace }   from '@/lib/workspace-context'
 import { isNavItemActive, hasMinRole } from '@/lib/nav-config'
+import { Icon }           from '@/components/ui/Icon'
 
 interface Tab {
   href:      string
   label:     string
-  emoji:     string
+  icon:      string
   exact?:    boolean
   minRole?:  'admin' | 'manager'
   badge?:    number
 }
 
 const PRIMARY: Tab[] = [
-  { href: '/dashboard',                          label: 'Kokpit',   emoji: '⌂',  exact: true },
-  { href: '/dashboard/commercial?tab=sales',     label: 'Satış',    emoji: '₺'               },
-  { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat', emoji: '📥'            },
-  { href: '/dashboard/finance',                  label: 'Finans',   emoji: '📊'               },
+  { href: '/dashboard',                          label: 'Kokpit',   icon: 'dashboard',   exact: true },
+  { href: '/dashboard/commercial?tab=sales',     label: 'Satış',    icon: 'sales'               },
+  { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat', icon: 'collections'      },
+  { href: '/dashboard/finance',                  label: 'Finans',   icon: 'analytics'          },
 ]
 
 const SECONDARY: Tab[] = [
-  { href: '/dashboard/commercial?tab=ozet',  label: 'Teklifler',   emoji: '📝'              },
-  { href: '/dashboard/commercial?tab=customers', label: 'Müşteriler',  emoji: '👥'              },
-  { href: '/dashboard/operations',               label: 'Gider & Stok',emoji: '⚙'               },
-  { href: '/dashboard/partners',                 label: 'Ortaklar',    emoji: '🤝', minRole: 'admin' },
-  { href: '/dashboard/planning',                 label: 'Planlama',    emoji: '📈'              },
-  { href: '/dashboard/insights',                 label: 'AI Analiz',   emoji: '🔍'              },
-  { href: '/dashboard/admin',                    label: 'Yönetim',     emoji: '🔐', minRole: 'admin' },
-  { href: '/dashboard/settings',                 label: 'Ayarlar',     emoji: '⚙'               },
+  { href: '/dashboard/commercial?tab=ozet',  label: 'Teklifler',   icon: 'proformas'        },
+  { href: '/dashboard/commercial?tab=customers', label: 'Müşteriler',  icon: 'customers'        },
+  { href: '/dashboard/operations',               label: 'Gider & Stok',icon: 'expenses'         },
+  { href: '/dashboard/partners',                 label: 'Ortaklar',    icon: 'partners', minRole: 'admin' },
+  { href: '/dashboard/planning',                 label: 'Planlama',    icon: 'planning'         },
+  { href: '/dashboard/insights',                 label: 'AI Analiz',   icon: 'search'           },
+  { href: '/dashboard/admin',                    label: 'Yönetim',     icon: 'shield', minRole: 'admin' },
+  { href: '/dashboard/settings',                 label: 'Ayarlar',     icon: 'settings'         },
 ]
 
 interface Props {
@@ -70,18 +71,18 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] px-1 pb-1">Hızlı Oluştur</div>
             <div className="grid grid-cols-4 gap-1">
               {[
-                { label: 'Satış',    href: '/dashboard/commercial?tab=sales&new=1',     icon: '₺' },
-                { label: 'Teklif',   href: '/dashboard/proformas/new',                  icon: '📝' },
-                { label: 'Gider',    href: '/dashboard/operations?tab=expenses&new=1',  icon: '💸' },
-                { label: 'Müşteri',  href: '/dashboard/commercial?tab=customers&new=1', icon: '👤' },
+                { label: 'Satış',    href: '/dashboard/commercial?tab=sales&new=1',     icon: 'sales' },
+                { label: 'Teklif',   href: '/dashboard/proformas/new',                  icon: 'proformas' },
+                { label: 'Gider',    href: '/dashboard/operations?tab=expenses&new=1',  icon: 'expenses' },
+                { label: 'Müşteri',  href: '/dashboard/commercial?tab=customers&new=1', icon: 'customers' },
               ].map(a => (
                 <Link
                   key={a.href}
                   href={a.href}
                   onClick={() => setOpen(false)}
-                  className="flex flex-col items-center gap-1 py-2 px-1 rounded bg-[#f8fafc] hover:bg-brand-subtle transition-colors"
+                  className="flex flex-col items-center gap-1 py-2 px-1 rounded bg-[#f8fafc] hover:bg-brand-subtle transition-colors text-[#475569]"
                 >
-                  <span className="text-base leading-none">{a.icon}</span>
+                  <Icon name={a.icon} size={18} />
                   <span className="text-[9px] font-bold text-[#334155] leading-none">+ {a.label}</span>
                 </Link>
               ))}
@@ -103,10 +104,10 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                     active ? 'bg-brand-subtle text-brand' : 'text-[#64748b] hover:bg-[#f8fafc]'
                   }`}
                 >
-                  <span className="text-lg leading-none relative">
-                    {tab.emoji}
+                  <span className="leading-none relative">
+                    <Icon name={tab.icon} size={20} />
                     {badge > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
+                      <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                         {badge > 9 ? '9+' : badge}
                       </span>
                     )}
@@ -141,10 +142,10 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                   active ? 'text-brand' : 'text-[#64748b] hover:text-[#334155]'
                 }`}
               >
-                <span className="text-lg leading-none relative">
-                  {tab.emoji}
+                <span className="leading-none relative">
+                  <Icon name={tab.icon} size={20} strokeWidth={active ? 2 : 1.5} />
                   {badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
+                    <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
@@ -163,7 +164,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
               open ? 'text-brand' : 'text-[#64748b]'
             }`}
           >
-            <span className="text-lg leading-none">☰</span>
+            <span className="leading-none"><Icon name="menu" size={20} /></span>
             <span className={`text-[9px] font-bold leading-none ${open ? 'text-brand' : 'text-[#94a3b8]'}`}>Daha</span>
           </button>
         </div>

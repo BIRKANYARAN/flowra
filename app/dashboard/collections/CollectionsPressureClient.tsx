@@ -175,7 +175,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
               {(activeRow.amount_paid ?? 0) > 0 && (
                 <div className="flex justify-between text-xs border-t border-[#e8eaef] pt-1.5 mt-1.5">
                   <span className="text-[#64748b] font-semibold">Kalan</span>
-                  <span className="font-black text-neg tabular-nums">{fmtTRY(remaining, 0)}</span>
+                  <span className="font-bold text-neg tabular-nums">{fmtTRY(remaining, 0)}</span>
                 </div>
               )}
               <div className="flex justify-between text-xs">
@@ -203,7 +203,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
               <div className="bg-[#f8fafc] rounded p-3">
                 <div className="flex justify-between text-xs mb-2">
                   <span className="text-[#64748b]">Toplam açık alacak</span>
-                  <span className="font-black text-neg tabular-nums">{fmtTRY(customerTotal, 0)}</span>
+                  <span className="font-bold text-neg tabular-nums">{fmtTRY(customerTotal, 0)}</span>
                 </div>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
                   {sameCustomer.map(r => {
@@ -406,7 +406,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
 
         {/* Amount + date */}
         <div className="text-right shrink-0">
-          <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(remaining, 0)}</div>
+          <div className="text-sm font-bold tabular-nums text-[#0f172a]">{fmtTRY(remaining, 0)}</div>
           {hasPartial && (
             <div className="text-[10px] text-[#94a3b8] tabular-nums">{fmtTRY(row.total_try, 0)} toplam</div>
           )}

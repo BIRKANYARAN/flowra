@@ -138,7 +138,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam İşlem
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {summary.total_transactions.toLocaleString('tr-TR')}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -149,7 +149,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Ürün
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {summary.total_products}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -160,7 +160,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. Ürün/Sepet
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {summary.avg_items_per_transaction !== null
               ? summary.avg_items_per_transaction.toFixed(1)
               : '—'}
@@ -173,7 +173,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Eşsiz Çift
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {summary.unique_pairs_found}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -184,7 +184,7 @@ export default function MarketBasketClient({ companyId }: Props) {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kural Sayısı
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-emerald-700">
+          <div className="text-lg font-bold tabular-nums leading-none text-emerald-700">
             {summary.rules_found}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">

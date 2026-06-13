@@ -71,7 +71,7 @@ function TrendBadge({ value, pct }: { value: TrendClass; pct: number | null }) {
   }
   const c = cfg[value]
   return (
-    <span className={`font-black text-base ${c.cls}`}>
+    <span className={`font-bold text-base ${c.cls}`}>
       {c.icon}
       <span className="text-[11px] font-semibold ml-1">
         {c.label}{pct !== null ? ` (${pct > 0 ? '+' : ''}${pct.toFixed(1)}%)` : ''}
@@ -221,7 +221,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
             Personel Maliyet Oranı
           </div>
           <div className="text-[10px] text-[#94a3b8]">Bu ay / Ciro</div>
-          <div className="text-lg font-extrabold tabular-nums text-[#0f172a] mt-1">
+          <div className="text-lg font-bold tabular-nums text-[#0f172a] mt-1">
             {currentRatio !== null ? fmtPct(currentRatio) : '—'}
           </div>
         </div>
@@ -232,7 +232,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
             Aylık Personel Maliyeti
           </div>
           <div className="text-[10px] text-[#94a3b8]">Toplam (maaş+SGK+huzur)</div>
-          <div className="text-lg font-extrabold tabular-nums text-neg mt-1">
+          <div className="text-lg font-bold tabular-nums text-neg mt-1">
             {fmtTRY(cm.total_personnel_cost)}
           </div>
         </div>
@@ -292,7 +292,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         />
         <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9] text-xs">
           <span className="text-[#64748b]">Toplam Bu Ay</span>
-          <span className="font-black text-neg tabular-nums">{fmtTRY(cm.total_personnel_cost)}</span>
+          <span className="font-bold text-neg tabular-nums">{fmtTRY(cm.total_personnel_cost)}</span>
         </div>
       </div>
 
@@ -304,19 +304,19 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <div className="text-[10px] text-[#94a3b8]">YTD Toplam</div>
-            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-bold tabular-nums text-[#0f172a] mt-0.5">
               {fmtTRY(report.ytd.total_personnel_cost)}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8]">Aylık Ortalama</div>
-            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-bold tabular-nums text-[#0f172a] mt-0.5">
               {fmtTRY(report.ytd.avg_monthly_cost)}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8]">YTD Maliyet Oranı</div>
-            <div className="text-sm font-extrabold tabular-nums text-[#0f172a] mt-0.5">
+            <div className="text-sm font-bold tabular-nums text-[#0f172a] mt-0.5">
               {report.ytd.personnel_cost_ratio_pct !== null
                 ? fmtPct(report.ytd.personnel_cost_ratio_pct)
                 : '—'}
@@ -368,25 +368,25 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div>
             <div className="text-[#3b82f6] font-semibold">İşveren SGK Oranı</div>
-            <div className="font-black text-[#1e3a8a] mt-0.5">
+            <div className="font-bold text-[#1e3a8a] mt-0.5">
               %{(report.sgk_reference.employer_rate * 100).toFixed(2)}
             </div>
           </div>
           <div>
             <div className="text-[#3b82f6] font-semibold">İşçi SGK Oranı</div>
-            <div className="font-black text-[#1e3a8a] mt-0.5">
+            <div className="font-bold text-[#1e3a8a] mt-0.5">
               %{(report.sgk_reference.employee_rate * 100).toFixed(0)}
             </div>
           </div>
           <div>
             <div className="text-[#3b82f6] font-semibold">Asgari Ücret (Brüt)</div>
-            <div className="font-black text-[#1e3a8a] mt-0.5 tabular-nums">
+            <div className="font-bold text-[#1e3a8a] mt-0.5 tabular-nums">
               {fmtTRY(report.sgk_reference.min_wage_try)}
             </div>
           </div>
           <div>
             <div className="text-[#3b82f6] font-semibold">Tipik Brüt→Net</div>
-            <div className="font-black text-[#1e3a8a] mt-0.5">
+            <div className="font-bold text-[#1e3a8a] mt-0.5">
               ~%{report.sgk_reference.typical_gross_to_net_pct}
             </div>
           </div>

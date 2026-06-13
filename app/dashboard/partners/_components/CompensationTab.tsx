@@ -287,12 +287,12 @@ export function CompensationTab({ partners }: CompensationTabProps) {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Toplam Brüt</div>
-          <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(totalMonthlyGross)}</div>
+          <div className="text-sm font-bold text-[#0f172a] tabular-nums mt-1">{fmtTRY(totalMonthlyGross)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">{activeSchedules.length} aktif takvim</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Aylık Net Ödeme</div>
-          <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(totalMonthlyNet)}</div>
+          <div className="text-sm font-bold text-[#16a34a] tabular-nums mt-1">{fmtTRY(totalMonthlyNet)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Stopaj sonrası</div>
         </div>
         <div className={cn(
@@ -304,7 +304,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
           <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]')}>
             Bu Ay Ödenen
           </div>
-          <div className={cn('text-sm font-extrabold tabular-nums mt-1', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]')}>
+          <div className={cn('text-sm font-bold tabular-nums mt-1', overdueCount > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]')}>
             {fmtTRY(thisMonthPaid)}
           </div>
           <div className="text-[0.65rem] text-[#94a3b8]">

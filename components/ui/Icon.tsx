@@ -16,6 +16,8 @@ import {
   ChevronDown, ChevronUp, MoreHorizontal, Filter, Eye, EyeOff,
   Shield, UserCog, ClipboardList, Database, Receipt, ShoppingCart,
   Activity, Key, Crown, Wallet, FileCheck2, GitBranch,
+  Calendar, Inbox, PiggyBank, Boxes, ClipboardCheck, Sparkles,
+  Menu, Target,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -46,6 +48,14 @@ const REGISTRY: Record<string, LucideIcon> = {
   alerts:        AlertTriangle,  // critical alerts
   reports:       FileCheck2,     // reconciliation / reports
   workflow:      GitBranch,      // workflow / iş akışları
+  calendar:      Calendar,       // dates / schedule
+  inbox:         Inbox,          // empty inbox / no records
+  savings:       PiggyBank,      // savings / reserve
+  boxes:         Boxes,          // inventory / catalogue
+  'clipboard-check': ClipboardCheck,
+  sparkles:      Sparkles,       // success / done
+  menu:          Menu,           // mobile "more" drawer
+  planning:      Target,         // planning / targets
   'arrow-right': ArrowRight,
   'arrow-up':    ArrowUp,
   'arrow-down':  ArrowDown,
@@ -88,6 +98,12 @@ const EMOJI_ALIAS: Record<string, string> = {
   '↩': 'logout',       '✓': 'check',         '✕': 'x',
   '📧': 'mail',        '📞': 'phone',        '🗑': 'trash',
   '📉': 'trending-up', '⚖': 'alert',
+  '⚠️': 'alert',      '⚠': 'alert',         '❗': 'alert',
+  '📋': 'tasks',       '📅': 'calendar',     '📈': 'trending-up',
+  '📭': 'inbox',       '🐷': 'savings',      '🗂': 'boxes',
+  '🗃': 'boxes',       '✅': 'check',        '✨': 'sparkles',
+  '—': 'inbox',        '🔔': 'bell',         '🛒': 'orders',
+  '🧾': 'tax',
 }
 
 export function Icon({

@@ -137,7 +137,7 @@ export function SupplierPerformancePanel() {
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {card.label}
             </div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>
               {card.value}
             </div>
           </div>
@@ -150,7 +150,7 @@ export function SupplierPerformancePanel() {
           <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Ortalama Portföy Karşılama Oranı
           </span>
-          <span className={`text-sm font-extrabold tabular-nums ${
+          <span className={`text-sm font-bold tabular-nums ${
             report.avg_portfolio_fulfillment_pct >= 90
               ? 'text-[#15803d]'
               : report.avg_portfolio_fulfillment_pct >= 75

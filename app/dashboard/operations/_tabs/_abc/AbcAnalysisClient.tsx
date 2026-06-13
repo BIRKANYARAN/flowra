@@ -31,8 +31,8 @@ function fmtPct(n: number): string {
 
 function TierBadge({ tier }: { tier: 'A' | 'B' | 'C' }) {
   const styles: Record<string, string> = {
-    A: 'bg-pos-light text-pos-text font-black',
-    B: 'bg-info-light text-info-text font-black',
+    A: 'bg-pos-light text-pos-text font-bold',
+    B: 'bg-info-light text-info-text font-bold',
     C: 'bg-[#f1f5f9] text-[#64748b] font-semibold',
   }
   return (
@@ -284,7 +284,7 @@ export function AbcAnalysisClient({ companyId }: Props) {
         <div className="px-4 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2 text-xs text-amber-700">
           <span className="text-base leading-none">⚠</span>
           <span>
-            <span className="font-black">A sınıfı ürünlerde fazla stok yatırımı</span>
+            <span className="font-bold">A sınıfı ürünlerde fazla stok yatırımı</span>
             {' '}— {report.over_invested_a_products.length} ürün nakit bağlıyor.
           </span>
         </div>
@@ -293,7 +293,7 @@ export function AbcAnalysisClient({ companyId }: Props) {
         <div className="px-4 py-2.5 bg-neg-light border-b border-red-100 flex items-center gap-2 text-xs text-neg-text">
           <span className="text-base leading-none">⚠</span>
           <span>
-            <span className="font-black">A sınıfı ürünlerde stok yetersizliği riski</span>
+            <span className="font-bold">A sınıfı ürünlerde stok yetersizliği riski</span>
             {' '}— {report.under_invested_a_products.length} ürün stokout tehlikesinde.
           </span>
         </div>
@@ -327,7 +327,7 @@ export function AbcAnalysisClient({ companyId }: Props) {
             }`}
           >
             {t.label}
-            <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
               tab === t.id ? 'bg-[#0f172a] text-white' : 'bg-[#f1f5f9] text-[#64748b]'
             }`}>
               {t.count}

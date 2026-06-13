@@ -234,7 +234,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${c.tone}`}>{c.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
           </div>
         ))}
@@ -324,7 +324,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                       <div className="text-[9px] text-[#94a3b8]">İlk: {c.oldest_invoice_date}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-extrabold tabular-nums text-[#0f172a]">{fmt(c.total_outstanding)}</td>
+                  <td className="px-4 py-3 text-right font-bold tabular-nums text-[#0f172a]">{fmt(c.total_outstanding)}</td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums text-pos-text">
                     {c.current > 0 ? fmt(c.current) : <span className="text-[#e2e8f0]">—</span>}
                   </td>
@@ -340,15 +340,15 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                 </tr>
               ))}
               {/* Totals row */}
-              <tr className="bg-[#f8fafc] font-black border-t-2 border-[#e8eaef]">
-                <td className="px-4 py-3 text-xs font-black text-[#334155]">Toplam</td>
-                <td className="px-4 py-3 text-right font-extrabold tabular-nums text-[#0f172a]">{fmt(risk.totalOutstanding)}</td>
-                <td className="px-4 py-3 text-right font-extrabold tabular-nums text-pos-text">
+              <tr className="bg-[#f8fafc] font-bold border-t-2 border-[#e8eaef]">
+                <td className="px-4 py-3 text-xs font-bold text-[#334155]">Toplam</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums text-[#0f172a]">{fmt(risk.totalOutstanding)}</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums text-pos-text">
                   {fmt(risk.totalOutstanding - risk.overdueTotal)}
                 </td>
-                <td className="px-4 py-3 text-right font-extrabold tabular-nums text-warn-text">{fmt(risk.overdue30Total)}</td>
-                <td className="px-4 py-3 text-right font-extrabold tabular-nums text-warn-text">{fmt(risk.overdue60Total)}</td>
-                <td className="px-4 py-3 text-right font-extrabold tabular-nums text-neg-text">{fmt(risk.overdue90Total)}</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums text-warn-text">{fmt(risk.overdue30Total)}</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums text-warn-text">{fmt(risk.overdue60Total)}</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums text-neg-text">{fmt(risk.overdue90Total)}</td>
               </tr>
             </tbody>
           </table>

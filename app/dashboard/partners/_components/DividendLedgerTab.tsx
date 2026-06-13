@@ -43,7 +43,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
   return (
     <div className="flex flex-col gap-0.5 p-3">
       <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
-      <div className={`text-base font-extrabold tabular-nums ${tone ?? 'text-[#0f172a]'}`}>{value}</div>
+      <div className={`text-base font-bold tabular-nums ${tone ?? 'text-[#0f172a]'}`}>{value}</div>
     </div>
   )
 }
@@ -96,7 +96,7 @@ function EventRow({ event }: { event: DividendEvent }) {
       <td className="px-3 py-2.5 text-right tabular-nums text-xs text-warn-text">
         −{fmtTRY(event.withholding_tax_try)}
       </td>
-      <td className="px-3 py-2.5 text-right tabular-nums text-xs font-black text-pos-text">
+      <td className="px-3 py-2.5 text-right tabular-nums text-xs font-bold text-pos-text">
         {fmtTRY(event.net_amount_try)}
       </td>
       <td className="px-3 py-2.5">
@@ -111,7 +111,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-start justify-between gap-2">
         <div>
-          <div className="text-xs font-black text-[#0f172a]">{summary.partner_name}</div>
+          <div className="text-xs font-bold text-[#0f172a]">{summary.partner_name}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
             {fmtPct(summary.share_ratio_pct)} pay
             {summary.paid_in_capital_try > 0 && (
@@ -122,7 +122,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
         {summary.dividend_yield_pct !== null && (
           <div className="text-right flex-shrink-0">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Temettü Verimi</div>
-            <div className="text-sm font-black text-pos-text tabular-nums">
+            <div className="text-sm font-bold text-pos-text tabular-nums">
               {fmtPct(summary.dividend_yield_pct)}
             </div>
           </div>
@@ -131,7 +131,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
       <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
         <div className="px-3 py-2.5">
           <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Brüt</div>
-          <div className="text-xs font-extrabold tabular-nums text-[#0f172a] mt-0.5">
+          <div className="text-xs font-bold tabular-nums text-[#0f172a] mt-0.5">
             {fmtTRY(summary.total_gross_dividends_try)}
           </div>
         </div>
@@ -143,7 +143,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
         </div>
         <div className="px-3 py-2.5">
           <div className="text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net</div>
-          <div className="text-xs font-extrabold tabular-nums text-pos-text mt-0.5">
+          <div className="text-xs font-bold tabular-nums text-pos-text mt-0.5">
             {fmtTRY(summary.total_net_dividends_try)}
           </div>
         </div>
@@ -151,7 +151,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
       {summary.pending_gross_try > 0 && (
         <div className="px-4 py-2 border-t border-[#e8eaef] bg-warn-light flex items-center justify-between">
           <span className="text-[10px] text-warn-text font-semibold">Bekleyen Temettü</span>
-          <span className="text-[10px] font-black text-warn-text tabular-nums">
+          <span className="text-[10px] font-bold text-warn-text tabular-nums">
             {fmtTRY(summary.pending_gross_try)}
           </span>
         </div>
@@ -304,13 +304,13 @@ export function DividendLedgerTab() {
             <table className="w-full text-xs min-w-[680px]">
               <thead>
                 <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
-                  <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Tarih</th>
-                  <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Ortak</th>
-                  <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Tür</th>
-                  <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Brüt</th>
-                  <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Stopaj</th>
-                  <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Net</th>
-                  <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Durum</th>
+                  <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Tarih</th>
+                  <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Ortak</th>
+                  <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Tür</th>
+                  <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Brüt</th>
+                  <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Stopaj</th>
+                  <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Net</th>
+                  <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Durum</th>
                 </tr>
               </thead>
               <tbody>

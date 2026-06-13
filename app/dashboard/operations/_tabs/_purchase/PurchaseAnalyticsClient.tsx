@@ -99,7 +99,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className="text-xl font-extrabold tabular-nums text-[#1e293b]">{value}</div>
+      <div className="text-xl font-bold tabular-nums text-[#1e293b]">{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
@@ -261,7 +261,7 @@ function ProductCostTrendList({ products }: { products: ProductPurchaseAnalytics
             <div className="text-xs tabular-nums text-[#64748b] text-right w-24">
               {p.avg_unit_cost_try > 0 ? fmtTRY(p.avg_unit_cost_try) : '—'}
             </div>
-            <div className={`text-sm font-black w-6 text-center ${TREND_COLOR[p.cost_trend]}`}>
+            <div className={`text-sm font-bold w-6 text-center ${TREND_COLOR[p.cost_trend]}`}>
               {TREND_ICON[p.cost_trend]}
             </div>
             {p.cost_variance_pct !== null && (

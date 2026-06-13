@@ -196,7 +196,7 @@ function StatusRow({ label, value, ok, hint }: {
 function Step({ num, text }: { num: number; text: string }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="w-5 h-5 rounded-full bg-brand-subtle text-brand text-xs font-black
+      <span className="w-5 h-5 rounded-full bg-brand-subtle text-brand text-xs font-bold
                        flex items-center justify-center flex-shrink-0 mt-0.5">
         {num}
       </span>

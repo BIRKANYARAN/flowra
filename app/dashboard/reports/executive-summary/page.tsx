@@ -35,7 +35,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-lg font-extrabold tabular-nums leading-tight ${
+      <div className={`text-lg font-bold tabular-nums leading-tight ${
         tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
@@ -140,7 +140,7 @@ export default function ExecutiveSummaryPage() {
 
       {/* Print header */}
       <div className="hidden print:block mb-6 border-b pb-4">
-        <h1 className="text-3xl font-black">Yönetici Özeti</h1>
+        <h1 className="text-3xl font-bold">Yönetici Özeti</h1>
         <p className="text-sm text-[#64748b] mt-1">{from} — {to}</p>
       </div>
 
@@ -277,7 +277,7 @@ export default function ExecutiveSummaryPage() {
                   { label: 'Net Nakit Değişimi',     value: cf?.net_change ?? 0, bold: true },
                 ].map(row => (
                   <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
-                    <span className={`text-xs ${row.bold ? 'font-black text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
+                    <span className={`text-xs ${row.bold ? 'font-bold text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
                     <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-pos-text' : row.value < 0 ? 'text-neg' : 'text-[#64748b]'}`}>
                       {fmt(row.value)}
                     </span>
@@ -296,7 +296,7 @@ export default function ExecutiveSummaryPage() {
                   { label: 'Kurumlar Verg.',value: -(is?.corporate_tax ?? 0) },
                 ].map(row => (
                   <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
-                    <span className={`text-xs ${row.bold ? 'font-black text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
+                    <span className={`text-xs ${row.bold ? 'font-bold text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
                     <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-warn' : row.value < 0 ? 'text-[#64748b]' : 'text-[#94a3b8]'}`}>
                       {fmt(Math.abs(row.value))} {row.bold && tax ? (tax.status === 'payable' ? '⬆ Ödenecek' : '⬇ Devir') : ''}
                     </span>

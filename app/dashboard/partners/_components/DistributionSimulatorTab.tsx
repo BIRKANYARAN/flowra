@@ -147,7 +147,7 @@ function ScenarioCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-xs font-black text-[#0f172a]">{scenario.name}</h3>
+            <h3 className="text-xs font-bold text-[#0f172a]">{scenario.name}</h3>
             {isOptimal && (
               <span className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full bg-[#bbf7d0] text-[#15803d]">
                 Optimal
@@ -163,19 +163,19 @@ function ScenarioCard({
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-[#f8fafc] rounded-lg p-2">
           <p className="text-[0.6rem] text-[#64748b] font-semibold">Brüt Dağıtım</p>
-          <p className="text-xs font-black text-[#0f172a] tabular-nums mt-0.5">
+          <p className="text-xs font-bold text-[#0f172a] tabular-nums mt-0.5">
             {fmtTRY(scenario.gross_distribution_try)}
           </p>
         </div>
         <div className="bg-[#f8fafc] rounded-lg p-2">
           <p className="text-[0.6rem] text-[#64748b] font-semibold">Stopaj (%10)</p>
-          <p className="text-xs font-black text-[#dc2626] tabular-nums mt-0.5">
+          <p className="text-xs font-bold text-[#dc2626] tabular-nums mt-0.5">
             -{fmtTRY(scenario.withholding_tax_try)}
           </p>
         </div>
         <div className="bg-[#f0fdf4] rounded-lg p-2">
           <p className="text-[0.6rem] text-[#64748b] font-semibold">Net Dağıtım</p>
-          <p className="text-xs font-black text-[#16a34a] tabular-nums mt-0.5">
+          <p className="text-xs font-bold text-[#16a34a] tabular-nums mt-0.5">
             {fmtTRY(scenario.net_distribution_try)}
           </p>
         </div>
@@ -290,7 +290,7 @@ export function DistributionSimulatorTab() {
         </div>
         <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-4">
           <p className="text-[0.65rem] text-[#92400e] font-semibold">Yasal Yedek Gerekli</p>
-          <p className="text-base font-black text-[#92400e] tabular-nums mt-1">
+          <p className="text-base font-bold text-[#92400e] tabular-nums mt-1">
             {fmtTRY(input_summary.legal_reserve_required_try)}
           </p>
         </div>
@@ -315,7 +315,7 @@ export function DistributionSimulatorTab() {
       {/* ── Scenario cards ─────────────────────────────────────────────────── */}
 
       <div>
-        <h2 className="text-sm font-black text-[#0f172a] mb-3">Dağıtım Senaryoları</h2>
+        <h2 className="text-sm font-bold text-[#0f172a] mb-3">Dağıtım Senaryoları</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {scenarios.map(scenario => (
             <ScenarioCard
@@ -333,7 +333,7 @@ export function DistributionSimulatorTab() {
       {/* ── Custom simulation ───────────────────────────────────────────────── */}
 
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
-        <h2 className="text-sm font-black text-[#0f172a] mb-1">Özel Tutar Simülasyonu</h2>
+        <h2 className="text-sm font-bold text-[#0f172a] mb-1">Özel Tutar Simülasyonu</h2>
         <p className="text-[0.65rem] text-[#94a3b8] mb-3">
           Dağıtmak istediğiniz tutarı girin — TTK 509/519 ve GVK 94 uyumluluğu anında hesaplanır
         </p>

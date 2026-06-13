@@ -84,7 +84,7 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
 
       {/* Tab context header */}
       <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded">
-        <div className="text-xs font-black text-brand">{ctx.title}</div>
+        <div className="text-xs font-bold text-brand">{ctx.title}</div>
         <div className="text-[10px] text-brand-light mt-0.5">{ctx.focus}</div>
       </div>
 

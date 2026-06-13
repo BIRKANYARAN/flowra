@@ -104,7 +104,7 @@ function CapitalCallCard({
     <div className="border border-[#e8eaef] rounded-lg p-4 flex flex-col gap-3 bg-[#f8fafc]">
       {/* Header */}
       <div>
-        <div className="text-xs font-black text-[#0f172a]">
+        <div className="text-xs font-bold text-[#0f172a]">
           %{scenario.call_pct} Sermaye Çağrısı
         </div>
         <div className="text-[0.65rem] text-[#64748b] mt-0.5">{label}</div>
@@ -115,7 +115,7 @@ function CapitalCallCard({
         <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide font-semibold">
           Toplam Ek Sermaye
         </div>
-        <div className="text-sm font-black text-[#0f172a]">
+        <div className="text-sm font-bold text-[#0f172a]">
           {fmtTRY(scenario.total_additional_capital_try)}
         </div>
       </div>
@@ -209,7 +209,7 @@ export function EquityDilutionTab({ companyId }: Props) {
       {/* ── Ownership drift warning ─────────────────────────────────────────── */}
       {has_ownership_drift && (
         <div className="bg-[#fef9c3] border border-[#fde047] rounded px-4 py-2.5 text-xs text-[#713f12] flex items-start gap-2">
-          <span className="font-black mt-0.5 flex-shrink-0 text-[#d97706]">!</span>
+          <span className="font-bold mt-0.5 flex-shrink-0 text-[#d97706]">!</span>
           <span>
             <strong>Sahiplik sapması tespit edildi.</strong>{' '}
             Bir veya daha fazla ortağın fiili özkaynak yüzdesi sözleşmesel pay oranından

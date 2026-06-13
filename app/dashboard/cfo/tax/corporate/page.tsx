@@ -81,7 +81,7 @@ function KpiCard({
   return (
     <div className="flex flex-col gap-0.5 px-4 py-3 border-r border-[#e8eaef] last:border-r-0">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</div>
-      <div className={`text-lg font-extrabold tabular-nums leading-tight ${valueColor}`}>{value}</div>
+      <div className={`text-lg font-bold tabular-nums leading-tight ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
@@ -211,12 +211,12 @@ export default async function CorporateTaxPage() {
             : 'bg-warn-light border-warn-light text-warn-text'
         }`}>
           <span>
-            <span className="font-black">{nextDue.label} Geçici Vergisi</span>
+            <span className="font-bold">{nextDue.label} Geçici Vergisi</span>
             {' '}— {fmtDate(nextDue.gecici_due_date)}{`'`}a kadar beyan:{' '}
-            <span className="font-black">{fmt(nextDue.gecici_vergi)}</span>
+            <span className="font-bold">{fmt(nextDue.gecici_vergi)}</span>
           </span>
           {nextDue.gecici_due_date <= addDays(today, 14) && (
-            <span className="text-xs font-black bg-warn-light text-warn-text rounded px-2 py-0.5">ACİL</span>
+            <span className="text-xs font-bold bg-warn-light text-warn-text rounded px-2 py-0.5">ACİL</span>
           )}
         </div>
       )}
@@ -259,7 +259,7 @@ export default async function CorporateTaxPage() {
               >
                 {/* Quarter label */}
                 <div>
-                  <div className="text-sm font-black text-[#1e293b]">{q.label}</div>
+                  <div className="text-sm font-bold text-[#1e293b]">{q.label}</div>
                   <div className="text-[10px] text-[#94a3b8]">
                     {q.period.from.slice(5).replace('-', '/')} — {q.period.to.slice(5).replace('-', '/')}
                   </div>
@@ -314,15 +314,15 @@ export default async function CorporateTaxPage() {
           {quarters.length > 0 && (
             <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-3 items-center bg-[#f8fafc] border-t-2 border-[#e8eaef]">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">YTD</div>
-              <div className="text-right tabular-nums text-sm font-black text-[#0f172a]">
+              <div className="text-right tabular-nums text-sm font-bold text-[#0f172a]">
                 {ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}
               </div>
-              <div className="text-right tabular-nums text-sm font-black text-warn-text">
+              <div className="text-right tabular-nums text-sm font-bold text-warn-text">
                 {ytd.corporate_tax > 0 ? fmt(ytd.corporate_tax) : '—'}
               </div>
               <div className="text-right" />
               <div className="flex justify-end">
-                <span className="text-[10px] font-black text-[#64748b] uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wide">
                   Geçici: {ytd.total_gecici > 0 ? fmt(ytd.total_gecici) : '—'}
                 </span>
               </div>
@@ -345,11 +345,11 @@ export default async function CorporateTaxPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-[#64748b]">Tahmini Yıllık Matrah</span>
-              <span className="tabular-nums text-sm font-black text-[#0f172a]">{fmt(projectedMatrah)}</span>
+              <span className="tabular-nums text-sm font-bold text-[#0f172a]">{fmt(projectedMatrah)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-[#e8eaef] pt-2">
               <span className="text-xs text-[#64748b]">Tahmini Yıllık KV (%25)</span>
-              <span className="tabular-nums text-sm font-black text-warn-text">{fmt(projectedKv)}</span>
+              <span className="tabular-nums text-sm font-bold text-warn-text">{fmt(projectedKv)}</span>
             </div>
             {ytd.total_gecici > 0 && (
               <div className="flex items-center justify-between">
@@ -358,8 +358,8 @@ export default async function CorporateTaxPage() {
               </div>
             )}
             <div className="flex items-center justify-between border-t-2 border-[#e8eaef] pt-2">
-              <span className="text-xs font-black text-[#1e293b]">Tahmini Kalan Yükümlülük</span>
-              <span className={`tabular-nums text-sm font-black ${Math.max(0, projectedKv - ytd.total_gecici) > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
+              <span className="text-xs font-bold text-[#1e293b]">Tahmini Kalan Yükümlülük</span>
+              <span className={`tabular-nums text-sm font-bold ${Math.max(0, projectedKv - ytd.total_gecici) > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
                 {fmt(Math.max(0, projectedKv - ytd.total_gecici))}
               </span>
             </div>
@@ -371,14 +371,14 @@ export default async function CorporateTaxPage() {
       {ytd.matrah > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3 text-xs text-warn-text leading-relaxed space-y-1">
           <div>
-            <span className="font-black">KV Formülü:</span>{' '}
+            <span className="font-bold">KV Formülü:</span>{' '}
             Matrah ({fmt(ytd.matrah)}) × %25 ={' '}
-            <span className="font-black">{fmt(ytd.corporate_tax)}</span> tahmini KV
+            <span className="font-bold">{fmt(ytd.corporate_tax)}</span> tahmini KV
           </div>
           {ytd.total_gecici > 0 && (
             <div>
               Ödenen Geçici: {fmt(ytd.total_gecici)} → Kalan:{' '}
-              <span className="font-black">{fmt(kvRemaining)}</span>{' '}
+              <span className="font-bold">{fmt(kvRemaining)}</span>{' '}
               ({fmtDate(annualDueDate)}{`'`}a kadar)
             </div>
           )}
@@ -387,7 +387,7 @@ export default async function CorporateTaxPage() {
 
       {/* ── Disclaimer ─────────────────────────────────────────────────────── */}
       <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
-        <span className="font-black">Not:</span>{' '}
+        <span className="font-bold">Not:</span>{' '}
         Bu sayfa tahmini hesaplama içerir. Kesin kurumlar vergisi beyanı muhasebeci tarafından
         hazırlanmalıdır. Geçici vergi dönemleri: Q1 → 17 Mayıs, Q2 → 17 Ağustos, Q3 → 17 Kasım.
         Yıllık KV beyannamesi → 30 Nisan.

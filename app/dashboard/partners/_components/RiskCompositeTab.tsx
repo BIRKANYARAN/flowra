@@ -148,7 +148,7 @@ function GradeBadge({ grade, size = 'md' }: { grade: RiskGrade; size?: 'sm' | 'm
     ? 'text-2xl font-bold w-10 h-10'
     : size === 'sm'
     ? 'text-xs font-bold w-6 h-6'
-    : 'text-base font-black w-8 h-8'
+    : 'text-base font-bold w-8 h-8'
 
   return (
     <span className={[

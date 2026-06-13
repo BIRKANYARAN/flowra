@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Icon } from '@/components/ui/Icon'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { CsvImportModal } from '@/components/import/CsvImportModal'
 
@@ -499,7 +500,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
-            <div className="text-3xl opacity-50">📦</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] border border-[#edeef2] flex items-center justify-center text-[#94a3b8]"><Icon name="stocks" size={22} strokeWidth={1.75} /></div>
             <div className="text-sm font-semibold text-[#334155]">
               {products.length === 0 ? 'Henüz ürün eklenmedi' : 'Aramayla eşleşen ürün bulunamadı.'}
             </div>
@@ -740,7 +741,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
           <div className="bg-white rounded border border-[#e8eaef] shadow-sm w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#e8eaef]">
               <div>
-                <h2 className="font-black text-lg">Maliyet Hesapla</h2>
+                <h2 className="font-bold text-lg">Maliyet Hesapla</h2>
                 <p className="text-sm text-[#64748b] mt-0.5">{products.find(p => p.id === costCalcId)?.name ?? ''}</p>
               </div>
               <button
@@ -826,11 +827,11 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <div className="text-xs text-[#94a3b8] font-semibold uppercase mb-1">Toplam Maliyet</div>
-                      <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">₺{fmt(totalCost)}</div>
+                      <div className="text-xl font-bold tabular-nums text-[#0f172a]">₺{fmt(totalCost)}</div>
                     </div>
                     <div>
                       <div className="text-xs text-[#94a3b8] font-semibold uppercase mb-1">Birim Maliyet</div>
-                      <div className="text-xl font-extrabold tabular-nums text-brand">₺{fmt(unitCost)}</div>
+                      <div className="text-xl font-bold tabular-nums text-brand">₺{fmt(unitCost)}</div>
                     </div>
                   </div>
                   <button

@@ -279,9 +279,9 @@ export function CommandBar() {
                     const isSelected = sel === flatIdx
                     const iconEl =
                       cmd.kind === 'smart'  ? <span className="text-brand-light text-xs">⚡</span> :
-                      cmd.kind === 'op'     ? <span className="text-white/50 text-[10px] font-black">▶</span> :
-                      cmd.kind === 'create' ? <span className="text-pos text-sm font-black leading-none">+</span> :
-                      cmd.kind === 'nav'    ? <span className="text-brand text-[9px] font-black">◆</span> :
+                      cmd.kind === 'op'     ? <span className="text-white/50 text-[10px] font-bold">▶</span> :
+                      cmd.kind === 'create' ? <span className="text-pos text-sm font-bold leading-none">+</span> :
+                      cmd.kind === 'nav'    ? <span className="text-brand text-[9px] font-bold">◆</span> :
                                              <span className="text-white/40 text-xs">→</span>
                     return (
                       <button

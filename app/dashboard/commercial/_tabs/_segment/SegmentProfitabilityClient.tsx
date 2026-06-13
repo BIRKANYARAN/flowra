@@ -73,7 +73,7 @@ function MarginCell({ pct }: { pct: number | null }) {
     : 'text-neg'
 
   return (
-    <span className={`text-sm font-extrabold tabular-nums leading-none ${color}`}>
+    <span className={`text-sm font-bold tabular-nums leading-none ${color}`}>
       {fmtPct(pct)}
     </span>
   )
@@ -132,7 +132,7 @@ function SegmentTable({ segments, totalRevenue }: SegmentTableProps) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <div className="text-sm font-extrabold tabular-nums text-brand leading-none">
+                  <div className="text-sm font-bold tabular-nums text-brand leading-none">
                     {fmtTRY(seg.revenue)}
                   </div>
                 </td>
@@ -237,19 +237,19 @@ export default function CustomerSegmentProfitabilityClient({ companyId }: Props)
         <div className="px-4 pt-2 pb-1 flex flex-wrap gap-2">
           {summary.highest_revenue_segment && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-wide">En yüksek gelir:</span>
+              <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide">En yüksek gelir:</span>
               <BadgeSegment segment={summary.highest_revenue_segment} />
             </div>
           )}
           {summary.most_profitable_segment && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-wide">En kârlı:</span>
+              <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide">En kârlı:</span>
               <BadgeSegment segment={summary.most_profitable_segment} />
             </div>
           )}
           {summary.fastest_growing_segment && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-wide">En hızlı büyüyen:</span>
+              <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide">En hızlı büyüyen:</span>
               <BadgeSegment segment={summary.fastest_growing_segment} />
             </div>
           )}

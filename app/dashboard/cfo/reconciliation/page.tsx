@@ -49,9 +49,9 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
   if (report.is_reconciled && criticalCount === 0 && warnCount === 0) {
     return (
       <div className="bg-pos-light border border-pos-light rounded px-4 py-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-pos-light flex items-center justify-center text-pos-text font-black text-sm shrink-0">✓</div>
+        <div className="w-8 h-8 rounded-full bg-pos-light flex items-center justify-center text-pos-text font-bold text-sm shrink-0">✓</div>
         <div>
-          <div className="text-xs font-black text-pos-text">Mutabakat Tamamlandı — Dönem Kapanışına Hazır</div>
+          <div className="text-xs font-bold text-pos-text">Mutabakat Tamamlandı — Dönem Kapanışına Hazır</div>
           <div className="text-[10px] text-pos-text mt-0.5">Tüm GL hesapları operasyonel tablolarla uyuşuyor. 100 TRY üzeri fark bulunmuyor.</div>
         </div>
       </div>
@@ -61,9 +61,9 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
   if (criticalCount > 0) {
     return (
       <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-neg-light flex items-center justify-center text-neg-text font-black text-sm shrink-0">✗</div>
+        <div className="w-8 h-8 rounded-full bg-neg-light flex items-center justify-center text-neg-text font-bold text-sm shrink-0">✗</div>
         <div>
-          <div className="text-xs font-black text-neg-text">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
+          <div className="text-xs font-bold text-neg-text">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
           <div className="text-[10px] text-neg mt-0.5">
             {criticalCount} kritik, {warnCount} uyarı. 100 TRY üzerindeki farklar giderilmeden dönem kapanışı engellenilir.
           </div>
@@ -74,9 +74,9 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
 
   return (
     <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-warn-light flex items-center justify-center text-warn-text font-black text-sm shrink-0">!</div>
+      <div className="w-8 h-8 rounded-full bg-warn-light flex items-center justify-center text-warn-text font-bold text-sm shrink-0">!</div>
       <div>
-        <div className="text-xs font-black text-warn-text">Küçük Farklar Var — Dönem Kapatılabilir</div>
+        <div className="text-xs font-bold text-warn-text">Küçük Farklar Var — Dönem Kapatılabilir</div>
         <div className="text-[10px] text-warn-text mt-0.5">
           {warnCount} uyarı (1–99 TRY arası). Zamanlama farkı olabilir — araştırılması önerilir.
         </div>
@@ -177,7 +177,7 @@ export default function ReconciliationPage() {
 
       {/* Print-only header */}
       <div className="hidden print:block mb-2">
-        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-black">Flowra — CFO Raporu</div>
+        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Flowra — CFO Raporu</div>
         <h1 className="text-2xl font-bold text-[#0f172a]">GL Mutabakat Raporu</h1>
         <p className="text-xs text-[#64748b] mt-0.5">
           {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })} itibarıyla
@@ -221,15 +221,15 @@ export default function ReconciliationPage() {
           {/* Summary chips */}
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-center">
-              <div className="text-xl font-black text-pos-text tabular-nums">{okCount}</div>
+              <div className="text-xl font-bold text-pos-text tabular-nums">{okCount}</div>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
-              <div className={`text-xl font-extrabold tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
+              <div className={`text-xl font-bold tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
               <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
-              <div className={`text-xl font-extrabold tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
+              <div className={`text-xl font-bold tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
               <div className={`text-[0.65rem] font-bold uppercase tracking-wider mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
@@ -243,11 +243,11 @@ export default function ReconciliationPage() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[#e8eaef]">
-                    <th className="px-4 py-2.5 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap / Kontrol</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">GL Değeri</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Operasyonel</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Fark</th>
-                    <th className="px-4 py-2.5 text-center text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Durum</th>
+                    <th className="px-4 py-2.5 text-left text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap / Kontrol</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">GL Değeri</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Operasyonel</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Fark</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Durum</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">

@@ -42,12 +42,12 @@ import { SectionLabel } from '@/components/ds'
 <SectionLabel>Nakit Akışı</SectionLabel>
 
 // ✅ CORRECT inline
-className="text-[10px] font-black uppercase tracking-widest text-gray-400"
+className="text-[10px] font-bold uppercase tracking-widest text-gray-400"
 
 // ❌ FORBIDDEN
 "text-xs font-semibold uppercase tracking-wide text-gray-400"   // wrong weight
-"text-[10px] font-bold uppercase tracking-widest text-gray-400" // font-bold not font-black
-"text-xs font-black uppercase tracking-widest"                   // wrong size
+"text-[10px] font-bold uppercase tracking-widest text-gray-400" // font-bold not font-bold
+"text-xs font-bold uppercase tracking-widest"                   // wrong size
 ```
 
 **Sub-labels** (inside panels, above mini-sections): `text-[9px]` not `text-[10px]`
@@ -62,15 +62,15 @@ Every page has exactly ONE hero block at the top:
 import { PageHero } from '@/components/ds'
 <PageHero
   super="Finans Merkezi"   // optional: section breadcrumb
-  title="Kâr / Zarar"      // required: text-2xl font-black
+  title="Kâr / Zarar"      // required: text-2xl font-bold
   sub="Ciro · Brüt Kâr · Faaliyet Kârı"  // optional: text-sm text-gray-400
   cta={<Link>...</Link>}   // optional: top-right action button
 />
 ```
 
 **Title sizes** — strictly enforced:
-- Main title: `text-2xl font-black tracking-tight text-gray-900`
-- Sub-title/breadcrumb: `text-[10px] font-black uppercase tracking-widest text-gray-400`
+- Main title: `text-2xl font-bold tracking-tight text-gray-900`
+- Sub-title/breadcrumb: `text-[10px] font-bold uppercase tracking-widest text-gray-400`
 - Never: `text-xl`, `text-3xl` for page titles
 
 ---
@@ -112,7 +112,7 @@ Location: always in the same sticky wrapper as the tab nav
 Context bars use `FinanceContextBar` / `PartnersContextBar` pattern:
 - `h-[46px]` minimum height
 - `bg-gray-50/40 border-b border-gray-100`  
-- Readings: `text-[8px] font-black uppercase` label + `text-[13px] font-black tabular-nums` value
+- Readings: `text-[8px] font-bold uppercase` label + `text-[13px] font-bold tabular-nums` value
 - Loading: `h-[46px] animate-pulse bg-gray-50/60`
 
 ---
@@ -161,7 +161,7 @@ There is ONE tab navigation pattern. It comes from `UnifiedTabNav` or the inline
 All workflow queues use the `AlertRow` component pattern:
 - `border-l-[3px]` left accent (red=critical, amber=warning, gray=info)
 - Grouped by severity: ACIL → YAKLAŞIYOR → BİLGİ
-- Group labels: `text-[9px] font-black uppercase tracking-widest` in background `bg-{color}-50/60`
+- Group labels: `text-[9px] font-bold uppercase tracking-widest` in background `bg-{color}-50/60`
 - Item action: filled button for critical, outlined for warning, text for info
 
 ---
@@ -210,17 +210,17 @@ All workflow queues use the `AlertRow` component pattern:
 ## 12. Typography Scale (exhaustive)
 
 ```
-Page title:       text-2xl font-black tracking-tight text-gray-900
-Section label:    text-[10px] font-black uppercase tracking-widest text-gray-400
-Sub-label:        text-[9px] font-black uppercase tracking-widest text-gray-400
-KPI value (lg):   text-[22px] font-black tabular-nums
-KPI value (md):   text-xl font-black tabular-nums
-KPI value (sm):   text-sm font-black tabular-nums
+Page title:       text-2xl font-bold tracking-tight text-gray-900
+Section label:    text-[10px] font-bold uppercase tracking-widest text-gray-400
+Sub-label:        text-[9px] font-bold uppercase tracking-widest text-gray-400
+KPI value (lg):   text-[22px] font-bold tabular-nums
+KPI value (md):   text-xl font-bold tabular-nums
+KPI value (sm):   text-sm font-bold tabular-nums
 Body text:        text-sm text-gray-700
 Small body:       text-xs text-gray-600
 Caption:          text-[10px] text-gray-400
 Mini caption:     text-[9px] text-gray-400
-Table header:     text-[9px] font-black uppercase tracking-widest text-gray-400
+Table header:     text-[9px] font-bold uppercase tracking-widest text-gray-400
 Table cell value: text-xs font-semibold text-gray-800
 Mono number:      font-mono tabular-nums
 ```
@@ -235,7 +235,7 @@ These patterns are BANNED from the codebase:
 ❌ rounded-2xl (except legacy EmptyState components — do not add new ones)
 ❌ border-gray-200 on new panels
 ❌ grid gap-3 for primary KPI display (use KpiStrip instead)
-❌ text-xl font-black (page hero must be text-2xl)
+❌ text-xl font-bold (page hero must be text-2xl)
 ❌ inline animate-pulse without using Skeleton component
 ❌ hardcoded hex colors in style=""
 ❌ text-violet-600 (use text-primary-600)

@@ -102,12 +102,12 @@ export function ExpenseForecastPanel() {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Gider Tahmini
           </div>
-          <div className="text-sm font-black text-[#0f172a] mt-0.5">
+          <div className="text-sm font-bold text-[#0f172a] mt-0.5">
             Sonraki Ay Projeksiyon
           </div>
         </div>
         {/* Forecast month chip */}
-        <span className="text-xs font-black px-3 py-1.5 rounded border bg-[#f8fafc] border-[#e8eaef] text-[#334155]">
+        <span className="text-xs font-bold px-3 py-1.5 rounded border bg-[#f8fafc] border-[#e8eaef] text-[#334155]">
           {report.forecast_month_label}
         </span>
       </div>
@@ -153,7 +153,7 @@ export function ExpenseForecastPanel() {
                 </td>
                 <td className="px-3 py-2 text-center">
                   {cat.anomaly_flag && (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-neg-light text-neg-text">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-neg-light text-neg-text">
                       Anomali
                     </span>
                   )}
@@ -164,11 +164,11 @@ export function ExpenseForecastPanel() {
           {/* Total row */}
           <tfoot>
             <tr className="border-t-2 border-[#e8eaef] bg-[#f8fafc]">
-              <td className="px-4 py-2 font-black text-[#0f172a]">Toplam</td>
+              <td className="px-4 py-2 font-bold text-[#0f172a]">Toplam</td>
               <td className="px-3 py-2 text-right tabular-nums font-bold text-[#334155]">
                 {fmtTRY(report.categories.reduce((s, c) => s + c.last_3m_avg, 0))}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums font-extrabold text-[#0f172a]">
+              <td className="px-3 py-2 text-right tabular-nums font-bold text-[#0f172a]">
                 {fmtTRY(report.total_forecast)}
               </td>
               <td colSpan={3} />

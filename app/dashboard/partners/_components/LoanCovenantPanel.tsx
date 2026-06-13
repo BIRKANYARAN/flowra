@@ -101,7 +101,7 @@ function GaugeBar({
     <div className={`border rounded px-4 py-3 ${colorClass}`}>
       <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1">{label}</div>
       <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-2xl font-extrabold tabular-nums leading-none">{value}</span>
+        <span className="text-2xl font-bold tabular-nums leading-none">{value}</span>
         <span className="text-xs font-semibold opacity-70">{statusLabel}</span>
       </div>
       <div className="h-1.5 bg-white/40 rounded-full overflow-hidden">
@@ -211,7 +211,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
           <div className="space-y-1">
             {critical_alerts.map((alert, i) => (
               <div key={i} className="flex items-start gap-2 text-[11px] text-neg-text">
-                <span className="shrink-0 font-black mt-px">{i + 1}.</span>
+                <span className="shrink-0 font-bold mt-px">{i + 1}.</span>
                 <span>{alert}</span>
               </div>
             ))}
@@ -247,7 +247,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
             Kovenan Risk Skoru
           </div>
           <div className="flex items-baseline gap-2 mb-1.5">
-            <span className="text-2xl font-extrabold tabular-nums leading-none">
+            <span className="text-2xl font-bold tabular-nums leading-none">
               {overall_covenant_risk_score.toFixed(0)}
             </span>
             <span className="text-xs font-semibold opacity-70">/ 100</span>
@@ -266,21 +266,21 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Borç</div>
-          <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_outstanding_loans_try, 0)}</div>
+          <div className="text-sm font-bold text-[#0f172a] tabular-nums">{fmtTRY(total_outstanding_loans_try, 0)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Yıllık Borç Servisi</div>
-          <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_annual_debt_service_try, 0)}</div>
+          <div className="text-sm font-bold text-[#0f172a] tabular-nums">{fmtTRY(total_annual_debt_service_try, 0)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
-          <div className={`text-sm font-extrabold tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
+          <div className={`text-sm font-bold tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_net_income_try, 0)}
           </div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">YTD EBITDA</div>
-          <div className={`text-sm font-extrabold tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
+          <div className={`text-sm font-bold tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_ebitda_try, 0)}
           </div>
         </div>
@@ -344,17 +344,17 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
                     {fmtTRY(t.annual_interest_try, 0)}
                   </td>
                   <td className="px-3 py-2 text-center">
-                    <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded tracking-wide ${dsrColor(t.dsr_status)}`}>
+                    <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded tracking-wide ${dsrColor(t.dsr_status)}`}>
                       {dsrLabel(t.dsr_status)}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-center">
-                    <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded tracking-wide ${icrColor(t.icr_status)}`}>
+                    <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded tracking-wide ${icrColor(t.icr_status)}`}>
                       {icrLabel(t.icr_status)}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-center">
-                    <span className={`text-[10px] font-black border px-2 py-0.5 rounded tabular-nums ${riskScoreColor(t.covenant_risk_score)}`}>
+                    <span className={`text-[10px] font-bold border px-2 py-0.5 rounded tabular-nums ${riskScoreColor(t.covenant_risk_score)}`}>
                       {t.covenant_risk_score.toFixed(0)}
                     </span>
                   </td>

@@ -92,7 +92,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#e8eaef]">
-        <h2 className="text-sm font-black text-[#1e293b]">Senaryo Analizi</h2>
+        <h2 className="text-sm font-bold text-[#1e293b]">Senaryo Analizi</h2>
         <p className="text-[10px] text-[#94a3b8] mt-0.5">
           Parametreleri değiştir — runway anında güncellenir
         </p>
@@ -105,7 +105,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>A — Tahsilat Oranı</label>
-            <span className="text-xs font-black text-brand-light">%{collectionPct}</span>
+            <span className="text-xs font-bold text-brand-light">%{collectionPct}</span>
           </div>
           <input
             type="range" min={0} max={100} step={5} value={collectionPct}
@@ -127,7 +127,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>B — Ek Finansman (₺)</label>
-            <span className="text-xs font-black text-brand-light">{fmt(extraLoan)}</span>
+            <span className="text-xs font-bold text-brand-light">{fmt(extraLoan)}</span>
           </div>
           <input
             type="range" min={0} max={Math.max(500_000, monthly_burn * 12)} step={10_000}
@@ -145,7 +145,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>C — Gider Kesintisi</label>
-            <span className="text-xs font-black text-brand-light">%{burnCutPct}</span>
+            <span className="text-xs font-bold text-brand-light">%{burnCutPct}</span>
           </div>
           <input
             type="range" min={0} max={50} step={5} value={burnCutPct}
@@ -181,7 +181,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
           return (
             <div key={s.label} className={`px-4 py-3 ${i === 3 ? 'col-span-2 sm:col-span-1' : ''}`}>
               <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
-              <div className={`text-base font-extrabold tabular-nums leading-tight ${tone}`}>
+              <div className={`text-base font-bold tabular-nums leading-tight ${tone}`}>
                 {runwayLabel(months)}
               </div>
               {s.delta && (

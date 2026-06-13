@@ -358,7 +358,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   <span>KDV</span>
                   <span className="font-mono font-semibold text-[#334155]">{fmt(kdvTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-black text-[#0f172a] pt-1 border-t border-[#e8eaef]">
+                <div className="flex justify-between text-sm font-bold text-[#0f172a] pt-1 border-t border-[#e8eaef]">
                   <span>TOPLAM</span>
                   <span className="font-mono">{fmt(grandTotal)}</span>
                 </div>

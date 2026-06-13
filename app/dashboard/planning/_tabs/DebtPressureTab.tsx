@@ -175,7 +175,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Borç</div>
-          <div className={`text-xl font-extrabold tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-bold tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">{tranches.length} aktif borç dilimi</div>
@@ -183,7 +183,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
-          <div className={`text-xl font-extrabold tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-bold tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">aylık nakit çıkışı · mevcut hızda</div>
@@ -191,7 +191,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">DSR (Borç/Gelir) <InfoTip k="DSR" /></div>
-          <div className={`text-xl font-extrabold tabular-nums ${dsrColor}`}>
+          <div className={`text-xl font-bold tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
           </div>
           <div className={`text-[9px] mt-0.5 font-semibold ${dsrColor}`}>{dsrLabel}</div>
@@ -206,7 +206,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
-              <div className={`text-xl font-extrabold tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-[#0f172a]'}`}>
+              <div className={`text-xl font-bold tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-[#0f172a]'}`}>
                 {nextDueDays !== null && nextDueDays <= 0 ? 'GECIKTI' : nextDueDays !== null ? `${nextDueDays}g` : '—'}
               </div>
               <div className="text-[9px] text-[#94a3b8] mt-0.5">{fmtDate(nextDue.due_date)}</div>
@@ -215,7 +215,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
               )}
             </>
           ) : (
-            <div className="text-xl font-black text-[#94a3b8]">—</div>
+            <div className="text-xl font-bold text-[#94a3b8]">—</div>
           )}
         </div>
       </div>
@@ -312,7 +312,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                           <div className="font-semibold text-[#1e293b]">{t.partner_name ?? 'Ortak'}</div>
                           <div className="text-[9px] text-[#94a3b8]">{fmtPct(share)} toplam</div>
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-extrabold text-[#0f172a]">
+                        <td className="px-4 py-3 text-right tabular-nums font-bold text-[#0f172a]">
                           {fmt(t.outstanding_try)}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">

@@ -74,7 +74,7 @@ function TrendBars({ months }: { months: MonthlyProformaStat[] }) {
         {months.map(mo => (
           <div key={mo.month} className="flex-1 text-center">
             {mo.win_rate_pct !== null ? (
-              <span className={`text-[9px] font-extrabold tabular-nums ${
+              <span className={`text-[9px] font-bold tabular-nums ${
                 mo.win_rate_pct >= 60 ? 'text-pos-text' : mo.win_rate_pct >= 40 ? 'text-warn-text' : 'text-neg'
               }`}>
                 %{mo.win_rate_pct.toFixed(0)}
@@ -108,7 +108,7 @@ function SizeTable({ buckets, total }: { buckets: SizeBucket[]; total: number })
         {buckets.map(b => (
           <div key={b.label} className={`grid grid-cols-3 px-3 py-2 border-b border-[#f1f5f9] last:border-b-0 ${b.count === 0 ? 'opacity-30' : ''}`}>
             <div className="text-[11px] font-semibold text-[#334155]">{b.label}</div>
-            <div className="text-right text-[11px] tabular-nums font-extrabold text-[#0f172a]">
+            <div className="text-right text-[11px] tabular-nums font-bold text-[#0f172a]">
               {b.count}
               {total > 0 && b.count > 0 && (
                 <span className="text-[9px] font-normal text-[#94a3b8] ml-1">
@@ -140,12 +140,12 @@ function TopProducts({ products }: { products: ProformaProductStat[] }) {
         {top5.map((p, i) => (
           <div key={p.product_id || p.product_name} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[9px] font-black text-[#94a3b8] tabular-nums w-3">{i + 1}</span>
+              <span className="text-[9px] font-bold text-[#94a3b8] tabular-nums w-3">{i + 1}</span>
               <span className="text-[11px] font-medium text-[#334155] truncate">{p.product_name || '(isimsiz)'}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-[10px] text-[#64748b] tabular-nums">{p.times_quoted}x</span>
-              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded tabular-nums ${
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded tabular-nums ${
                 p.win_rate_pct >= 60 ? 'bg-pos-light text-pos-text'
                 : p.win_rate_pct >= 40 ? 'bg-warn-light text-warn-text'
                 : p.times_converted > 0 ? 'bg-neg-light text-neg-text'
@@ -228,7 +228,7 @@ export function ProformaAnalyticsClient() {
         {summaryCards.map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
           </div>
         ))}

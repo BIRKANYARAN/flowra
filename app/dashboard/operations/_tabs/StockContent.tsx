@@ -149,17 +149,17 @@ export async function StockContent({ companyId, userId }: Props) {
             {/* Alert count badges */}
             <div className="flex items-center gap-2">
               {reorderReport.out_of_stock_count > 0 && (
-                <span className="text-[10px] font-black bg-neg-light text-neg-text px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-neg-light text-neg-text px-2 py-0.5 rounded">
                   {reorderReport.out_of_stock_count} Stok Bitti
                 </span>
               )}
               {reorderReport.critical_count > 0 && (
-                <span className="text-[10px] font-black bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
                   {reorderReport.critical_count} Kritik
                 </span>
               )}
               {reorderReport.low_count > 0 && (
-                <span className="text-[10px] font-black bg-warn-light text-warn-text px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-warn-light text-warn-text px-2 py-0.5 rounded">
                   {reorderReport.low_count} Düşük
                 </span>
               )}
@@ -247,12 +247,12 @@ export async function StockContent({ companyId, userId }: Props) {
             </div>
             <div className="flex items-center gap-2">
               {demandForecastReport.critical_stockout_count > 0 && (
-                <span className="text-[10px] font-black bg-neg-light text-neg-text px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-neg-light text-neg-text px-2 py-0.5 rounded">
                   {demandForecastReport.critical_stockout_count} Kritik Stok-out
                 </span>
               )}
               {demandForecastReport.needs_reorder_count > 0 && (
-                <span className="text-[10px] font-black bg-warn-light text-warn-text px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-warn-light text-warn-text px-2 py-0.5 rounded">
                   {demandForecastReport.needs_reorder_count} Sipariş Gerekli
                 </span>
               )}
@@ -330,7 +330,7 @@ export async function StockContent({ companyId, userId }: Props) {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
@@ -378,7 +378,7 @@ export async function StockContent({ companyId, userId }: Props) {
                   {' '}· Stok sayacı:{' '}
                   <span className="font-semibold">{item.legacy_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}</span>
                   {' '}· Fark:{' '}
-                  <span className={`font-black ${item.drift > 0 ? 'text-pos-text' : 'text-neg-text'}`}>
+                  <span className={`font-bold ${item.drift > 0 ? 'text-pos-text' : 'text-neg-text'}`}>
                     {item.drift > 0 ? '+' : ''}{item.drift.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
                   </span>
                 </span>
@@ -415,7 +415,7 @@ export async function StockContent({ companyId, userId }: Props) {
             ].map(b => (
               <div key={b.label} className="px-4 py-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{b.label}</div>
-                <div className={`text-base font-extrabold tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
+                <div className={`text-base font-bold tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
               </div>
             ))}
           </div>
@@ -504,13 +504,13 @@ export async function StockContent({ companyId, userId }: Props) {
                     <div className="flex items-center gap-4 text-right">
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Miktar</div>
-                        <div className="text-sm font-extrabold tabular-nums text-[#1e293b]">
+                        <div className="text-sm font-bold tabular-nums text-[#1e293b]">
                           {totalQty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {product.unit}
                         </div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Lot Değeri</div>
-                        <div className="text-sm font-extrabold tabular-nums text-brand">{fmtTRY(productValue)}</div>
+                        <div className="text-sm font-bold tabular-nums text-brand">{fmtTRY(productValue)}</div>
                       </div>
                     </div>
                   </div>

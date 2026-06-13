@@ -60,7 +60,7 @@ function StepIcon({ status }: { status: ChecklistStep['status'] }) {
   const { icon, cls } = map[status] ?? map.skipped
   return (
     <span
-      className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-black shrink-0 ${cls}`}
+      className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 ${cls}`}
     >
       {icon}
     </span>
@@ -148,7 +148,7 @@ function ReadinessBanner({
     return (
       <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-pos-light border border-pos-light">
         <div className="flex items-center gap-2">
-          <span className="text-pos-text text-base font-black">✓</span>
+          <span className="text-pos-text text-base font-bold">✓</span>
           <span className="text-sm font-bold text-pos-text">Dönem kapatılmaya hazır</span>
         </div>
         {canClose && (
@@ -166,7 +166,7 @@ function ReadinessBanner({
   if (readiness === 'blocked') {
     return (
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neg-light border border-neg-light">
-        <span className="text-neg-text text-base font-black">✗</span>
+        <span className="text-neg-text text-base font-bold">✗</span>
         <span className="text-sm font-bold text-neg-text">
           Dönemi kapatmak için engelleri giderin
         </span>
@@ -176,7 +176,7 @@ function ReadinessBanner({
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-warn-light border border-warn-light">
-      <span className="text-warn-text text-base font-black">!</span>
+      <span className="text-warn-text text-base font-bold">!</span>
       <span className="text-sm font-bold text-warn-text">
         Kontrol listesini tamamlayın (%80 gerekli)
       </span>
@@ -352,7 +352,7 @@ export function PeriodCloseChecklistClient({ companyId }: { companyId: string })
           <ul className="space-y-1">
             {checklist.blocking_failures.map(step => (
               <li key={step.id} className="text-[0.65rem] text-neg-text flex items-start gap-1.5">
-                <span className="font-black">✗</span>
+                <span className="font-bold">✗</span>
                 <span>{step.label}{step.detail ? ` — ${step.detail}` : ''}</span>
               </li>
             ))}

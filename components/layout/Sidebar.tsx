@@ -82,13 +82,13 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
               ) : (
-                <span className="text-white font-black text-xs">
+                <span className="text-white font-bold text-xs">
                   {displayName.slice(0, 2).toUpperCase()}
                 </span>
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-black text-sm leading-tight truncate text-white">{displayName}</div>
+              <div className="font-bold text-sm leading-tight truncate text-white">{displayName}</div>
               <div className="text-[10px] text-white/40 uppercase tracking-wide">
                 {hasMultiCompany ? `${companies.length} şirket ▾` : 'Flowra ERP'}
               </div>
@@ -119,7 +119,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
                   }`}
                 >
                   <div className="w-5 h-5 rounded bg-brand/25 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[9px] font-black text-brand-light">
+                    <span className="text-[9px] font-bold text-brand-light">
                       {(c.companyName ?? 'Ş').slice(0, 2).toUpperCase()}
                     </span>
                   </div>

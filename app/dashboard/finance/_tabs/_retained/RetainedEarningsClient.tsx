@@ -54,7 +54,7 @@ function KpiCard({ label, value, tone }: { label: string; value: string; tone?: 
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-lg font-extrabold tabular-nums leading-none ${color}`}>{value}</div>
+      <div className={`text-lg font-bold tabular-nums leading-none ${color}`}>{value}</div>
     </div>
   )
 }
@@ -82,12 +82,12 @@ function TableRow({ line }: { line: RetainedEarningsLine }) {
       <td className="px-3 py-2.5 text-xs tabular-nums text-right text-[#64748b]">
         {line.compensation_try > 0 ? `(${fmtTRY(line.compensation_try, 0)})` : '—'}
       </td>
-      <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-black ${
+      <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-bold ${
         line.is_deficit ? 'text-[#dc2626]' : 'text-[#0f172a]'
       }`}>
         {fmtTRY(line.closing_try, 0)}
         {line.is_deficit && (
-          <span className="ml-1 text-[9px] font-black text-[#dc2626] uppercase">ZARAR</span>
+          <span className="ml-1 text-[9px] font-bold text-[#dc2626] uppercase">ZARAR</span>
         )}
       </td>
     </tr>
@@ -215,7 +215,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
             ? 'bg-[#fffbeb] border-[#fde68a] text-[#92400e]'
             : 'bg-[#fef2f2] border-[#fecaca] text-[#dc2626]'
         }`}>
-          <span className="font-black">Özkaynak Kapsama Oranı:</span>
+          <span className="font-bold">Özkaynak Kapsama Oranı:</span>
           <span className="tabular-nums">{data.equity_coverage_ratio.toFixed(2)}x</span>
           <span className="text-[10px] opacity-75">
             {data.equity_coverage_ratio >= 1 ? '— Borçlar özkaynak ile karşılanıyor' :
@@ -275,11 +275,11 @@ export function RetainedEarningsClient({ companyId }: Props) {
               {data.lines.length > 1 && (
                 <tfoot>
                   <tr className="border-t-2 border-[#e8eaef] bg-[#f8fafc]">
-                    <td className="px-3 py-2.5 text-xs font-black text-[#0f172a]">Toplam</td>
+                    <td className="px-3 py-2.5 text-xs font-bold text-[#0f172a]">Toplam</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums text-right font-bold text-[#475569]">
                       {fmtTRY(data.opening_total, 0)}
                     </td>
-                    <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-black ${
+                    <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-bold ${
                       data.total_net_income >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'
                     }`}>
                       {fmtTRY(data.total_net_income, 0)}
@@ -291,7 +291,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
                       {data.total_dividends > 0 ? `(${fmtTRY(data.total_dividends, 0)})` : '—'}
                     </td>
                     <td className="px-3 py-2.5" />
-                    <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-black ${
+                    <td className={`px-3 py-2.5 text-xs tabular-nums text-right font-bold ${
                       data.closing_total < 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'
                     }`}>
                       {fmtTRY(data.closing_total, 0)}

@@ -409,7 +409,7 @@ export function SalesTable({ rows }: Props) {
           ].map(card => (
             <div key={card.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-extrabold tabular-nums ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-bold tabular-nums ${card.color}`}>{card.value}</div>
             </div>
           ))}
         </div>
@@ -440,7 +440,7 @@ export function SalesTable({ rows }: Props) {
         ) : (
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="grid grid-cols-12 text-[0.65rem] font-black text-[#94a3b8] px-4 py-2 border-b border-[#e8eaef] uppercase tracking-widest">
+            <div className="grid grid-cols-12 text-[0.65rem] font-bold text-[#94a3b8] px-4 py-2 border-b border-[#e8eaef] uppercase tracking-widest">
               <div className="col-span-3">Müşteri</div>
               <div className="col-span-2">Proforma</div>
               <div className="col-span-2">Tarih</div>

@@ -84,7 +84,7 @@ export default function SignoffPanel({ snapshotId, signoffs: initial, isImmutabl
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#f1f5f9] flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-black text-[#334155]">
+                <span className="text-xs font-bold text-[#334155]">
                   {s.partner_name.slice(0, 2).toUpperCase()}
                 </span>
               </div>

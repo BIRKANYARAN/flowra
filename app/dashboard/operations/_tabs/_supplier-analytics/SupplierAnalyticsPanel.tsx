@@ -140,7 +140,7 @@ export function SupplierAnalyticsPanel() {
                 {CONCENTRATION_LABELS[card.badge]}
               </span>
             ) : (
-              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>
+              <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>
                 {card.value}
               </div>
             )}
@@ -184,7 +184,7 @@ export function SupplierAnalyticsPanel() {
                   <td className="py-1.5 px-2 text-right tabular-nums text-[#64748b] text-xs font-semibold">
                     {report.aging.reduce((s, b) => s + b.count, 0)}
                   </td>
-                  <td className="py-1.5 pl-2 text-right tabular-nums text-xs font-black text-[#1e293b]">
+                  <td className="py-1.5 pl-2 text-right tabular-nums text-xs font-bold text-[#1e293b]">
                     {fmtTRY(report.total_payables_try)}
                   </td>
                 </tr>

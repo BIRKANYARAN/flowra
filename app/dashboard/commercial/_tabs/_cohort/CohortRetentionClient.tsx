@@ -209,7 +209,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             3 Aylık Ort. Tutma
           </div>
-          <div className={`text-lg font-extrabold tabular-nums leading-none ${
+          <div className={`text-lg font-bold tabular-nums leading-none ${
             report.overall_avg_3m_retention_pct >= 60
               ? 'text-emerald-700'
               : report.overall_avg_3m_retention_pct >= 40
@@ -225,7 +225,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Ort. Aylık Churn
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {fmtPct(report.churn_rate_pct)}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -236,7 +236,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Toplam Kohort
           </div>
-          <div className="text-lg font-extrabold tabular-nums leading-none text-[#0f172a]">
+          <div className="text-lg font-bold tabular-nums leading-none text-[#0f172a]">
             {report.cohorts.length}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">

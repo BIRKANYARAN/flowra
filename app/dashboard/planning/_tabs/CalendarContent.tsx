@@ -142,7 +142,7 @@ function MonthCard({
       <div className="p-3">
         <div className="flex items-start justify-between gap-1">
           <div>
-            <div className="text-xs font-black text-[#0f172a]">{month.month_label}</div>
+            <div className="text-xs font-bold text-[#0f172a]">{month.month_label}</div>
             {month.event_count === 0 ? (
               <div className="text-[10px] text-[#cbd5e1] mt-0.5">Etkinlik yok</div>
             ) : (
@@ -271,7 +271,7 @@ export function CalendarContent({ companyId }: Props) {
       {/* Header + Year Selector */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-sm font-black text-[#0f172a]">Yıllık Finansal Takvim</h2>
+          <h2 className="text-sm font-bold text-[#0f172a]">Yıllık Finansal Takvim</h2>
           <p className="text-xs text-[#94a3b8] mt-0.5">Tüm vergi, muhasebe ve ortak yükümlülükleri</p>
         </div>
         <div className="flex items-center gap-2">

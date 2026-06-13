@@ -230,7 +230,7 @@ export function ContributionTimelineTab({ companyId }: Props) {
       {/* TTK 588 risk banner */}
       {hasTtk588Risk && (
         <div className="rounded-lg border border-neg-text/30 bg-neg-light px-4 py-3 space-y-1.5">
-          <p className="text-xs font-black text-neg-text uppercase tracking-wide">
+          <p className="text-xs font-bold text-neg-text uppercase tracking-wide">
             TTK 588 — Yasal Faiz Riski
           </p>
           <p className="text-xs text-neg-text">

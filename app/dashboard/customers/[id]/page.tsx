@@ -184,7 +184,7 @@ export default function CustomerDetailPage() {
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-lg font-extrabold tabular-nums ${c.cls ?? ''}`}>{c.value}</div>
+            <div className={`text-lg font-bold tabular-nums ${c.cls ?? ''}`}>{c.value}</div>
           </div>
         ))}
       </div>

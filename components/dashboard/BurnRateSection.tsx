@@ -152,7 +152,7 @@ export function BurnRateSection() {
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {kpi.label}
             </div>
-            <div className={`text-base font-extrabold tabular-nums leading-none ${kpi.tone}`}>
+            <div className={`text-base font-bold tabular-nums leading-none ${kpi.tone}`}>
               {kpi.value}
             </div>
           </div>
@@ -197,7 +197,7 @@ export function BurnRateSection() {
             Tahmini Runway
           </span>
           <span className={[
-            'text-sm font-extrabold tabular-nums',
+            'text-sm font-bold tabular-nums',
             runway_estimate_months <= 2
               ? 'text-neg'
               : runway_estimate_months <= 6

@@ -43,7 +43,7 @@ function StepIcon({ status }: { status: WizardStep['status'] }) {
   }
   const { icon, cls } = map[status]
   return (
-    <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-black shrink-0 ${cls}`}>
+    <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 ${cls}`}>
       {icon}
     </span>
   )
@@ -351,7 +351,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
         {/* Phase title */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-xs font-black text-[#0f172a]">{currentPhaseData.label}</div>
+            <div className="text-xs font-bold text-[#0f172a]">{currentPhaseData.label}</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">
               {currentPhaseData.blocking_failures > 0
                 ? `${currentPhaseData.blocking_failures} zorunlu adım başarısız`
@@ -389,7 +389,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
               </div>
             ) : (
               <div className="rounded border border-[#e8eaef] p-4 space-y-3">
-                <div className="text-xs font-black text-[#0f172a]">Nihai Onay</div>
+                <div className="text-xs font-bold text-[#0f172a]">Nihai Onay</div>
 
                 {/* Close note */}
                 <div>
@@ -429,7 +429,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
                 <button
                   onClick={handlePeriodClose}
                   disabled={!cfoSignOff || !effectiveCanClose || isClosing}
-                  className="w-full px-4 py-2.5 rounded bg-neg text-white text-xs font-black hover:bg-neg-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-full px-4 py-2.5 rounded bg-neg text-white text-xs font-bold hover:bg-neg-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   {isClosing
                     ? 'Kapatılıyor…'

@@ -142,7 +142,7 @@ export async function ProformasContent({ companyId }: Props) {
             ].map((card, i) => (
               <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
               </div>
             ))}
@@ -166,7 +166,7 @@ export async function ProformasContent({ companyId }: Props) {
                 return (
                   <div key={step.label} className="flex-1 min-w-0">
                     <div className={`h-7 rounded flex items-center justify-center ${step.color}`}>
-                      <span className={`text-[10px] font-extrabold tabular-nums ${step.textColor}`}>{step.count}</span>
+                      <span className={`text-[10px] font-bold tabular-nums ${step.textColor}`}>{step.count}</span>
                     </div>
                     <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor} truncate`}>{step.label}</div>
                   </div>
@@ -188,7 +188,7 @@ export async function ProformasContent({ companyId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
             </div>
           ))}
@@ -252,7 +252,7 @@ export async function ProformasContent({ companyId }: Props) {
                 <div key={step.label} className="flex-1 min-w-0">
                   <div className={`h-8 rounded flex items-center justify-center ${step.color}`}
                     style={{ minWidth: `${widthPct}%` }}>
-                    <span className={`text-[10px] font-extrabold tabular-nums ${step.textColor}`}>{step.count}</span>
+                    <span className={`text-[10px] font-bold tabular-nums ${step.textColor}`}>{step.count}</span>
                   </div>
                   <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor}`}>{step.label}</div>
                 </div>
@@ -262,7 +262,7 @@ export async function ProformasContent({ companyId }: Props) {
           {winRate !== null && (
             <div className="mt-3 flex items-center gap-3 text-[10px] text-[#64748b] border-t border-[#f1f5f9] pt-2.5">
               <span>Karar verilen teklifler: {decided}</span>
-              <span className={`font-black ${winRate >= 60 ? 'text-pos-text' : winRate >= 40 ? 'text-warn-text' : 'text-neg'}`}>
+              <span className={`font-bold ${winRate >= 60 ? 'text-pos-text' : winRate >= 40 ? 'text-warn-text' : 'text-neg'}`}>
                 Kazanma Oranı: %{winRate}
               </span>
               {openCount > 0 && (
@@ -336,7 +336,7 @@ export async function ProformasContent({ companyId }: Props) {
                   <div className="col-span-3 text-xs font-medium text-[#1e293b] truncate">{p.customer_name || '—'}</div>
                   <div className="col-span-2"><StatusBadge status={p.status || 'draft'} /></div>
                   <div className="col-span-2 text-xs text-[#64748b]">{displayDate}</div>
-                  <div className="col-span-2 text-right font-black text-xs tabular-nums">{displayTotal}</div>
+                  <div className="col-span-2 text-right font-bold text-xs tabular-nums">{displayTotal}</div>
                 </Link>
               )
             })}

@@ -257,7 +257,7 @@ export function TrialBalanceTab() {
         ].map(k => (
           <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
-            <div className={`text-xs font-extrabold tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
+            <div className={`text-xs font-bold tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
               {fmtTRY(k.value)}
             </div>
           </div>
@@ -289,11 +289,11 @@ export function TrialBalanceTab() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-[#f1f5f9]">
-                        <th className="px-4 py-2 text-left   text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap Kodu</th>
-                        <th className="px-4 py-2 text-left   text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap Adı</th>
-                        <th className="px-4 py-2 text-right  text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Borç</th>
-                        <th className="px-4 py-2 text-right  text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Alacak</th>
-                        <th className="px-4 py-2 text-right  text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
+                        <th className="px-4 py-2 text-left   text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap Kodu</th>
+                        <th className="px-4 py-2 text-left   text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap Adı</th>
+                        <th className="px-4 py-2 text-right  text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Borç</th>
+                        <th className="px-4 py-2 text-right  text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Alacak</th>
+                        <th className="px-4 py-2 text-right  text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f1f5f9]">
@@ -321,10 +321,10 @@ export function TrialBalanceTab() {
                         <td colSpan={2} className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
                           Alt Toplam
                         </td>
-                        <td className="px-4 py-2 text-right font-mono font-black text-[#0f172a] tabular-nums">
+                        <td className="px-4 py-2 text-right font-mono font-bold text-[#0f172a] tabular-nums">
                           {fmtTRY(grpTotal.total_debits)}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono font-black text-[#0f172a] tabular-nums">
+                        <td className="px-4 py-2 text-right font-mono font-bold text-[#0f172a] tabular-nums">
                           {fmtTRY(grpTotal.total_credits)}
                         </td>
                         <td className="px-4 py-2" />
@@ -342,11 +342,11 @@ export function TrialBalanceTab() {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
-                <th className="px-4 py-2.5 text-left  text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap Kodu</th>
-                <th className="px-4 py-2.5 text-left  text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap Adı</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Borç</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Alacak</th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
+                <th className="px-4 py-2.5 text-left  text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap Kodu</th>
+                <th className="px-4 py-2.5 text-left  text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap Adı</th>
+                <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Borç</th>
+                <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Alacak</th>
+                <th className="px-4 py-2.5 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -385,7 +385,7 @@ export function TrialBalanceTab() {
       <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">TOPLAM</span>
-          <div className="flex items-center gap-6 tabular-nums text-xs font-black">
+          <div className="flex items-center gap-6 tabular-nums text-xs font-bold">
             <div>
               <span className="text-[#94a3b8] font-semibold mr-1.5">Borç:</span>
               <span className="text-[#0f172a]">{fmtTRY(validation.total_debits)}</span>

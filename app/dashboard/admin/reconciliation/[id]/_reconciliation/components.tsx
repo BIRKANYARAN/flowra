@@ -28,11 +28,11 @@ export function SectionBlock({
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
         <div className="w-6 h-6 rounded bg-[#0f172a] flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] font-black text-white">
+          <span className="text-[10px] font-bold text-white">
             {String(number).padStart(2, '0')}
           </span>
         </div>
-        <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">{title}</span>
+        <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">{title}</span>
       </div>
       <div className="px-5 py-4">{children}</div>
     </div>
@@ -64,7 +64,7 @@ export function SimpleTable({
         <thead>
           <tr className="bg-[#0f172a]">
             {cols.map((c, i) => (
-              <th key={i} className="px-3 py-2 text-left text-[10px] font-black text-white uppercase tracking-wide first:rounded-tl last:rounded-tr">
+              <th key={i} className="px-3 py-2 text-left text-[10px] font-bold text-white uppercase tracking-wide first:rounded-tl last:rounded-tr">
                 {c}
               </th>
             ))}

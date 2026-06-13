@@ -159,11 +159,11 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         <div className="p-3">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Müşteri</div>
-          <div className="text-xl font-extrabold tabular-nums text-[#0f172a] leading-none">{report.total_customers}</div>
+          <div className="text-xl font-bold tabular-nums text-[#0f172a] leading-none">{report.total_customers}</div>
         </div>
         <div className="p-3">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Ort. Kredi Skoru</div>
-          <div className={`text-xl font-extrabold tabular-nums leading-none ${
+          <div className={`text-xl font-bold tabular-nums leading-none ${
             report.avg_credit_score >= 65 ? 'text-emerald-700'
             : report.avg_credit_score >= 50 ? 'text-yellow-700'
             : 'text-red-700'
@@ -173,7 +173,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
         </div>
         <div className="p-3">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Yüksek Risk</div>
-          <div className={`text-xl font-extrabold tabular-nums leading-none ${
+          <div className={`text-xl font-bold tabular-nums leading-none ${
             report.high_risk_customers.length > 0 ? 'text-red-700' : 'text-emerald-700'
           }`}>
             {report.high_risk_customers.length > 0 ? report.high_risk_customers.length : '—'}
@@ -182,7 +182,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
         </div>
         <div className="p-3">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Kredi Limiti</div>
-          <div className="text-xl font-extrabold tabular-nums leading-none text-brand">
+          <div className="text-xl font-bold tabular-nums leading-none text-brand">
             {fmtTRY(report.total_recommended_limits_try)}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -275,7 +275,7 @@ export default function CustomerCreditClient({ companyId: _companyId }: Props) {
                     </div>
                   </td>
                   <td className="px-3 py-2 text-center">
-                    <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">{c.credit_score}</div>
+                    <div className="text-sm font-bold tabular-nums text-[#0f172a]">{c.credit_score}</div>
                     <div className="w-16 h-1 bg-[#f1f5f9] rounded-full overflow-hidden mx-auto mt-1">
                       <div
                         className={`h-full rounded-full ${GRADE_CFG[c.credit_grade].bar}`}

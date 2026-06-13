@@ -245,7 +245,7 @@ export async function CustomersContent({ companyId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
           ))}
@@ -268,7 +268,7 @@ export async function CustomersContent({ companyId }: Props) {
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-              <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
           ))}
@@ -350,7 +350,7 @@ export async function CustomersContent({ companyId }: Props) {
                 <div key={r.customer_name} className="flex items-center gap-4 px-4 py-3 hover:bg-[#f8fafc]/40">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center"
                     style={{ borderColor: r.risk_level === 'high' ? '#f87171' : r.risk_level === 'medium' ? '#fb923c' : '#34d399' }}>
-                    <span className={`text-[11px] font-extrabold tabular-nums ${cfg.text}`}>{r.risk_score}</span>
+                    <span className={`text-[11px] font-bold tabular-nums ${cfg.text}`}>{r.risk_score}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

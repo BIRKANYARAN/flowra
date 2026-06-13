@@ -70,7 +70,7 @@ function ScoreMeter({ score }: { score: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-extrabold tabular-nums" style={{ color }}>{score.toFixed(1)}</span>
+          <span className="text-xl font-bold tabular-nums" style={{ color }}>{score.toFixed(1)}</span>
           <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide">/100</span>
         </div>
       </div>
@@ -104,7 +104,7 @@ function RatioRow({ label, value, benchmark, format = 'ratio' }: RatioRowProps) 
         <span className="text-xs font-semibold text-[#334155]">{label}</span>
         <span className="ml-2 text-[10px] text-[#94a3b8]">{benchmark}</span>
       </div>
-      <span className={`text-sm font-extrabold tabular-nums ${value === null ? 'text-[#94a3b8]' : 'text-[#0f172a]'}`}>
+      <span className={`text-sm font-bold tabular-nums ${value === null ? 'text-[#94a3b8]' : 'text-[#0f172a]'}`}>
         {fmt(value, format)}
       </span>
     </div>
@@ -197,13 +197,13 @@ export function BalanceRatiosClient({ companyId }: Props) {
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Cari Oran</div>
-            <span className="text-base font-extrabold tabular-nums text-[#0f172a]">
+            <span className="text-base font-bold tabular-nums text-[#0f172a]">
               {liquidity.current_ratio !== null ? liquidity.current_ratio.toFixed(2) : '—'}
             </span>
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Borç/Özsermaye</div>
-            <span className="text-base font-extrabold tabular-nums text-[#0f172a]">
+            <span className="text-base font-bold tabular-nums text-[#0f172a]">
               {solvency.debt_to_equity !== null ? solvency.debt_to_equity.toFixed(2) : '—'}
             </span>
           </div>

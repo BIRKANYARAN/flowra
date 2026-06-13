@@ -169,7 +169,7 @@ export function TaxCalendarClient({ companyId }: Props) {
         <KpiCell
           label="Vadesi Geçmiş"
           value={
-            <span className="text-[#dc2626] font-black">
+            <span className="text-[#dc2626] font-bold">
               {report.overdue_count > 0
                 ? `${report.overdue_count} yükümlülük · ${fmtTRY(report.total_overdue_try)}`
                 : 'Yok'
@@ -181,7 +181,7 @@ export function TaxCalendarClient({ companyId }: Props) {
         <KpiCell
           label="Yaklaşan (14 Gün)"
           value={
-            <span className="text-[#d97706] font-black">
+            <span className="text-[#d97706] font-bold">
               {report.due_soon_count > 0
                 ? `${report.due_soon_count} yükümlülük · ${fmtTRY(report.total_due_soon_try)}`
                 : 'Yok'
@@ -193,7 +193,7 @@ export function TaxCalendarClient({ companyId }: Props) {
         <KpiCell
           label="Uyum Skoru"
           value={
-            <span className={`font-black ${complianceScoreColor(report.compliance_score)}`}>
+            <span className={`font-bold ${complianceScoreColor(report.compliance_score)}`}>
               {report.compliance_score}/100
             </span>
           }
@@ -252,7 +252,7 @@ export function TaxCalendarClient({ companyId }: Props) {
                     const isOverdue  = ob.status === 'overdue'
                     const isDueSoon  = ob.status === 'due_soon'
                     const rowBg      = isOverdue ? 'bg-[#fee2e2]/20' : isDueSoon ? 'bg-[#ffedd5]/20' : ''
-                    const dateCls    = isOverdue ? 'text-[#991b1b] font-black' : isDueSoon ? 'text-[#9a3412] font-bold' : 'text-[#64748b]'
+                    const dateCls    = isOverdue ? 'text-[#991b1b] font-bold' : isDueSoon ? 'text-[#9a3412] font-bold' : 'text-[#64748b]'
 
                     return (
                       <div

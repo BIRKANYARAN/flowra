@@ -94,7 +94,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
         {/* Geciken */}
         <div className="px-4 py-4">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Geciken</div>
-          <div className={`text-xl font-black ${m.overdue_try > 0 ? 'text-[#ef4444]' : 'text-[#22c55e]'}`}>
+          <div className={`text-xl font-bold ${m.overdue_try > 0 ? 'text-[#ef4444]' : 'text-[#22c55e]'}`}>
             ₺{(m.overdue_try / 1000).toFixed(0)}K
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">{m.overdue_collections} müşteri</div>
@@ -103,7 +103,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
         {/* Kritik Stok */}
         <div className="px-4 py-4">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Kritik</div>
-          <div className={`text-xl font-black ${m.critical_stock_items > 0 ? 'text-[#f97316]' : 'text-[#22c55e]'}`}>
+          <div className={`text-xl font-bold ${m.critical_stock_items > 0 ? 'text-[#f97316]' : 'text-[#22c55e]'}`}>
             {m.critical_stock_items} Stok
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">Ürün uyarı</div>
@@ -112,7 +112,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
         {/* Doluluk */}
         <div className="px-4 py-4">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Doluluk</div>
-          <div className={`text-xl font-black ${m.fill_rate_pct >= 95 ? 'text-[#22c55e]' : m.fill_rate_pct >= 80 ? 'text-[#eab308]' : 'text-[#ef4444]'}`}>
+          <div className={`text-xl font-bold ${m.fill_rate_pct >= 95 ? 'text-[#22c55e]' : m.fill_rate_pct >= 80 ? 'text-[#eab308]' : 'text-[#ef4444]'}`}>
             %{m.fill_rate_pct.toFixed(1)}
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">Oranı</div>
@@ -121,7 +121,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
         {/* Açık Görev */}
         <div className="px-4 py-4 col-span-2 sm:col-span-1">
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Açık</div>
-          <div className={`text-xl font-black ${m.open_tasks > 0 ? 'text-[#6366f1]' : 'text-[#22c55e]'}`}>
+          <div className={`text-xl font-bold ${m.open_tasks > 0 ? 'text-[#6366f1]' : 'text-[#22c55e]'}`}>
             {m.open_tasks} Görev
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">Bekliyor</div>

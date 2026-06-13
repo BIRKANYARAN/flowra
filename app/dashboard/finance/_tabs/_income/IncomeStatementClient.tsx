@@ -95,8 +95,8 @@ function StatementRow({
   const isSubtotal   = line.is_subtotal
   const indentClass  = line.indent_level === 1 ? 'pl-6' : ''
   const rowBg        = isSubtotal ? 'bg-[#f8fafc] border-t border-[#e8eaef]' : 'hover:bg-[#fafafa]'
-  const fontClass    = isSubtotal ? 'font-black text-[#0f172a]' : 'font-medium text-[#334155]'
-  const valueFont    = isSubtotal ? 'font-black' : 'font-mono'
+  const fontClass    = isSubtotal ? 'font-bold text-[#0f172a]' : 'font-medium text-[#334155]'
+  const valueFont    = isSubtotal ? 'font-bold' : 'font-mono'
   const netColor     =
     line.current_try < 0
       ? 'text-[#dc2626]'
@@ -166,7 +166,7 @@ function MarginSummary({ statement }: { statement: IncomeStatement }) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
             {m.label}
           </div>
-          <div className={`text-sm font-extrabold tabular-nums ${
+          <div className={`text-sm font-bold tabular-nums ${
             m.label === 'Efektif Vergi'
               ? 'text-[#64748b]'
               : m.ok

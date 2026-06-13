@@ -105,7 +105,7 @@ function KpiTile({
   return (
     <div className={`bg-white border border-[#e8eaef] border-l-4 ${accentCls} rounded px-4 py-4 shadow-sm`}>
       <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className="text-2xl font-extrabold tabular-nums text-[#0f172a] mb-1">
+      <div className="text-2xl font-bold tabular-nums text-[#0f172a] mb-1">
         {fmtPct(value)}
       </div>
       <div className="text-[10px] text-[#94a3b8]">
@@ -397,7 +397,7 @@ export function MarginTrendClient({ companyId }: Props) {
             <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
               <div className="text-[9px] font-bold uppercase tracking-wider text-amber-600 mb-1">En İyi Ay</div>
               <div className="text-[13px] font-bold text-amber-900">{r.best_month.year_month}</div>
-              <div className="text-xl font-black text-amber-700">{fmtPct(r.best_month.gross_margin_pct)}</div>
+              <div className="text-xl font-bold text-amber-700">{fmtPct(r.best_month.gross_margin_pct)}</div>
               <div className="text-[9px] text-amber-600 mt-0.5">brüt marj</div>
             </div>
           )}
@@ -405,7 +405,7 @@ export function MarginTrendClient({ companyId }: Props) {
             <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
               <div className="text-[9px] font-bold uppercase tracking-wider text-red-600 mb-1">En Kötü Ay</div>
               <div className="text-[13px] font-bold text-red-900">{r.worst_month.year_month}</div>
-              <div className="text-xl font-black text-red-700">{fmtPct(r.worst_month.gross_margin_pct)}</div>
+              <div className="text-xl font-bold text-red-700">{fmtPct(r.worst_month.gross_margin_pct)}</div>
               <div className="text-[9px] text-red-600 mt-0.5">brüt marj</div>
             </div>
           )}

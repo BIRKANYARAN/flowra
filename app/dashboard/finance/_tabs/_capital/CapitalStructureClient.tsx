@@ -97,7 +97,7 @@ function SummaryCard({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-extrabold tabular-nums leading-none ${valueColor}`}>{value}</div>
+      <div className={`text-xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
     </div>
   )
@@ -356,7 +356,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Ağırlıklı Ort. Borç Maliyeti (WACD)
             </div>
-            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-xl font-bold tabular-nums text-[#0f172a]">
               {data.wacd != null ? fmtPct(data.wacd) : '—'}
             </div>
             <div className="text-[9px] text-[#94a3b8] mt-0.5">Yıllık faiz oranı</div>
@@ -365,7 +365,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Ortak Kredileri
             </div>
-            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-xl font-bold tabular-nums text-[#0f172a]">
               {fmtTRY(cs.partner_loans)}
             </div>
             <div className="text-[9px] text-[#94a3b8] mt-0.5">Toplam bakiye</div>
@@ -374,7 +374,7 @@ export function CapitalStructureClient({ companyId }: Props) {
             <div className="text-[0.6rem] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">
               Yıllık Faiz Gideri
             </div>
-            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-xl font-bold tabular-nums text-[#0f172a]">
               {fmtTRY(ds.annual_interest)}
             </div>
             <div className="text-[9px] text-[#94a3b8] mt-0.5">Tahmini yıllık maliyet</div>

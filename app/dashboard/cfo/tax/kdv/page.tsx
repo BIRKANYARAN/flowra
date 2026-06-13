@@ -139,10 +139,10 @@ export default async function KdvPage({
           : 'bg-pos-light border-pos-light text-pos-text'
       }`}>
         <span>
-          <span className="font-black">Beyan tarihi: </span>
+          <span className="font-bold">Beyan tarihi: </span>
           {fmtDate(kdv.filing_due_date)}
         </span>
-        <span className={`font-black text-sm ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
+        <span className={`font-bold text-sm ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
           {isPayable ? 'Ödenecek' : 'İade / Devir'}
         </span>
       </div>
@@ -157,7 +157,7 @@ export default async function KdvPage({
         <div className="px-4 py-3 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#64748b]">Satış KDV (Hesaplanan)</span>
-            <span className="tabular-nums text-sm font-black text-warn">{fmt(kdv.output_vat_try)}</span>
+            <span className="tabular-nums text-sm font-bold text-warn">{fmt(kdv.output_vat_try)}</span>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export default async function KdvPage({
           </div>
           <div className="flex items-center justify-between border-t border-[#e8eaef] pt-1.5">
             <span className="text-xs font-semibold text-[#334155]">Toplam İndirilecek KDV</span>
-            <span className="tabular-nums text-sm font-black text-pos-text">
+            <span className="tabular-nums text-sm font-bold text-pos-text">
               {fmt(kdv.input_vat_try)}
             </span>
           </div>
@@ -182,12 +182,12 @@ export default async function KdvPage({
         <div className={`px-4 py-4 border-t-2 ${isPayable ? 'bg-warn-light border-warn/20' : 'bg-pos-light border-pos-light'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-black text-[#0f172a]">Net KDV</div>
+              <div className="text-xs font-bold text-[#0f172a]">Net KDV</div>
               <div className={`text-[10px] font-semibold mt-0.5 ${isPayable ? 'text-warn' : 'text-pos-text'}`}>
                 {isPayable ? '⬆ Ödenecek (beyan döneminde)' : '⬇ Sonraki döneme devir'}
               </div>
             </div>
-            <div className={`text-2xl font-extrabold tabular-nums ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
+            <div className={`text-2xl font-bold tabular-nums ${isPayable ? 'text-warn-text' : 'text-pos-text'}`}>
               {fmt(Math.abs(kdv.net_vat_try))}
             </div>
           </div>
@@ -216,7 +216,7 @@ export default async function KdvPage({
                   <td className="px-4 py-2.5 text-right tabular-nums font-bold text-warn-text">{fmt(row.vat_try)}</td>
                 </tr>
               ))}
-              <tr className="bg-[#f8fafc] font-black border-t border-[#e8eaef]">
+              <tr className="bg-[#f8fafc] font-bold border-t border-[#e8eaef]">
                 <td className="px-4 py-2.5 text-[#334155]">Toplam</td>
                 <td className="px-4 py-2.5 text-right tabular-nums text-[#0f172a]">
                   {fmt(kdv.breakdown.vat_rate_summary.reduce((s, r) => s + r.base_try, 0))}
@@ -234,7 +234,7 @@ export default async function KdvPage({
       <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
         <span className="font-bold">KDV Formülü:</span>{' '}
         Hesaplanan KDV ({fmt(kdv.output_vat_try)}) − İndirilecek KDV ({fmt(kdv.input_vat_try)}) ={' '}
-        <span className="font-black">{fmt(Math.abs(kdv.net_vat_try))} {isPayable ? 'Ödenecek' : 'Devir'}</span>
+        <span className="font-bold">{fmt(Math.abs(kdv.net_vat_try))} {isPayable ? 'Ödenecek' : 'Devir'}</span>
         {' '}· Beyan: {fmtDate(kdv.filing_due_date)}
       </div>
 

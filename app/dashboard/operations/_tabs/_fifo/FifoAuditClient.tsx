@@ -131,11 +131,11 @@ export function FifoAuditClient({ companyId }: Props) {
 
       {/* Integrity score + grade */}
       <div className={`px-5 py-4 border-b border-[#e8eaef] flex items-center gap-5 ${gradeBg(audit.grade)}`}>
-        <div className={`text-5xl font-black leading-none tabular-nums ${gradeColor(audit.grade)}`}>
+        <div className={`text-5xl font-bold leading-none tabular-nums ${gradeColor(audit.grade)}`}>
           {audit.grade}
         </div>
         <div>
-          <div className={`text-xl font-extrabold tabular-nums leading-none ${gradeColor(audit.grade)}`}>
+          <div className={`text-xl font-bold tabular-nums leading-none ${gradeColor(audit.grade)}`}>
             {audit.integrity_score}<span className="text-sm font-semibold ml-0.5">/ 100</span>
           </div>
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mt-1">
@@ -148,24 +148,24 @@ export function FifoAuditClient({ companyId }: Props) {
             <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Toplam Lot</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-black text-pos-text tabular-nums">{audit.clean_lots}</div>
+            <div className="text-lg font-bold text-pos-text tabular-nums">{audit.clean_lots}</div>
             <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Temiz</div>
           </div>
           {audit.over_consumed_lots > 0 && (
             <div className="text-center">
-              <div className="text-lg font-black text-neg tabular-nums">{audit.over_consumed_lots}</div>
+              <div className="text-lg font-bold text-neg tabular-nums">{audit.over_consumed_lots}</div>
               <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Aşım</div>
             </div>
           )}
           {audit.orphaned_lots > 0 && (
             <div className="text-center">
-              <div className="text-lg font-black text-orange-600 tabular-nums">{audit.orphaned_lots}</div>
+              <div className="text-lg font-bold text-orange-600 tabular-nums">{audit.orphaned_lots}</div>
               <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Yetim</div>
             </div>
           )}
           {audit.cost_drift_lots > 0 && (
             <div className="text-center">
-              <div className="text-lg font-black text-warn-text tabular-nums">{audit.cost_drift_lots}</div>
+              <div className="text-lg font-bold text-warn-text tabular-nums">{audit.cost_drift_lots}</div>
               <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Maliyet Kayması</div>
             </div>
           )}

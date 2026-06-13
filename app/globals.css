@@ -59,12 +59,13 @@ input[type="number"] { -moz-appearance: textfield; }
     color: #9ca3af;
   }
 
-  /* KPI value — big money numbers. */
+  /* KPI value — big money numbers. Weight capped at 700 (premium restraint:
+     hierarchy comes from size + colour, not 900-weight shouting). */
   .kpi-value {
     font-size: 24px;
     line-height: 1.1;
-    font-weight: 900;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: #111827;
     font-variant-numeric: tabular-nums;
   }
@@ -73,8 +74,8 @@ input[type="number"] { -moz-appearance: textfield; }
   .total-emphatic {
     font-size: 30px;
     line-height: 1.1;
-    font-weight: 900;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: #111827;
     font-variant-numeric: tabular-nums;
   }

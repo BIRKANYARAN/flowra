@@ -371,7 +371,7 @@ export function ProformaDetailClient({
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#e8eaef]">
               <div>
-                <h2 className="font-black text-lg">Satışa Dönüştür</h2>
+                <h2 className="font-bold text-lg">Satışa Dönüştür</h2>
                 <p className="text-sm text-[#64748b] mt-0.5">{no} · {customerName}</p>
               </div>
               <button
@@ -459,7 +459,7 @@ export function ProformaDetailClient({
                 </span>
                 <div className="text-right">
                   <div className="text-xs text-[#94a3b8]">Satış Tutarı</div>
-                  <div className="text-2xl font-extrabold tabular-nums">{S}{Number.isFinite(modalTotal) ? modalTotal.toFixed(2) : '0.00'}</div>
+                  <div className="text-2xl font-bold tabular-nums">{S}{Number.isFinite(modalTotal) ? modalTotal.toFixed(2) : '0.00'}</div>
                 </div>
               </div>
 

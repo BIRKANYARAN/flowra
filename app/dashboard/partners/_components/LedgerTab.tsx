@@ -37,7 +37,7 @@ export function LedgerTab({
             ].map(c => (
               <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
-                <div className="text-lg font-extrabold tabular-nums text-[#0f172a] leading-none">{c.value}</div>
+                <div className="text-lg font-bold tabular-nums text-[#0f172a] leading-none">{c.value}</div>
               </div>
             ))}
           </div>
@@ -84,7 +84,7 @@ export function LedgerTab({
                     <td className={`px-4 py-3 text-right font-mono font-bold ${e.net_loan_outstanding > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{fmt(e.net_loan_outstanding)}</td>
                     <td className="px-4 py-3 text-right font-mono text-pos-text">{fmt(e.dividends_received)}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#64748b]">{fmt(e.salary_received)}</td>
-                    <td className="px-4 py-3 text-right font-mono font-black text-brand">{fmt(e.company_total_owed)}</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-brand">{fmt(e.company_total_owed)}</td>
                   </tr>
                 ))}
               </tbody>

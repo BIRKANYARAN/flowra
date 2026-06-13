@@ -120,7 +120,7 @@ export default function TrialBalancePage() {
       </div>
       {/* Print-only header */}
       <div className="hidden print:block mb-4">
-        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-black">Flowra — Muhasebe Raporu</div>
+        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Flowra — Muhasebe Raporu</div>
         <h1 className="text-2xl font-bold text-[#0f172a]">Mizan</h1>
         <p className="text-xs text-[#64748b] mt-0.5">Genel Muhasebe Hesap Bakiyeleri · {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })}</p>
       </div>
@@ -139,7 +139,7 @@ export default function TrialBalancePage() {
             {checks.map((c, i) => (
               <div key={i} className="flex items-start justify-between px-4 py-3 gap-4">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black ${c.passed ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${c.passed ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'}`}>
                     {c.passed ? '✓' : '✗'}
                   </div>
                   <div className="min-w-0">
@@ -148,7 +148,7 @@ export default function TrialBalancePage() {
                   </div>
                 </div>
                 {c.amount != null && (
-                  <div className="text-xs font-extrabold tabular-nums text-neg shrink-0">{fmt(c.amount)}</div>
+                  <div className="text-xs font-bold tabular-nums text-neg shrink-0">{fmt(c.amount)}</div>
                 )}
               </div>
             ))}
@@ -161,17 +161,17 @@ export default function TrialBalancePage() {
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Borç</div>
-            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
+            <div className="text-xl font-bold tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
           </div>
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Toplam Alacak</div>
-            <div className="text-xl font-extrabold tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
+            <div className="text-xl font-bold tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
           </div>
           <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'}`}>
             <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-pos-text' : 'text-neg'}`}>
               {tb.is_balanced ? 'Dengeli' : 'Dengesiz'}
             </div>
-            <div className={`text-xl font-extrabold tabular-nums ${tb.is_balanced ? 'text-pos-text' : 'text-neg-text'}`}>
+            <div className={`text-xl font-bold tabular-nums ${tb.is_balanced ? 'text-pos-text' : 'text-neg-text'}`}>
               {tb.is_balanced ? '✓ Tamam' : fmt(tb.imbalance_try) + ' fark'}
             </div>
           </div>
@@ -209,10 +209,10 @@ export default function TrialBalancePage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-[#f1f5f9]">
-                      <th className="px-4 py-2 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Borç</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Alacak</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Hesap</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Borç</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Alacak</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f1f5f9]">

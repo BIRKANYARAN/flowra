@@ -180,12 +180,12 @@ function ImportModal({ periodFrom, periodTo, onClose, onSuccess }: ImportModalPr
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e8eaef]">
-          <h2 className="text-sm font-black text-[#0f172a]">Banka Ekstresi Satırı Ekle</h2>
+          <h2 className="text-sm font-bold text-[#0f172a]">Banka Ekstresi Satırı Ekle</h2>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#475569] text-lg leading-none">×</button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <div className="text-xs text-[#64748b] bg-[#f8fafc] rounded p-3 font-mono leading-relaxed">
-            <div className="font-black text-[#334155] mb-1">Format (her satır):</div>
+            <div className="font-bold text-[#334155] mb-1">Format (her satır):</div>
             <div>YYYY-MM-DD | Açıklama | Tutar | [Referans] | [Karşı Taraf]</div>
             <div className="mt-1 text-[#94a3b8]">Pozitif tutar = gelen para (kredi), Negatif = giden (borç)</div>
           </div>
@@ -236,7 +236,7 @@ function KpiCard({ label, value, sub, highlight = false }: { label: string; valu
   return (
     <div className={cn('rounded border px-4 py-3', highlight ? 'bg-neg-light border-neg-light' : 'bg-white border-[#e8eaef]')}>
       <div className={cn('text-[0.65rem] font-bold uppercase tracking-wider', highlight ? 'text-neg-text' : 'text-[#94a3b8]')}>{label}</div>
-      <div className={cn('text-xl font-extrabold tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
+      <div className={cn('text-xl font-bold tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
       {sub && <div className={cn('text-[10px] mt-0.5', highlight ? 'text-neg' : 'text-[#94a3b8]')}>{sub}</div>}
     </div>
   )

@@ -158,7 +158,7 @@ export default async function ReconciliationDetailPage({
               </svg>
             </Link>
             <div>
-              <p className="text-sm font-black text-[#0f172a] leading-none">{snapshot.title}</p>
+              <p className="text-sm font-bold text-[#0f172a] leading-none">{snapshot.title}</p>
               <p className="text-[11px] text-[#94a3b8] mt-0.5">{fmtDate(snapshot.reconciliation_date)}</p>
             </div>
           </div>
@@ -250,8 +250,8 @@ export default async function ReconciliationDetailPage({
           return (
             <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
               <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-                <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Finansal Doğrulama Merkezi</span>
-                <span className={`text-xs font-black ${overallColor}`}>
+                <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">Finansal Doğrulama Merkezi</span>
+                <span className={`text-xs font-bold ${overallColor}`}>
                   {v.overall_status === 'PASS' ? '✓ TÜM KONTROLLER GEÇTI' : v.overall_status === 'WARNING' ? '⚠ UYARILAR VAR' : '✗ HATALAR VAR'} — {v.checks_passed}/{v.checks_total}
                 </span>
               </div>
@@ -263,7 +263,7 @@ export default async function ReconciliationDetailPage({
                     <div key={c.id} className="flex items-center gap-4 px-5 py-2.5">
                       <span className={`text-sm font-bold w-4 flex-shrink-0 ${color}`}>{icon}</span>
                       <span className="text-xs font-semibold text-[#0f172a] w-44 flex-shrink-0">{c.title}</span>
-                      <span className={`text-[10px] font-black w-16 flex-shrink-0 ${color}`}>{c.result}</span>
+                      <span className={`text-[10px] font-bold w-16 flex-shrink-0 ${color}`}>{c.result}</span>
                       <span className="text-[10px] text-[#64748b] w-28 flex-shrink-0">
                         {c.variance !== null ? `Fark: ₺${c.variance.toLocaleString('tr-TR')}` : '—'}
                       </span>
@@ -307,7 +307,7 @@ export default async function ReconciliationDetailPage({
                 <div className="mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Sermaye</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t9.total_capital_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t9.total_capital_try)}</p>
                   </div>
                 </div>
                 {t9.shareholders.length > 0 && (
@@ -373,7 +373,7 @@ export default async function ReconciliationDetailPage({
                 <div className="mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Ortak Borçları</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t10.total_partner_loans_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t10.total_partner_loans_try)}</p>
                   </div>
                 </div>
                 {t10.partners.length > 0 && (
@@ -403,7 +403,7 @@ export default async function ReconciliationDetailPage({
                 <div className="mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Ortak Borçları</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t11.total_partner_debt_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t11.total_partner_debt_try)}</p>
                   </div>
                 </div>
                 {t11.partners.length > 0 && (
@@ -430,7 +430,7 @@ export default async function ReconciliationDetailPage({
                 <div className="mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Dilim Borcu</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t12.total_tranches_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t12.total_tranches_try)}</p>
                   </div>
                 </div>
                 {t12.tranches.length > 0 && (
@@ -461,19 +461,19 @@ export default async function ReconciliationDetailPage({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">YTD Dağıtılan</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t13.total_distributed_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t13.total_distributed_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Bekleyen</p>
-                    <p className="text-sm font-black text-amber-700">{fmt(t13.pending_distributions_try)}</p>
+                    <p className="text-sm font-bold text-amber-700">{fmt(t13.pending_distributions_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Dağıtılabilir</p>
-                    <p className="text-sm font-black text-green-700">{fmt(t13.distributable_profit_try)}</p>
+                    <p className="text-sm font-bold text-green-700">{fmt(t13.distributable_profit_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Geçmiş Yıl Kârı</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t13.retained_earnings_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t13.retained_earnings_try)}</p>
                   </div>
                 </div>
                 {t13.history.length > 0 && (
@@ -501,23 +501,23 @@ export default async function ReconciliationDetailPage({
               <>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">AKTİF</p>
+                    <p className="text-[10px] font-bold text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">AKTİF</p>
                     <KV label="Dönen Varlıklar"      value={fmt(t14.current_assets_try)} />
                     <KV label="Duran Varlıklar"      value={fmt(t14.non_current_assets_try)} />
                     <div className="flex gap-2 py-1.5 mt-1 border-t border-[#0f172a]">
-                      <span className="text-xs font-black text-[#0f172a] w-40 flex-shrink-0">TOPLAM AKTİF</span>
-                      <span className="text-xs font-black text-[#0f172a]">{fmt(t14.total_assets_try)}</span>
+                      <span className="text-xs font-bold text-[#0f172a] w-40 flex-shrink-0">TOPLAM AKTİF</span>
+                      <span className="text-xs font-bold text-[#0f172a]">{fmt(t14.total_assets_try)}</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">PASİF</p>
+                    <p className="text-[10px] font-bold text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">PASİF</p>
                     <KV label="Kısa Vadeli Borçlar"  value={fmt(t14.short_term_liabilities)} />
                     <KV label="Uzun Vadeli Borçlar"  value={fmt(t14.long_term_liabilities)} />
                     <KV label="Toplam Yükümlülükler" value={fmt(t14.total_liabilities_try)} />
                     <KV label="Özsermaye"            value={fmt(t14.equity_try)} />
                     <div className="flex gap-2 py-1.5 mt-1 border-t border-[#0f172a]">
-                      <span className="text-xs font-black text-[#0f172a] w-40 flex-shrink-0">TOPLAM PASİF</span>
-                      <span className="text-xs font-black text-[#0f172a]">{fmt(t14.total_liabilities_try + t14.equity_try)}</span>
+                      <span className="text-xs font-bold text-[#0f172a] w-40 flex-shrink-0">TOPLAM PASİF</span>
+                      <span className="text-xs font-bold text-[#0f172a]">{fmt(t14.total_liabilities_try + t14.equity_try)}</span>
                     </div>
                   </div>
                 </div>
@@ -663,7 +663,7 @@ export default async function ReconciliationDetailPage({
         {snapshot.confidence_factors && snapshot.confidence_factors.length > 0 && (
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
             <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-              <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Güven Faktörleri</span>
+              <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">Güven Faktörleri</span>
               <ConfidenceBadge score={snapshot.confidence_score} />
             </div>
             <div className="px-5 py-4">
@@ -694,7 +694,7 @@ export default async function ReconciliationDetailPage({
         {/* ── Audit Trail ─────────────────────────────────────────────────────── */}
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
           <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
-            <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Denetim Geçmişi</span>
+            <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">Denetim Geçmişi</span>
           </div>
           <div className="px-5 py-4">
             <div className="space-y-3">

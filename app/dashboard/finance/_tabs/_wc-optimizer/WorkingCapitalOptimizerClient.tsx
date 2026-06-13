@@ -100,7 +100,7 @@ function GapCard({ gap }: { gap: WorkingCapitalGap }) {
       <div className="px-4 py-3 grid grid-cols-3 gap-4 bg-[#f8fafc]">
         <div className="text-center">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Mevcut</div>
-          <div className="text-xl font-extrabold tabular-nums text-[#ef4444]">{Math.round(gap.actual_days)}</div>
+          <div className="text-xl font-bold tabular-nums text-[#ef4444]">{Math.round(gap.actual_days)}</div>
           <div className="text-[10px] text-[#94a3b8]">gün</div>
         </div>
 
@@ -115,7 +115,7 @@ function GapCard({ gap }: { gap: WorkingCapitalGap }) {
 
         <div className="text-center">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Hedef</div>
-          <div className="text-xl font-extrabold tabular-nums text-[#10b981]">{Math.round(gap.benchmark_days)}</div>
+          <div className="text-xl font-bold tabular-nums text-[#10b981]">{Math.round(gap.benchmark_days)}</div>
           <div className="text-[10px] text-[#94a3b8]">gün</div>
         </div>
       </div>
@@ -205,7 +205,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Mevcut CCC</div>
-            <div className="text-2xl font-extrabold tabular-nums text-[#ef4444]">{currentCcc}</div>
+            <div className="text-2xl font-bold tabular-nums text-[#ef4444]">{currentCcc}</div>
             <div className="text-[10px] text-[#94a3b8]">gün</div>
           </div>
 
@@ -220,7 +220,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
 
           <div className="text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Hedef CCC</div>
-            <div className="text-2xl font-extrabold tabular-nums text-[#10b981]">{targetCcc}</div>
+            <div className="text-2xl font-bold tabular-nums text-[#10b981]">{targetCcc}</div>
             <div className="text-[10px] text-[#94a3b8]">gün</div>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#16a34a] mb-1">
             Toplam Nakit Optimizasyon Potansiyeli
           </div>
-          <div className="text-3xl font-extrabold tabular-nums text-[#15803d]">
+          <div className="text-3xl font-bold tabular-nums text-[#15803d]">
             {fmtTRY(report.total_cash_release_potential_try ?? 0, 0)}
           </div>
           <div className="text-xs text-[#16a34a] mt-1 font-medium">nakit serbest bırakılabilir</div>

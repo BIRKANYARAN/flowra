@@ -69,7 +69,7 @@ function MaturityBucketBar({ items, total }: { items: BucketBarItem[]; total: nu
                 style={{ width: `${barWidth}%` }}
               >
                 {item.pct >= 8 && (
-                  <span className={`text-[0.6rem] font-extrabold tabular-nums ${item.textColor}`}>
+                  <span className={`text-[0.6rem] font-bold tabular-nums ${item.textColor}`}>
                     {item.pct.toFixed(1)}%
                   </span>
                 )}
@@ -100,7 +100,7 @@ function RefinancingScoreChip({ score }: { score: number }) {
   return (
     <div className={`inline-flex items-center gap-2 rounded border px-3 py-1.5 ${color}`}>
       <span className="text-[0.6rem] font-bold uppercase tracking-wider">Yeniden Finansman Baskısı</span>
-      <span className="text-base font-extrabold tabular-nums">{rounded}</span>
+      <span className="text-base font-bold tabular-nums">{rounded}</span>
       <span className="text-[0.65rem] font-semibold">/100</span>
       <span className="text-[0.65rem] font-semibold">·</span>
       <span className="text-[0.65rem] font-semibold">{label}</span>

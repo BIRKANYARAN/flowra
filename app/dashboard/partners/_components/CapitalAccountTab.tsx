@@ -86,7 +86,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
         <div className="text-right">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Pozisyon</div>
           <div className={[
-            'text-base font-extrabold tabular-nums',
+            'text-base font-bold tabular-nums',
             acc.net_position_try >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
           ].join(' ')}>
             {fmtTRY(acc.net_position_try)}
@@ -364,7 +364,7 @@ function CapitalCommitmentSection() {
       {/* Overdue warning banner */}
       {hasOverdue && (
         <div className="bg-[#fef2f2] border border-[#fecaca] rounded px-4 py-3 flex items-start gap-3">
-          <div className="text-[#dc2626] text-sm font-black mt-0.5">⚠</div>
+          <div className="text-[#dc2626] text-sm font-bold mt-0.5">⚠</div>
           <div>
             <div className="text-xs font-bold text-[#dc2626]">
               {data.overdue_partners} ortak gecikmiş taahhüt — TTK 588 faizi uygulanıyor
@@ -380,17 +380,17 @@ function CapitalCommitmentSection() {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Taahhüt</div>
-          <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
+          <div className="text-sm font-bold text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ödenen</div>
-          <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
+          <div className="text-sm font-bold text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
         </div>
         <div className={`rounded px-3 py-2.5 shadow-sm border ${data.total_equity_gap_try > 0 ? 'bg-[#fef2f2] border-[#fecaca]' : 'bg-white border-[#e8eaef]'}`}>
           <div className={`text-[0.65rem] font-bold uppercase tracking-wider ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
             Eksik Taahhüt
           </div>
-          <div className={`text-sm font-extrabold tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
+          <div className={`text-sm font-bold tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
             {fmtTRY(data.total_equity_gap_try)}
           </div>
         </div>
@@ -507,18 +507,18 @@ export function CapitalAccountTab() {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Öz Sermaye</div>
-          <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(total_equity_try)}</div>
+          <div className="text-sm font-bold text-[#0f172a] tabular-nums mt-1">{fmtTRY(total_equity_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Defter değeri</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Ortak Borç Bakiyesi</div>
-          <div className="text-sm font-black text-[#dc2626] tabular-nums mt-1">{fmtTRY(total_partner_debt_try)}</div>
+          <div className="text-sm font-bold text-[#dc2626] tabular-nums mt-1">{fmtTRY(total_partner_debt_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Aktif trancheler</div>
         </div>
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Net Öz Sermaye</div>
           <div className={[
-            'text-sm font-extrabold tabular-nums mt-1',
+            'text-sm font-bold tabular-nums mt-1',
             (total_equity_try - total_partner_debt_try) >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]',
           ].join(' ')}>
             {fmtTRY(total_equity_try - total_partner_debt_try)}

@@ -224,7 +224,7 @@ export function DividendTab() {
                 ].map((card, i) => (
                   <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
                     <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                    <div className={`text-base font-extrabold tabular-nums ${card.tone}`}>{card.value}</div>
+                    <div className={`text-base font-bold tabular-nums ${card.tone}`}>{card.value}</div>
                   </div>
                 ))}
               </div>
@@ -271,11 +271,11 @@ export function DividendTab() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-[#e8eaef]">
-                        <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Ortak</th>
-                        <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Pay %</th>
-                        <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Brüt</th>
-                        <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Stopaj</th>
-                        <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-pos">Net</th>
+                        <th className="text-left px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Ortak</th>
+                        <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Pay %</th>
+                        <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Brüt</th>
+                        <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-[#94a3b8]">Stopaj</th>
+                        <th className="text-right px-3 py-2 text-[0.6rem] font-bold uppercase text-pos">Net</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f1f5f9]">
@@ -291,7 +291,7 @@ export function DividendTab() {
                           <td className="px-3 py-2 text-right tabular-nums text-warn-text">
                             −{fmtTRY(p.withholding_try)}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums text-pos-text font-black">
+                          <td className="px-3 py-2 text-right tabular-nums text-pos-text font-bold">
                             {fmtTRY(p.net_share_try)}
                           </td>
                         </tr>
@@ -373,7 +373,7 @@ export function DividendTab() {
                 </div>
                 <div className="text-right shrink-0">
                   {item.payload.gross_dividend_try != null && (
-                    <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">
+                    <div className="text-sm font-bold tabular-nums text-[#0f172a]">
                       {fmtTRY(item.payload.gross_dividend_try)}
                     </div>
                   )}

@@ -337,7 +337,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
         <button
           onClick={buildPack}
           disabled={state === 'loading'}
-          className="h-9 px-5 rounded bg-[#0f172a] text-white text-xs font-black tracking-wide hover:bg-[#1e293b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-9 px-5 rounded bg-[#0f172a] text-white text-xs font-bold tracking-wide hover:bg-[#1e293b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {state === 'loading' ? 'Oluşturuluyor…' : 'Paket Oluştur'}
         </button>
@@ -396,9 +396,9 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
       {/* ── Error state ─────────────────────────────────────────────────────── */}
       {state === 'error' && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-neg font-black">⚠</span>
+          <span className="text-neg font-bold">⚠</span>
           <div>
-            <div className="text-xs font-black text-neg-text">Paket oluşturulamadı</div>
+            <div className="text-xs font-bold text-neg-text">Paket oluşturulamadı</div>
             <div className="text-xs text-neg-text mt-0.5">{errorMsg}</div>
           </div>
         </div>
@@ -411,7 +411,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           {/* Intro card */}
           <div className="bg-[#f8fafc] border border-dashed border-[#e8eaef] rounded px-6 py-8 text-center">
             <div className="text-2xl mb-3">📋</div>
-            <div className="text-sm font-black text-[#0f172a] mb-1">
+            <div className="text-sm font-bold text-[#0f172a] mb-1">
               Yönetim Paketi
             </div>
             <div className="text-xs text-[#94a3b8] max-w-sm mx-auto leading-relaxed">
@@ -479,7 +479,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
                 'Mizan ve KDV özeti',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-[#334155]">
-                  <span className="text-pos-text font-black mt-0.5">✓</span>
+                  <span className="text-pos-text font-bold mt-0.5">✓</span>
                   {item}
                 </li>
               ))}
@@ -494,7 +494,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
         <>
           {/* Meta strip */}
           <div className="flex items-center gap-4 text-[10px] text-[#94a3b8]">
-            <span className="font-black text-[#334155]">{pack.company_name}</span>
+            <span className="font-bold text-[#334155]">{pack.company_name}</span>
             <span>·</span>
             <span>{periodDisplayLabel(pack.period)}</span>
             <span>·</span>
@@ -508,7 +508,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
                 className="rounded px-4 py-3 flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-black"
+                    <span className="text-xs font-bold"
                       style={{ color: statusColor(d.executive_summary.status) }}>
                       {statusLabel(d.executive_summary.status)}
                     </span>
@@ -598,11 +598,11 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
                   <div key={alert.id}
                     style={{ background: alertBg(alert.severity), color: alertColor(alert.severity) }}
                     className="rounded px-3 py-2 flex items-start gap-2.5">
-                    <span className="text-sm leading-none mt-0.5 font-black shrink-0">
+                    <span className="text-sm leading-none mt-0.5 font-bold shrink-0">
                       {alertIcon(alert.severity)}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs font-black">{alert.title}</div>
+                      <div className="text-xs font-bold">{alert.title}</div>
                       {alert.detail && (
                         <div className="text-[10px] mt-0.5 opacity-80">{alert.detail}</div>
                       )}

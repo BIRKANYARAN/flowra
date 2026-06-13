@@ -59,8 +59,8 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
             <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e8eaef] mt-1' : ''}`}>
               <div className="min-w-0 flex-1">
                 <span className={`text-xs leading-snug ${
-                  row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
-                  row.isTotal  ? 'font-black text-[#334155]' :
+                  row.isGrand  ? 'font-bold text-[#0f172a] text-[13px]' :
+                  row.isTotal  ? 'font-bold text-[#334155]' :
                   row.indent   ? 'text-[#94a3b8] pl-4 font-medium' :
                                  'text-[#334155] font-semibold'
                 }`}>{row.label}</span>
@@ -74,7 +74,7 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
                   </span>
                 )}
                 <span className={`tabular-nums text-xs ${
-                  row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
+                  row.isGrand  ? 'font-bold text-[#0f172a] text-[13px]' :
                   row.isTotal  ? 'font-bold text-[#1e293b]' :
                   row.indent   ? 'font-semibold text-[#64748b]' :
                   row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-[#334155]'
@@ -260,7 +260,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
       {/* Balance source indicator */}
       <div className="flex items-center gap-2 px-1">
         <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Bilanço Kaynağı:</span>
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-bold ${
           useGlData
             ? 'bg-pos-light border-pos-light text-pos-text'
             : 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]'
@@ -338,7 +338,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${c.color}`}>{c.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${c.color}`}>{c.value}</div>
           </div>
         ))}
       </div>

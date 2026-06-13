@@ -210,7 +210,7 @@ export async function PipelineContent({ companyId }: Props) {
           ].map((tile, i) => (
             <div key={tile.label} className="px-3 py-2.5">
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{tile.label}</div>
-              <div className={`text-xl font-extrabold tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
+              <div className={`text-xl font-bold tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">{tile.sub}</div>
             </div>
           ))}
@@ -242,7 +242,7 @@ export async function PipelineContent({ companyId }: Props) {
             className="flex items-center justify-between px-4 py-2.5 hover:bg-[#f8fafc] transition-colors group"
           >
             <span className="text-[11px] text-[#64748b]">
-              <span className="font-black text-[#1e293b] tabular-nums">{totalPfCount} teklif</span>
+              <span className="font-bold text-[#1e293b] tabular-nums">{totalPfCount} teklif</span>
               {' · '}{convertedCount} dönüştürüldü · {pfByStatus.sent + pfByStatus.accepted} açık
             </span>
             <span className="text-[11px] font-bold text-brand group-hover:underline shrink-0">Tüm teklifler →</span>
@@ -368,7 +368,7 @@ export async function PipelineContent({ companyId }: Props) {
             ].map(card => (
               <div key={card.label} className="px-3 py-2.5">
                 <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{card.label}</div>
-                <div className={`text-sm font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className={`text-sm font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
               </div>
             ))}
           </div>
@@ -385,7 +385,7 @@ export async function PipelineContent({ companyId }: Props) {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}

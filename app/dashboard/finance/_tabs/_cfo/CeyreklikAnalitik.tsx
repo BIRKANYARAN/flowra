@@ -24,17 +24,17 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
               <div>
-                <h2 className="text-xs font-black text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>
+                <h2 className="text-xs font-bold text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>
                 <p className="text-[10px] text-[#94a3b8] mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-right">
                 <div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">YTD Ciro</div>
-                  <div className="text-xs font-black text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
+                  <div className="text-xs font-bold text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
                 </div>
                 <div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">Net Kâr</div>
-                  <div className={`text-xs font-extrabold tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
+                  <div className={`text-xs font-bold tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
                 </div>
               </div>
             </div>
@@ -57,7 +57,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
                     const isFuture = !q.is_past_quarter && q.period.from > today
                     return (
                       <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
-                        <td className="px-4 py-2.5 font-black text-[#0f172a] text-xs">{q.label}</td>
+                        <td className="px-4 py-2.5 font-bold text-[#0f172a] text-xs">{q.label}</td>
                         <td className="px-4 py-2.5 text-right">
                           <div className="font-mono font-bold text-[#0f172a]">{fmtTRY(q.revenue)}</div>
                           {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
@@ -71,13 +71,13 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
                       </tr>
                     )
                   })}
-                  <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
-                    <td className="px-4 py-2.5 text-brand font-black text-xs">YTD Toplam</td>
-                    <td className="px-4 py-2.5 text-right font-mono font-black text-[#0f172a]">{fmtTRY(ytd.revenue)}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_profit)}</td>
+                  <tr className="bg-brand-subtle/40 font-bold border-t-2 border-brand/10">
+                    <td className="px-4 py-2.5 text-brand font-bold text-xs">YTD Toplam</td>
+                    <td className="px-4 py-2.5 text-right font-mono font-bold text-[#0f172a]">{fmtTRY(ytd.revenue)}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_profit)}</td>
                     <td className="px-4 py-2.5 text-right font-mono text-[#64748b]">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -104,7 +104,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
                           </div>
                           <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
                         </div>
-                        <div className={`text-xs font-extrabold tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
+                        <div className={`text-xs font-bold tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
                       </div>
                     )
                   })}

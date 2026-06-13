@@ -63,7 +63,7 @@ export function CfoDashboard({ data }: { data: HomePayload }) {
           <div className="h-full flex flex-col justify-center gap-3">
             <div className="flex items-center justify-between">
               <span className="text-[12px] text-[#64748b]">Toplam Alacak</span>
-              <span className="text-[15px] font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(k.accounts_receivable_try)}</span>
+              <span className="text-[15px] font-bold tabular-nums text-[#0f172a]">{fmtTRY(k.accounts_receivable_try)}</span>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">

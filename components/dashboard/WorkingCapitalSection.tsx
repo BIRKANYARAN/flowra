@@ -85,7 +85,7 @@ function MetricChip({
   return (
     <div className={`border rounded px-3 py-2.5 flex flex-col gap-1 ${chipClass}`}>
       <span className="text-[0.6rem] font-bold uppercase tracking-wider opacity-70">{label}</span>
-      <span className="text-sm font-extrabold tabular-nums leading-none">{value}</span>
+      <span className="text-sm font-bold tabular-nums leading-none">{value}</span>
     </div>
   )
 }
@@ -262,7 +262,7 @@ export function WorkingCapitalSection() {
       {/* CCC decomposition */}
       {current && (
         <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] text-xs text-[#64748b]">
-          <span className="font-black text-[#334155] uppercase tracking-widest text-[0.6rem] mr-2">NDD Bileşenleri</span>
+          <span className="font-bold text-[#334155] uppercase tracking-widest text-[0.6rem] mr-2">NDD Bileşenleri</span>
           <span className="font-mono tabular-nums">
             = {current.dio_days !== null ? `${current.dio_days.toFixed(1)}g stok` : '—g stok'}
             {' '}+{' '}

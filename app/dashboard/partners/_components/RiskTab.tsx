@@ -172,14 +172,14 @@ function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
                   const dim = p.dimensions[k]
                   return (
                     <td key={k} className="px-2 py-1.5 text-center">
-                      <div className={`inline-flex items-center justify-center w-10 h-6 rounded text-[11px] font-extrabold tabular-nums ${heatCell(dim.score)}`}>
+                      <div className={`inline-flex items-center justify-center w-10 h-6 rounded text-[11px] font-bold tabular-nums ${heatCell(dim.score)}`}>
                         {dim.score.toFixed(0)}
                       </div>
                     </td>
                   )
                 })}
                 <td className="px-3 py-1.5 text-center">
-                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-black border-2 ${GRADE_COLORS[p.composite_grade]}`}>
+                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold border-2 ${GRADE_COLORS[p.composite_grade]}`}>
                     {gradeFromScore(p.composite_score)}
                   </span>
                 </td>
@@ -205,7 +205,7 @@ function ScoreBar({ score, grade }: { score: number; grade: RiskGrade }) {
 
 function GradeBadge({ grade }: { grade: RiskGrade }) {
   return (
-    <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded tracking-wide ${GRADE_COLORS[grade]}`}>
+    <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded tracking-wide ${GRADE_COLORS[grade]}`}>
       {grade}
     </span>
   )
@@ -231,7 +231,7 @@ function DimScoreCell({ dim }: { dim: NewDimension }) {
       <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] truncate mb-0.5">
         {dim.label}
       </div>
-      <div className={`text-xs font-extrabold tabular-nums ${color}`}>
+      <div className={`text-xs font-bold tabular-nums ${color}`}>
         {dim.score.toFixed(0)}
         {dim.is_flagged && <span className="ml-1 text-neg-text text-[9px]">!</span>}
       </div>
@@ -266,9 +266,9 @@ function NewRiskCard({ p }: { p: NewProfile }) {
         <div className="flex items-center gap-2 shrink-0">
           <div className="text-right hidden sm:block">
             <div className="text-[9px] text-[#94a3b8] uppercase tracking-widest">Kompozit</div>
-            <div className="text-xs font-black text-[#334155]">{p.composite_score.toFixed(0)}/100</div>
+            <div className="text-xs font-bold text-[#334155]">{p.composite_score.toFixed(0)}/100</div>
           </div>
-          <span className={`text-xs font-black border px-2 py-0.5 rounded tracking-wide ${gradeColors}`}>
+          <span className={`text-xs font-bold border px-2 py-0.5 rounded tracking-wide ${gradeColors}`}>
             {p.grade} · {p.grade_label}
           </span>
         </div>
@@ -358,14 +358,14 @@ function PartnerRiskDashboard() {
         {/* Avg score chip */}
         <div className={`border rounded px-3 py-2.5 ${avgGradeColors}`}>
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-0.5">Portföy Skoru</div>
-          <div className="text-xl font-extrabold tabular-nums leading-none">{avg_score.toFixed(0)}</div>
+          <div className="text-xl font-bold tabular-nums leading-none">{avg_score.toFixed(0)}</div>
           <div className="text-[10px] opacity-70 mt-0.5">Not: {avgGrade}</div>
         </div>
 
         {/* Flagged partners */}
         <div className={`border rounded px-3 py-2.5 ${flagged_partners > 0 ? 'bg-neg-light border-neg-light text-neg-text' : 'bg-pos-light border-pos-light text-pos-text'}`}>
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-0.5">Riskli Ortak</div>
-          <div className="text-xl font-extrabold tabular-nums leading-none">{flagged_partners}</div>
+          <div className="text-xl font-bold tabular-nums leading-none">{flagged_partners}</div>
           <div className="text-[10px] opacity-70 mt-0.5">D veya F notu</div>
         </div>
 
@@ -375,7 +375,7 @@ function PartnerRiskDashboard() {
           <div className="flex items-center gap-2 flex-wrap">
             {(['A', 'B', 'C', 'D', 'F'] as const).map(g => (
               <div key={g} className="flex items-center gap-1">
-                <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded ${NEW_GRADE_COLORS[g]}`}>{g}</span>
+                <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded ${NEW_GRADE_COLORS[g]}`}>{g}</span>
                 <span className="text-xs font-bold text-[#334155]">{grade_distribution[g] ?? 0}</span>
               </div>
             ))}
@@ -484,7 +484,7 @@ export function RiskTab({ loading }: RiskTabProps) {
         <div>
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-1.5">Şirket Geneli Risk Notu</div>
           <div className="flex items-center gap-3">
-            <span className="text-4xl font-black leading-none">{rs.company_grade}</span>
+            <span className="text-4xl font-bold leading-none">{rs.company_grade}</span>
             <div>
               <div className="text-sm font-bold leading-snug">
                 {rs.company_grade === 'A' ? 'Düşük Risk — Sağlıklı Yapı' :
@@ -501,7 +501,7 @@ export function RiskTab({ loading }: RiskTabProps) {
         </div>
         <div className="text-right shrink-0 space-y-1">
           <div className="text-[10px] opacity-60 uppercase tracking-widest">Toplam Borç</div>
-          <div className="text-xl font-extrabold tabular-nums">{fmt(rs.total_debt_try)}</div>
+          <div className="text-xl font-bold tabular-nums">{fmt(rs.total_debt_try)}</div>
           <div className="text-[10px] opacity-60">
             DSR: <span className="font-bold">{(rs.dsr * 100).toFixed(0)}%</span> · Konsantrasyon: <span className="font-bold">{rs.concentration_pct.toFixed(0)}%</span>
           </div>
@@ -511,7 +511,7 @@ export function RiskTab({ loading }: RiskTabProps) {
       {/* ── Konsantrasyon Uyarısı Banner ─────────────────────────────────────── */}
       {rs.concentration_warning && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-neg font-black text-base shrink-0">!</span>
+          <span className="text-neg font-bold text-base shrink-0">!</span>
           <div>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-neg-text mb-1">
               Konsantrasyon Uyarısı
@@ -567,7 +567,7 @@ export function RiskTab({ loading }: RiskTabProps) {
             <div className="flex items-center gap-2 shrink-0">
               <div className="text-right hidden sm:block">
                 <div className="text-[9px] text-[#94a3b8] uppercase tracking-widest">Kompozit</div>
-                <div className="text-xs font-black text-[#334155]">{p.composite_score.toFixed(0)}/100</div>
+                <div className="text-xs font-bold text-[#334155]">{p.composite_score.toFixed(0)}/100</div>
               </div>
               <GradeBadge grade={p.composite_grade} />
             </div>

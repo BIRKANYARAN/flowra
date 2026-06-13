@@ -332,7 +332,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider mb-1.5 opacity-60">
             Finansal Sağlık
           </div>
-          <div className="text-4xl font-black">{healthScore.grade}</div>
+          <div className="text-4xl font-bold">{healthScore.grade}</div>
           <div className="text-base font-bold mt-1 tabular-nums">{healthScore.score}/100</div>
           <div className="text-[0.65rem] mt-1.5 opacity-70">
             {healthScore.grade === 'A' ? 'Mükemmel' :
@@ -529,7 +529,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               }`}>
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(d.amount_try)}</span>
+                    <span className="font-bold tabular-nums text-[#0f172a]">{fmtTRY(d.amount_try)}</span>
                     <span className="text-[#94a3b8]">·</span>
                     <span className="font-semibold text-[#334155]">{d.expense_type}</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
@@ -694,7 +694,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           ].map(k => (
             <div key={k.label} className="text-center">
               <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
-              <div className={`text-base font-extrabold tabular-nums ${k.color}`}>
+              <div className={`text-base font-bold tabular-nums ${k.color}`}>
                 {fmtCompact(Math.abs(k.value))}
               </div>
               {k.label !== 'Satış Geliri' && (
@@ -764,8 +764,8 @@ export async function CFOTab({ userId, companyId }: Props) {
                     </tr>
                   ))}
                   <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
-                    <td className="px-4 py-2.5 font-black text-[#0f172a]">Kapanış Geçmiş Yıl Karı</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-extrabold tabular-nums ${
+                    <td className="px-4 py-2.5 font-bold text-[#0f172a]">Kapanış Geçmiş Yıl Karı</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${
                       re.closing_total >= 0 ? 'text-pos-text' : 'text-neg'
                     }`}>
                       {fmtTRY(re.closing_total)}

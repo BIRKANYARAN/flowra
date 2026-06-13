@@ -93,7 +93,7 @@ function MetricCard({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-extrabold tabular-nums leading-none ${valueColor}`}>{primary}</div>
+      <div className={`text-xl font-bold tabular-nums leading-none ${valueColor}`}>{primary}</div>
       {secondary && (
         <div className="text-[10px] text-[#94a3b8] mt-1">{secondary}</div>
       )}
@@ -193,7 +193,7 @@ export function OpsCommandClient({ companyId }: Props) {
             {m.as_of_date} tarihli günlük komuta raporu
           </div>
         </div>
-        <div className={`text-2xl font-extrabold tabular-nums ${pulse.text}`}>
+        <div className={`text-2xl font-bold tabular-nums ${pulse.text}`}>
           {m.fill_rate_pct.toFixed(0)}%
           <div className={`text-[9px] font-semibold uppercase tracking-wide ${pulse.text} opacity-60`}>doluluk</div>
         </div>

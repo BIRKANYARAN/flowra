@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Icon } from '@/components/ui/Icon'
 import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   PartnerRow, EqResult, TxRow,
@@ -70,7 +71,7 @@ export function PartnersTab({
           ].map(c => (
             <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className={`text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
-              <div className="text-xl font-extrabold tabular-nums text-[#0f172a] leading-none">{c.value}</div>
+              <div className="text-xl font-bold tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
           ))}
         </div>
@@ -104,7 +105,7 @@ export function PartnersTab({
 
       {!loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-12 flex flex-col items-center gap-3 text-center">
-          <div className="text-3xl opacity-50">🤝</div>
+          <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] border border-[#edeef2] flex items-center justify-center text-[#94a3b8]"><Icon name="partners" size={22} strokeWidth={1.75} /></div>
           <div className="text-sm text-[#64748b]">Henüz ortak eklenmemiş.</div>
           <a
             href="/dashboard/partners/new"
@@ -162,17 +163,17 @@ export function PartnersTab({
                     <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-right shrink-0">
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Bakiye</div>
-                        <div className={`text-xs font-extrabold tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
+                        <div className={`text-xs font-bold tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                           {fmt(b?.partner_balance_try ?? 0)}
                         </div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dağıtılan</div>
-                        <div className="text-xs font-extrabold tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
+                        <div className="text-xs font-bold tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8]">Sermaye</div>
-                        <div className="text-xs font-extrabold tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
+                        <div className="text-xs font-bold tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
                       </div>
                     </div>
                   </div>
@@ -253,7 +254,7 @@ export function PartnersTab({
                                 {tx.notes && <span className="text-[#94a3b8] ml-1.5">· {tx.notes}</span>}
                                 <div className="text-[#94a3b8]">{tx.tx_date?.slice(0, 10)}</div>
                               </div>
-                              <span className={`shrink-0 font-extrabold tabular-nums ml-4 ${['loan_out','salary','board_fee','dividend'].includes(tx.tx_type) ? 'text-neg' : 'text-pos-text'}`}>
+                              <span className={`shrink-0 font-bold tabular-nums ml-4 ${['loan_out','salary','board_fee','dividend'].includes(tx.tx_type) ? 'text-neg' : 'text-pos-text'}`}>
                                 {fmt(tx.amount_try)}
                               </span>
                             </div>

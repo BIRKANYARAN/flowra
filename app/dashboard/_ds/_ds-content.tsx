@@ -26,7 +26,7 @@ export default function DesignSystemContent() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-10">
       <header>
-        <h1 className="font-black text-2xl tracking-tight text-[#0f172a]">Flowra — Design System</h1>
+        <h1 className="font-bold text-2xl tracking-tight text-[#0f172a]">Flowra — Design System</h1>
         <p className="text-sm text-[#64748b] mt-1">
           Internal showcase · <code className="text-xs bg-[#f1f5f9] px-1 py-0.5 rounded">/dashboard/_ds</code>
           · not linked from nav · dev-only (production returns 404)

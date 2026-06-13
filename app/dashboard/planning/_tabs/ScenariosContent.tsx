@@ -30,7 +30,7 @@ export async function ScenariosContent({ companyId, userId }: Props) {
 
       {/* Comparison section header */}
       <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded">
-        <div className="text-xs font-black text-brand">Senaryo Karşılaştırma Motoru</div>
+        <div className="text-xs font-bold text-brand">Senaryo Karşılaştırma Motoru</div>
         <div className="text-[10px] text-brand-light mt-0.5">
           Kayıtlı senaryoları yan yana karşılaştırın · Metrik bazlı en iyi senaryo vurgulanır · Baz senaryoya göre delta gösterilir
         </div>

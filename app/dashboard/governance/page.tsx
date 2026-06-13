@@ -66,7 +66,7 @@ export default function GovernancePage() {
             className={cn(
               'px-3.5 py-1.5 text-xs rounded transition-colors',
               i === activeGroupIdx
-                ? 'bg-brand-subtle text-brand font-black'
+                ? 'bg-brand-subtle text-brand font-bold'
                 : 'text-[#64748b] hover:text-[#334155] font-semibold',
             )}
           >

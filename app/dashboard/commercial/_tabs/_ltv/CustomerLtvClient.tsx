@@ -79,7 +79,7 @@ function SegmentPills({ report }: { report: CustomerLtvReport }) {
           key={p.label}
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${p.bg} ${p.text}`}
         >
-          <span className="tabular-nums font-extrabold">{p.count}</span>
+          <span className="tabular-nums font-bold">{p.count}</span>
           {p.label}
         </span>
       ))}
@@ -137,7 +137,7 @@ function LtvTable({ customers }: { customers: CustomerLtvProfile[] }) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <div className="text-sm font-extrabold tabular-nums text-brand leading-none">
+                  <div className="text-sm font-bold tabular-nums text-brand leading-none">
                     {fmtTRY(c.estimated_ltv)}
                   </div>
                   <div className="text-[9px] text-[#94a3b8] tabular-nums mt-0.5">
@@ -145,7 +145,7 @@ function LtvTable({ customers }: { customers: CustomerLtvProfile[] }) {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-center">
-                  <span className="inline-block bg-[#f1f5f9] text-[#334155] text-[10px] font-extrabold tabular-nums px-2 py-0.5 rounded">
+                  <span className="inline-block bg-[#f1f5f9] text-[#334155] text-[10px] font-bold tabular-nums px-2 py-0.5 rounded">
                     {c.rfm_score}/15
                   </span>
                 </td>

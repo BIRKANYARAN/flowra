@@ -135,7 +135,7 @@ export function PriceOptimizationClient() {
         {realizationPct !== null && (
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Fiyat Gerçekleşme</div>
-            <div className={`font-extrabold tabular-nums text-sm ${realizationColor}`}>
+            <div className={`font-bold tabular-nums text-sm ${realizationColor}`}>
               {fmtPct(realizationPct)}
             </div>
           </div>
@@ -171,7 +171,7 @@ export function PriceOptimizationClient() {
         ].map((card, i) => (
           <div key={card.label} className={`px-4 py-2.5 ${i === 0 ? 'rounded-bl' : ''}`}>
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{card.label}</div>
-            <div className={`text-lg font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-lg font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">{card.sub}</div>
           </div>
         ))}

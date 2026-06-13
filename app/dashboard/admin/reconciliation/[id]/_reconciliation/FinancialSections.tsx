@@ -27,15 +27,15 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Nakit</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t2.total_cash_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t2.total_cash_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Kullanılabilir</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t2.available_cash_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t2.available_cash_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Bloke</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t2.restricted_cash_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t2.restricted_cash_try)}</p>
                   </div>
                 </div>
                 {t2.bank_accounts.length > 0 && (
@@ -75,15 +75,15 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Alacak</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t3.total_receivables_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t3.total_receivables_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Vadesi Geçmiş</p>
-                    <p className="text-sm font-black text-red-700">{fmt(t3.overdue_receivables_try)}</p>
+                    <p className="text-sm font-bold text-red-700">{fmt(t3.overdue_receivables_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Şüpheli Alacak</p>
-                    <p className="text-sm font-black text-amber-700">{fmt(t3.doubtful_try)}</p>
+                    <p className="text-sm font-bold text-amber-700">{fmt(t3.doubtful_try)}</p>
                   </div>
                 </div>
                 <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-2">Yaşlandırma Analizi</p>
@@ -122,15 +122,15 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Borç</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t4.total_payables_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t4.total_payables_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">7 Gün İçinde</p>
-                    <p className="text-sm font-black text-red-700">{fmt(t4.upcoming_7d_try)}</p>
+                    <p className="text-sm font-bold text-red-700">{fmt(t4.upcoming_7d_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">30 Gün İçinde</p>
-                    <p className="text-sm font-black text-amber-700">{fmt(t4.upcoming_30d_try)}</p>
+                    <p className="text-sm font-bold text-amber-700">{fmt(t4.upcoming_30d_try)}</p>
                   </div>
                 </div>
                 <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-2">Yaşlandırma Analizi</p>
@@ -165,15 +165,15 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Değer</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t5.total_inventory_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t5.total_inventory_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Ürün Sayısı</p>
-                    <p className="text-sm font-black text-[#0f172a]">{t5.item_count}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{t5.item_count}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Kritik Stok</p>
-                    <p className="text-sm font-black text-red-700">{t5.critical_stock_count}</p>
+                    <p className="text-sm font-bold text-red-700">{t5.critical_stock_count}</p>
                   </div>
                 </div>
                 {t5.top_items.length > 0 && (
@@ -204,15 +204,15 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Brüt Değer</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t6.total_gross_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t6.total_gross_try)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Birikim Amortisman</p>
-                    <p className="text-sm font-black text-[#64748b]">{fmt(t6.accumulated_depreciation)}</p>
+                    <p className="text-sm font-bold text-[#64748b]">{fmt(t6.accumulated_depreciation)}</p>
                   </div>
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Net Defter Değeri</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t6.net_carrying_value)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t6.net_carrying_value)}</p>
                   </div>
                 </div>
                 {t6.assets.length > 0 && (
@@ -277,7 +277,7 @@ export function FinancialSections({ s }: { s: ReconciliationData }) {
                 <div className="grid grid-cols-1 gap-4 mb-4">
                   <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Borç</p>
-                    <p className="text-sm font-black text-[#0f172a]">{fmt(t8.total_debt_try)}</p>
+                    <p className="text-sm font-bold text-[#0f172a]">{fmt(t8.total_debt_try)}</p>
                   </div>
                 </div>
                 {t8.items.length > 0 && (

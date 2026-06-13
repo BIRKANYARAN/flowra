@@ -154,7 +154,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
             ].map((card, i) => (
               <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
                 <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
               </div>
             ))}

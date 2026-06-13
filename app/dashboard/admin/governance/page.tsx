@@ -113,7 +113,7 @@ function MetricCard({ label, value, sub, highlight = false }: { label: string; v
   return (
     <div className={`rounded border px-4 py-3 ${highlight ? 'border-[#e8eaef] bg-brand-subtle/50' : 'border-[#e8eaef] bg-white'}`}>
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-extrabold tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>{value}</div>
+      <div className={`text-xl font-bold tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
@@ -168,7 +168,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
             </svg>
             Yazdır / PDF
           </button>
-          <div className={`text-xl font-extrabold tabular-nums ${theme.text}`}>
+          <div className={`text-xl font-bold tabular-nums ${theme.text}`}>
             {Math.round(snap.composite_score ?? 0)}<span className="text-xs font-semibold">/100</span>
           </div>
         </div>

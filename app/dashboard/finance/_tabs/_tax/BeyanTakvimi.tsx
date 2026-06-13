@@ -47,7 +47,7 @@ export function BeyanTakvimi({ taxCalendar }: { taxCalendar: TaxCalendar | null 
               const isOverdue  = ob.status === 'overdue'
               const isDueSoon  = ob.status === 'due_soon'
               const rowBg = isOverdue ? 'bg-neg-light/20' : isDueSoon ? 'bg-warn-light/20' : ''
-              const dateTone = isOverdue ? 'text-neg-text font-black' : isDueSoon ? 'text-warn-text font-bold' : 'text-[#64748b]'
+              const dateTone = isOverdue ? 'text-neg-text font-bold' : isDueSoon ? 'text-warn-text font-bold' : 'text-[#64748b]'
               const badgeCls = isOverdue
                 ? 'bg-neg-light text-neg-text border-neg-light'
                 : isDueSoon
@@ -72,7 +72,7 @@ export function BeyanTakvimi({ taxCalendar }: { taxCalendar: TaxCalendar | null 
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {ob.estimated_amount_try !== null ? (
-                      <span className={`text-sm font-extrabold tabular-nums ${isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'}`}>
+                      <span className={`text-sm font-bold tabular-nums ${isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'}`}>
                         {fmt(ob.estimated_amount_try)}
                       </span>
                     ) : (

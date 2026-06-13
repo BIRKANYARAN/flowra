@@ -56,7 +56,7 @@ function SummaryCard({
   return (
     <div className="flex flex-col gap-0.5 p-3 rounded border border-[#e8eaef] bg-[#f8fafc] min-w-[140px]">
       <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</span>
-      <span className={`text-base font-black ${toneClass}`}>{value}</span>
+      <span className={`text-base font-bold ${toneClass}`}>{value}</span>
       {sub && <span className="text-[0.6rem] text-[#94a3b8]">{sub}</span>}
     </div>
   )
@@ -107,7 +107,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#f8fafc] transition-colors bg-transparent border-0 cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             {account.partner_name.slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -118,7 +118,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
         <div className="flex items-center gap-6">
           <div className="text-right">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Dönem Sonu Sermaye</div>
-            <div className={`text-sm font-black ${account.current_equity >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+            <div className={`text-sm font-bold ${account.current_equity >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
               {fmtTRY(account.current_equity)}
             </div>
           </div>
@@ -179,7 +179,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
               </tbody>
               <tfoot>
                 <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
-                  <td className="py-2 px-3 text-xs font-black text-[#0f172a]">TOPLAM</td>
+                  <td className="py-2 px-3 text-xs font-bold text-[#0f172a]">TOPLAM</td>
                   <td className="py-2 px-3 text-xs text-right text-[#475569] tabular-nums">—</td>
                   <td className="py-2 px-3 text-xs text-right font-bold text-pos-text tabular-nums">
                     {fmtTRY(account.total_contributions_ytd)}
@@ -191,7 +191,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
                   <td className="py-2 px-3 text-xs text-right font-bold text-neg tabular-nums">
                     {fmtTRY(account.total_compensation_ytd)}
                   </td>
-                  <td className="py-2 px-3 text-xs text-right font-black text-[#0f172a] tabular-nums">
+                  <td className="py-2 px-3 text-xs text-right font-bold text-[#0f172a] tabular-nums">
                     {fmtTRY(account.current_equity)}
                   </td>
                 </tr>

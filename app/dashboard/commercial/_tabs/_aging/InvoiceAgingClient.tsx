@@ -45,7 +45,7 @@ function riskLevel(score: number): { label: string; bg: string; text: string } {
 }
 
 function urgencyColor(score: number): string {
-  if (score >= 80) return 'text-[#b91c1c] font-black'
+  if (score >= 80) return 'text-[#b91c1c] font-bold'
   if (score >= 60) return 'text-[#c2410c] font-bold'
   if (score >= 40) return 'text-[#b45309] font-semibold'
   return 'text-[#475569]'
@@ -144,13 +144,13 @@ export default function InvoiceAgingClient({ companyId }: Props) {
           <div>
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8] font-medium">Portföy Risk Skoru</div>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-2xl font-extrabold tabular-nums text-[#0f172a] leading-none">
+              <span className="text-2xl font-bold tabular-nums text-[#0f172a] leading-none">
                 {Math.round(report.portfolio_risk_score)}
               </span>
               <span className="text-[10px] text-[#94a3b8]">/100</span>
             </div>
           </div>
-          <span className={`inline-block text-[10px] font-black px-2 py-0.5 rounded ${risk.bg} ${risk.text}`}>
+          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded ${risk.bg} ${risk.text}`}>
             {risk.label}
           </span>
         </div>
@@ -160,20 +160,20 @@ export default function InvoiceAgingClient({ companyId }: Props) {
         {/* Totals */}
         <div>
           <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-          <div className="font-extrabold tabular-nums text-sm text-[#0f172a]">{fmtTRY(report.total_outstanding_try)}</div>
+          <div className="font-bold tabular-nums text-sm text-[#0f172a]">{fmtTRY(report.total_outstanding_try)}</div>
         </div>
 
         {report.total_overdue_try > 0 && (
           <div>
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Vadesi Geçmiş</div>
-            <div className="font-extrabold tabular-nums text-sm text-[#b91c1c]">{fmtTRY(report.total_overdue_try)}</div>
+            <div className="font-bold tabular-nums text-sm text-[#b91c1c]">{fmtTRY(report.total_overdue_try)}</div>
           </div>
         )}
 
         {report.total_current_try > 0 && (
           <div>
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Cari (Vadesi Gelmemiş)</div>
-            <div className="font-extrabold tabular-nums text-sm text-[#15803d]">{fmtTRY(report.total_current_try)}</div>
+            <div className="font-bold tabular-nums text-sm text-[#15803d]">{fmtTRY(report.total_current_try)}</div>
           </div>
         )}
       </div>

@@ -146,7 +146,7 @@ export default async function ReconciliationHubPage() {
           /* Snapshots table */
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
-              <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#0f172a] uppercase tracking-widest">
                 Mutabakat Dosyaları
               </span>
               <span className="text-xs text-[#94a3b8]">{snapshots.length} kayıt</span>

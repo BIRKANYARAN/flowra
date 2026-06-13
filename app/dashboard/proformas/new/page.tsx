@@ -213,7 +213,7 @@ export default function NewProformaPage() {
           {/* Step 1: Customer */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
+              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
               Müşteri Bilgileri &amp; Seçenekler
             </h2>
             <div className="space-y-4">
@@ -273,7 +273,7 @@ export default function NewProformaPage() {
           {/* Step 2: Items */}
           <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
+              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
               Ürünler / Hizmetler
             </h2>
 
@@ -423,7 +423,7 @@ export default function NewProformaPage() {
               onClick={() => setLines(ls => [...ls, emptyLine(currency)])}
               className="mt-4 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-brand-light py-1.5 px-2 rounded hover:bg-brand-subtle transition-colors"
             >
-              <span className="font-black text-base">+</span> Satır Ekle
+              <span className="font-bold text-base">+</span> Satır Ekle
             </button>
           </div>
 
@@ -493,7 +493,7 @@ export default function NewProformaPage() {
                 <span className="font-medium tabular-nums">{S}{kdvTotal.toFixed(2)}</span>
               </div>
               <div className="border-t border-[#e8eaef] pt-2.5">
-                <div className="flex justify-between font-black text-base">
+                <div className="flex justify-between font-bold text-base">
                   <span>Genel Toplam</span>
                   <span className="tabular-nums">{S}{grand.toFixed(2)}</span>
                 </div>

@@ -226,7 +226,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                 <div key={card.label}
                   className={`p-3 ${i < 3 ? 'border-r border-[#e8eaef]' : ''}`}>
                   <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-                  <div className={`text-base font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                  <div className={`text-base font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 </div>
               ))}
             </div>
@@ -236,7 +236,7 @@ export async function TaxTab({ userId, companyId }: Props) {
               <div className="mx-4 my-3 bg-neg-light border border-neg rounded px-3 py-2 flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1" />
                 <div className="text-xs text-neg-text">
-                  <span className="font-black">Nakit rezervi yetersiz.</span>{' '}
+                  <span className="font-bold">Nakit rezervi yetersiz.</span>{' '}
                   Mevcut nakit (<strong>{fmt(taxReserve.cash_available_try)}</strong>), vergi yükümlülüklerinin
                   {' '}<strong>%{taxReserve.reserve_coverage_pct?.toFixed(0) ?? '?'}</strong>&apos;ini karşılıyor.
                   Hedef: toplam rezervin en az %120&apos;si ({fmt(taxReserve.total_reserved_try * 1.2)}).
@@ -364,7 +364,7 @@ export async function TaxTab({ userId, companyId }: Props) {
         <div className="px-4 py-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#64748b]">Hesaplanan KDV (Çıktı)</span>
-            <span className="tabular-nums text-sm font-black text-warn-text">{fmt(currentKdv.salesVat)}</span>
+            <span className="tabular-nums text-sm font-bold text-warn-text">{fmt(currentKdv.salesVat)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#64748b]">İndirilecek KDV (Girdi)</span>
@@ -373,11 +373,11 @@ export async function TaxTab({ userId, companyId }: Props) {
             </span>
           </div>
           <div className="border-t border-[#e8eaef] pt-2 flex items-center justify-between">
-            <span className="text-xs font-black text-[#1e293b]">
+            <span className="text-xs font-bold text-[#1e293b]">
               {kdvPosition === 'payable' ? 'Ödenecek KDV' : kdvPosition === 'credit' ? 'Devreden KDV' : 'Net KDV'}
             </span>
             <div className="flex items-center gap-2">
-              <span className={`tabular-nums text-base font-black ${
+              <span className={`tabular-nums text-base font-bold ${
                 kdvPosition === 'payable' ? 'text-warn-text' : kdvPosition === 'credit' ? 'text-pos-text' : 'text-[#94a3b8]'
               }`}>
                 {fmt(Math.abs(currentKdv.netVat))}
@@ -473,7 +473,7 @@ export async function TaxTab({ userId, companyId }: Props) {
           <div key={card.label}
             className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-xl font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-xl font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
@@ -494,15 +494,15 @@ export async function TaxTab({ userId, companyId }: Props) {
               <>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#64748b]">Hesaplanan KDV (çıkış)</span>
-                  <span className="tabular-nums text-sm font-black text-warn">{fmt(kdvSummary.output_vat_try)}</span>
+                  <span className="tabular-nums text-sm font-bold text-warn">{fmt(kdvSummary.output_vat_try)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#64748b]">İndirilecek KDV (giriş)</span>
                   <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdvSummary.input_vat_try)}</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-[#e8eaef] pt-2">
-                  <span className="text-xs font-black text-[#1e293b]">Net KDV</span>
-                  <span className={`tabular-nums text-sm font-black ${kdvSummary.vat_payable ? 'text-warn-text' : 'text-pos-text'}`}>
+                  <span className="text-xs font-bold text-[#1e293b]">Net KDV</span>
+                  <span className={`tabular-nums text-sm font-bold ${kdvSummary.vat_payable ? 'text-warn-text' : 'text-pos-text'}`}>
                     {fmt(Math.abs(kdvSummary.net_vat_try))}
                     <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded border ${
                       kdvSummary.vat_payable
@@ -543,11 +543,11 @@ export async function TaxTab({ userId, companyId }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#64748b]">Tahmini KV (%25)</span>
-                  <span className="tabular-nums text-sm font-black text-warn-text">{fmt(corpTaxEstimate.estimated_tax_try)}</span>
+                  <span className="tabular-nums text-sm font-bold text-warn-text">{fmt(corpTaxEstimate.estimated_tax_try)}</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-[#e8eaef] pt-2">
-                  <span className="text-xs font-black text-[#1e293b]">Kalan Vergi</span>
-                  <span className={`tabular-nums text-sm font-black ${corpTaxEstimate.remaining_tax_try > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
+                  <span className="text-xs font-bold text-[#1e293b]">Kalan Vergi</span>
+                  <span className={`tabular-nums text-sm font-bold ${corpTaxEstimate.remaining_tax_try > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
                     {fmt(Math.abs(corpTaxEstimate.remaining_tax_try))}
                     {corpTaxEstimate.remaining_tax_try < 0 && (
                       <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded border bg-pos-light text-pos-text border-pos-light">Fazla ödendi</span>
@@ -653,7 +653,7 @@ export async function TaxTab({ userId, companyId }: Props) {
               }`}>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-black text-[#1e293b]">Q{q} Geçici Vergi</span>
+                    <span className="text-xs font-bold text-[#1e293b]">Q{q} Geçici Vergi</span>
                     {statusBadge.text && (
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusBadge.cls}`}>
                         {statusBadge.text}
@@ -668,7 +668,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                     {matrah > 0 && ` · Matrah: ${fmt(matrah)}`}
                   </div>
                 </div>
-                <div className={`text-base font-extrabold tabular-nums shrink-0 ${
+                <div className={`text-base font-bold tabular-nums shrink-0 ${
                   !hasData ? 'text-[#cbd5e1]' :
                   status === 'overdue' || status === 'urgent' ? 'text-neg' : 'text-warn-text'
                 }`}>
@@ -679,10 +679,10 @@ export async function TaxTab({ userId, companyId }: Props) {
           })}
           <div className="px-4 py-3 flex items-center justify-between gap-4 bg-[#f8fafc]">
             <div>
-              <div className="text-xs font-black text-[#334155]">Yıl Sonu Kurumlar Vergisi</div>
+              <div className="text-xs font-bold text-[#334155]">Yıl Sonu Kurumlar Vergisi</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Nisan {currentYear + 1} · Matrah × %25 − Ödenen Geçici</div>
             </div>
-            <div className={`text-base font-extrabold tabular-nums ${kvRemaining > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+            <div className={`text-base font-bold tabular-nums ${kvRemaining > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
               {kvRemaining > 0 ? fmt(kvRemaining) : '—'}
             </div>
           </div>
@@ -713,13 +713,13 @@ export async function TaxTab({ userId, companyId }: Props) {
             ].map((row, i) => (
               <div key={i} className="px-4 py-2.5 flex items-center justify-between">
                 <div className={`text-xs ${row.indent ? 'pl-4 text-[#94a3b8]' : 'font-bold text-[#1e293b]'}`}>{row.label}</div>
-                <div className={`text-sm font-extrabold tabular-nums font-mono ${row.tone}`}>{fmt(row.value)}</div>
+                <div className={`text-sm font-bold tabular-nums font-mono ${row.tone}`}>{fmt(row.value)}</div>
               </div>
             ))}
             {monthsElapsed < 12 && projectedMatrah > 0 && (
               <div className="px-4 py-2.5 flex items-center justify-between bg-info-light/30">
                 <div className="text-xs text-info-text font-semibold">Yıl Sonu Matrah Tahmini ({monthsElapsed} ay → 12 ay)</div>
-                <div className="text-sm font-extrabold tabular-nums font-mono text-info-text">~{fmt(projectedMatrah)}</div>
+                <div className="text-sm font-bold tabular-nums font-mono text-info-text">~{fmt(projectedMatrah)}</div>
               </div>
             )}
           </div>

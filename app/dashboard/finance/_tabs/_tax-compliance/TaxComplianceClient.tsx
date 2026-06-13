@@ -118,7 +118,7 @@ export function TaxComplianceClient({ companyId }: Props) {
         <div className="bg-neg-light border border-neg rounded px-4 py-3 flex items-start gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1.5" />
           <div className="text-xs text-neg-text">
-            <span className="font-black">KDV vadesi geçmiş.</span>
+            <span className="font-bold">KDV vadesi geçmiş.</span>
             {' '}Ceza ve faiz dahil tahmini toplam:{' '}
             <strong>{fmtTRY(penalty.total)}</strong>
             {' '}(anapara: {fmtTRY(penalty.principal)}, faiz: {fmtTRY(penalty.interest)}, ceza: {fmtTRY(penalty.penalty)})
@@ -153,7 +153,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               </span>
             </div>
 
-            <div className={`text-2xl font-extrabold tabular-nums leading-none mb-1 ${kdvAmountColor(kdv.status, kdv.obligation_status)}`}>
+            <div className={`text-2xl font-bold tabular-nums leading-none mb-1 ${kdvAmountColor(kdv.status, kdv.obligation_status)}`}>
               {kdv.kdv_payable !== 0
                 ? fmtTRY(Math.abs(kdv.kdv_payable))
                 : '₺0'
@@ -190,7 +190,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               </span>
             </div>
 
-            <div className={`text-2xl font-extrabold tabular-nums leading-none mb-1 ${
+            <div className={`text-2xl font-bold tabular-nums leading-none mb-1 ${
               gecici.obligation_status === 'overdue' ? 'text-neg' :
               gecici.estimated_tax > 0 ? 'text-warn-text' :
               'text-[#64748b]'
@@ -236,7 +236,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               const isDueSoon  = ob.status === 'due_soon'
               const rowBg = isOverdue ? 'bg-neg-light/20' : isDueSoon ? 'bg-warn-light/10' : ''
               const dateTone  = isOverdue
-                ? 'text-neg-text font-black'
+                ? 'text-neg-text font-bold'
                 : isDueSoon
                 ? 'text-warn-text font-bold'
                 : 'text-[#64748b]'
@@ -256,7 +256,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                   </div>
                   <div className="shrink-0 text-right">
                     {ob.estimated_amount !== null && ob.estimated_amount > 0 ? (
-                      <span className={`text-sm font-extrabold tabular-nums ${
+                      <span className={`text-sm font-bold tabular-nums ${
                         isOverdue ? 'text-neg' : isDueSoon ? 'text-warn-text' : 'text-[#1e293b]'
                       }`}>
                         {fmtTRY(ob.estimated_amount)}
@@ -284,7 +284,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                 { label: 'Anapara',   value: penalty.principal, cls: 'text-[#1e293b]'  },
                 { label: 'Faiz',      value: penalty.interest,  cls: 'text-warn-text'  },
                 { label: 'Ceza',      value: penalty.penalty,   cls: 'text-neg'        },
-                { label: 'Toplam',    value: penalty.total,     cls: 'text-neg font-black' },
+                { label: 'Toplam',    value: penalty.total,     cls: 'text-neg font-bold' },
               ].map((item, i) => (
                 <div
                   key={item.label}
@@ -293,7 +293,7 @@ export function TaxComplianceClient({ companyId }: Props) {
                   <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                     {item.label}
                   </div>
-                  <div className={`text-sm font-extrabold tabular-nums ${item.cls}`}>
+                  <div className={`text-sm font-bold tabular-nums ${item.cls}`}>
                     {fmtTRY(item.value)}
                   </div>
                 </div>

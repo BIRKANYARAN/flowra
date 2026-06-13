@@ -82,16 +82,16 @@ export default function AuthPage() {
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-[#0f172a] via-[#161a33] to-[#2e1065] text-white relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 rounded-xl bg-brand-light flex items-center justify-center shadow-soft-lg">
-            <span className="text-white font-black">F</span>
+            <span className="text-white font-bold">F</span>
           </div>
           <div>
-            <div className="font-black text-lg leading-none">Flowra</div>
+            <div className="font-bold text-lg leading-none">Flowra</div>
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-white/40 mt-0.5">ERP Sistemi</div>
           </div>
         </div>
 
         <div className="max-w-md relative z-10">
-          <h1 className="text-[2rem] font-black leading-[1.15] tracking-tight">
+          <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight">
             İşletmenizin finansal komuta merkezi.
           </h1>
           <p className="mt-4 text-white/60 leading-relaxed">
@@ -100,7 +100,7 @@ export default function AuthPage() {
           <ul className="mt-8 space-y-3">
             {['Anlık nakit & kâr göstergeleri', 'Otomatik KDV & kurumlar vergisi', 'Ortak sermaye & temettü takibi', 'TTK uyumlu belge arşivi'].map(f => (
               <li key={f} className="flex items-center gap-3 text-sm text-white/80">
-                <span className="w-5 h-5 rounded-full bg-brand/30 flex items-center justify-center text-brand-light text-[11px] font-black flex-shrink-0">✓</span>
+                <span className="w-5 h-5 rounded-full bg-brand/30 flex items-center justify-center text-brand-light text-[11px] font-bold flex-shrink-0">✓</span>
                 {f}
               </li>
             ))}
@@ -120,16 +120,16 @@ export default function AuthPage() {
           {/* Mobile brand (left panel hidden on mobile) */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-9 h-9 rounded-xl bg-brand-light flex items-center justify-center">
-              <span className="text-white font-black text-sm">F</span>
+              <span className="text-white font-bold text-sm">F</span>
             </div>
             <div>
-              <div className="font-black text-[#0f172a]">Flowra</div>
+              <div className="font-bold text-[#0f172a]">Flowra</div>
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">ERP Sistemi</div>
             </div>
           </div>
 
           <div className="fl-card p-8">
-            <h2 className="text-lg font-black text-[#0f172a] tracking-tight mb-1">
+            <h2 className="text-lg font-bold text-[#0f172a] tracking-tight mb-1">
               {mode === 'login' ? 'Tekrar hoş geldiniz' : 'Hesap oluşturun'}
             </h2>
             <p className="text-sm text-[#64748b] mb-6">

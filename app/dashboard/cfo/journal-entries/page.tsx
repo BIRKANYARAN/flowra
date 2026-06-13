@@ -115,7 +115,7 @@ export default async function JournalEntriesPage() {
               <div key={entry.id} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-[#64748b]">{fmtDate(entry.entry_date)}</span>
+                    <span className="text-xs font-bold text-[#64748b]">{fmtDate(entry.entry_date)}</span>
                     {entry.voucher_number && (
                       <span className="text-[10px] bg-brand-subtle text-brand font-mono px-1.5 py-0.5 rounded font-semibold tracking-wide">
                         {entry.voucher_number}
@@ -170,9 +170,9 @@ export default async function JournalEntriesPage() {
                         </tr>
                       ))}
                       <tr className="border-t border-[#e8eaef] bg-[#f8fafc]">
-                        <td colSpan={2} className="px-4 py-1.5 text-xs font-black text-[#64748b] uppercase tracking-wide">Toplam</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-extrabold text-info-text">{fmtTRY(totalDebit)}</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-extrabold text-pos-text">{fmtTRY(totalCredit)}</td>
+                        <td colSpan={2} className="px-4 py-1.5 text-xs font-bold text-[#64748b] uppercase tracking-wide">Toplam</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-bold text-info-text">{fmtTRY(totalDebit)}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-bold text-pos-text">{fmtTRY(totalCredit)}</td>
                       </tr>
                     </tbody>
                   </table>

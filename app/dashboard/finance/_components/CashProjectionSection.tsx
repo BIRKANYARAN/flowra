@@ -109,7 +109,7 @@ export function CashProjectionSection() {
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               {chip.label}
             </div>
-            <div className={`text-base font-extrabold tabular-nums leading-none ${chip.tone}`}>
+            <div className={`text-base font-bold tabular-nums leading-none ${chip.tone}`}>
               {chip.value}
             </div>
           </div>
@@ -146,7 +146,7 @@ export function CashProjectionSection() {
                   className={`hover:bg-[#f8fafc]/60 ${isNeg ? 'bg-neg-light/20' : ''}`}
                 >
                   <td className="px-4 py-2 font-semibold text-[#334155]">
-                    <span className="font-black text-[#0f172a]">{week.week_label}</span>
+                    <span className="font-bold text-[#0f172a]">{week.week_label}</span>
                     <span className="ml-1.5 text-[10px] text-[#94a3b8] font-normal">{week.week_start.slice(5)}</span>
                   </td>
                   <td className="px-3 py-2 text-right font-mono tabular-nums">
@@ -165,7 +165,7 @@ export function CashProjectionSection() {
                   }`}>
                     {fmt(week.net_cash_flow)}
                   </td>
-                  <td className={`px-4 py-2 text-right font-extrabold tabular-nums ${
+                  <td className={`px-4 py-2 text-right font-bold tabular-nums ${
                     isNeg ? 'text-neg-text bg-neg-light/40 rounded' : 'text-[#0f172a]'
                   }`}>
                     {fmt(week.cumulative_cash)}
@@ -193,7 +193,7 @@ export function CashProjectionSection() {
           ].map(item => (
             <div key={item.label}>
               <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{item.label}</div>
-              <div className={`text-sm font-extrabold tabular-nums leading-none mt-0.5 ${item.tone}`}>
+              <div className={`text-sm font-bold tabular-nums leading-none mt-0.5 ${item.tone}`}>
                 {fmt(item.value)}
               </div>
             </div>

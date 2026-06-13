@@ -21,7 +21,7 @@ export function GlToolsAndReports() {
             <Link key={item.href} href={item.href}
               className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[0.65rem] font-black text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded tabular-nums">{item.tag}</span>
+                <span className="text-[0.65rem] font-bold text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded tabular-nums">{item.tag}</span>
                 <span className="text-xs font-bold text-[#0f172a]">{item.title}</span>
               </div>
               <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>

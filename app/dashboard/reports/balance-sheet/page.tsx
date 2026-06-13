@@ -69,8 +69,8 @@ function Section({ title }: { title: string }) {
 function Row({ label, value, bold, indent }: { label: string; value: string; bold?: boolean; indent?: boolean }) {
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-[#f1f5f9] last:border-0 ${indent ? 'pl-6' : ''}`}>
-      <span className={`text-xs ${bold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
-      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black text-[#0f172a]' : 'font-semibold text-[#334155]'}`}>{value}</span>
+      <span className={`text-xs ${bold ? 'font-bold text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
+      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-bold text-[#0f172a]' : 'font-semibold text-[#334155]'}`}>{value}</span>
     </div>
   )
 }
@@ -171,7 +171,7 @@ export default function BalanceSheetPage() {
             <div className="px-4 py-3 bg-info-light border-b border-info-light">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-info-text">Varlıklar</span>
-                <span className="text-sm font-extrabold tabular-nums text-info-text">{fmt(bs.assets.total_assets_try)}</span>
+                <span className="text-sm font-bold tabular-nums text-info-text">{fmt(bs.assets.total_assets_try)}</span>
               </div>
             </div>
             <Section title="Dönen Varlıklar" />
@@ -201,7 +201,7 @@ export default function BalanceSheetPage() {
               <div className="px-4 py-3 bg-warn-light border-b border-warn/10">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-warn">Kaynaklar</span>
-                  <span className="text-sm font-extrabold tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
+                  <span className="text-sm font-bold tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
                 </div>
               </div>
               <Section title="Kısa Vadeli" />
@@ -229,7 +229,7 @@ export default function BalanceSheetPage() {
               <div className="px-4 py-3 bg-pos-light border-b border-pos-light">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-pos-text">Özkaynak</span>
-                  <span className="text-sm font-extrabold tabular-nums text-pos-text">{fmt(bs.equity.total_equity_try)}</span>
+                  <span className="text-sm font-bold tabular-nums text-pos-text">{fmt(bs.equity.total_equity_try)}</span>
                 </div>
               </div>
               <div className="px-4">
@@ -248,7 +248,7 @@ export default function BalanceSheetPage() {
         <div className={`px-4 py-2.5 rounded border text-xs font-semibold flex items-center gap-2 ${
           bs.balanced ? 'bg-pos-light border-pos-light text-pos-text' : 'bg-neg-light border-neg-light text-neg-text'
         }`}>
-          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${
+          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
             bs.balanced ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'
           }`}>
             {bs.balanced ? '✓' : '✗'}

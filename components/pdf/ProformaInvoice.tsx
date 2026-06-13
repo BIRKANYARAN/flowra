@@ -157,7 +157,7 @@ export function ProformaInvoice({
             </div>
           ) : (
             <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-              <span className="text-white font-black text-lg tracking-wide">
+              <span className="text-white font-bold text-lg tracking-wide">
                 {settings?.company_name?.slice(0, 2).toUpperCase() || 'FL'}
               </span>
             </div>
@@ -168,7 +168,7 @@ export function ProformaInvoice({
         </div>
         <div className="text-right">
           <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Proforma Fatura</div>
-          <div className="text-white font-black text-lg tracking-wide">{no}</div>
+          <div className="text-white font-bold text-lg tracking-wide">{no}</div>
           <div className="inline-flex items-center gap-1 bg-white/10 text-white/80 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1">
             {currencyLabel(proforma.currency || 'TRY')}
           </div>
@@ -380,7 +380,7 @@ export function ProformaInvoice({
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Genel Toplam</div>
               <div className="text-white/60 text-[10px] mt-0.5">{currencyLabel(proforma.currency || 'TRY')}</div>
             </div>
-            <span className="font-black text-2xl tabular-nums tracking-tight">
+            <span className="font-bold text-2xl tabular-nums tracking-tight">
               {money(grand, S)}
             </span>
           </div>
@@ -421,7 +421,7 @@ export function ProformaInvoice({
         {/* Bank info */}
         {banks.length > 0 && (
           <div className="px-5 py-3 border-b border-[#e8eaef]">
-            <div className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest mb-2">Ödeme Bilgileri</div>
+            <div className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest mb-2">Ödeme Bilgileri</div>
             <div className="space-y-1.5">
               {banks.map((b, i) => (
                 <div key={i} className="flex items-baseline justify-between gap-4">
@@ -443,12 +443,12 @@ export function ProformaInvoice({
         {/* Signature area */}
         <div className="px-5 py-4 grid grid-cols-2 gap-8">
           <div>
-            <div className="text-[9px] font-black text-[#cbd5e1] uppercase tracking-widest mb-3">Satıcı Onayı</div>
+            <div className="text-[9px] font-bold text-[#cbd5e1] uppercase tracking-widest mb-3">Satıcı Onayı</div>
             <div className="h-12 border-b border-[#e8eaef]" />
             <div className="mt-1 text-[10px] text-[#94a3b8]">{settings?.company_name || ''}</div>
           </div>
           <div>
-            <div className="text-[9px] font-black text-[#cbd5e1] uppercase tracking-widest mb-3">Alıcı Onayı</div>
+            <div className="text-[9px] font-bold text-[#cbd5e1] uppercase tracking-widest mb-3">Alıcı Onayı</div>
             <div className="h-12 border-b border-[#e8eaef]" />
             <div className="mt-1 text-[10px] text-[#94a3b8]">{proforma.customer_name || ''}</div>
           </div>

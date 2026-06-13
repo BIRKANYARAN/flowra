@@ -116,7 +116,7 @@ function SummaryCard({
   return (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-extrabold tabular-nums leading-none ${valueColor}`}>{value}</div>
+      <div className={`text-xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
     </div>
   )

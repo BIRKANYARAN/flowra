@@ -63,7 +63,7 @@ function AccuracyBar({ score }: { score: number | null }) {
       <div className="flex-1 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
         <div className={cn('h-full rounded-full', color)} style={{ width: `${score}%` }} />
       </div>
-      <span className={cn('text-[10px] font-extrabold tabular-nums', textColor)}>{score.toFixed(0)}</span>
+      <span className={cn('text-[10px] font-bold tabular-nums', textColor)}>{score.toFixed(0)}</span>
     </div>
   )
 }
@@ -139,11 +139,11 @@ function DetailRow({ v }: { v: ScenarioVariance }) {
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-[#f1f5f9]/60">
-                <th className="text-left px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Kalem</th>
-                <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Plan</th>
-                <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Gerçek</th>
-                <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Fark</th>
-                <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">%</th>
+                <th className="text-left px-4 py-2 font-bold text-[#94a3b8] whitespace-nowrap">Kalem</th>
+                <th className="text-right px-4 py-2 font-bold text-[#94a3b8] whitespace-nowrap">Plan</th>
+                <th className="text-right px-4 py-2 font-bold text-[#94a3b8] whitespace-nowrap">Gerçek</th>
+                <th className="text-right px-4 py-2 font-bold text-[#94a3b8] whitespace-nowrap">Fark</th>
+                <th className="text-right px-4 py-2 font-bold text-[#94a3b8] whitespace-nowrap">%</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -238,7 +238,7 @@ function SummaryStrip({ variances }: { variances: ScenarioVariance[] }) {
       {kpis.map(k => (
         <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{k.label}</div>
-          <div className={cn('text-xl font-extrabold tabular-nums leading-none', k.color)}>{k.value}</div>
+          <div className={cn('text-xl font-bold tabular-nums leading-none', k.color)}>{k.value}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{k.sub}</div>
         </div>
       ))}
@@ -318,12 +318,12 @@ export function VarianceClient() {
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-[#f8fafc]/60">
-                <th className="text-left px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Senaryo</th>
-                <th className="text-left px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Dönem</th>
-                <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Doğruluk</th>
-                <th className="text-center px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Karar</th>
-                <th className="text-right px-3 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Net Fark</th>
-                <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap"></th>
+                <th className="text-left px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap">Senaryo</th>
+                <th className="text-left px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap">Dönem</th>
+                <th className="text-right px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap">Doğruluk</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap">Karar</th>
+                <th className="text-right px-3 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap">Net Fark</th>
+                <th className="text-right px-4 py-2.5 font-bold text-[#94a3b8] whitespace-nowrap"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

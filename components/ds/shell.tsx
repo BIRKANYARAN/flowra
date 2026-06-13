@@ -51,9 +51,9 @@ export const TOKENS = {
   heroSuper: 'text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1',
 
   // Typography
-  valueXl:  'text-xl font-extrabold tabular-nums leading-none',
-  value2xl: 'text-[22px] font-extrabold tabular-nums leading-none',
-  valueSm:  'text-sm font-extrabold tabular-nums',
+  valueXl:  'text-xl font-bold tabular-nums leading-none',
+  value2xl: 'text-[22px] font-bold tabular-nums leading-none',
+  valueSm:  'text-sm font-bold tabular-nums',
   mono:     'font-mono tabular-nums',
 
   // Status colors
@@ -359,7 +359,7 @@ export function EmptySlate({
   return (
     <div className="text-center py-14 px-6">
       {icon && <div className="text-3xl mb-3">{icon}</div>}
-      <div className="text-sm font-black text-[#0f172a] mb-1">{title}</div>
+      <div className="text-sm font-bold text-[#0f172a] mb-1">{title}</div>
       {sub && <div className="text-xs text-[#94a3b8] mb-4">{sub}</div>}
       {action}
     </div>
@@ -604,7 +604,7 @@ export function ContextReading({
           {label}
         </span>
       </div>
-      <span className={cn('text-[15px] font-extrabold tabular-nums leading-tight', valueCls)}>
+      <span className={cn('text-[15px] font-bold tabular-nums leading-tight', valueCls)}>
         {value}
       </span>
       {sub && (

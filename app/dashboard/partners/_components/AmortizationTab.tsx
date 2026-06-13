@@ -378,7 +378,7 @@ function FaizTahakkuku() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             YTD Tahakkuk
           </div>
-          <div className="text-base font-black text-amber-600 leading-tight tabular-nums">
+          <div className="text-base font-bold text-amber-600 leading-tight tabular-nums">
             {fmtTRY(report.total_accrued_ytd)}
           </div>
         </div>
@@ -405,14 +405,14 @@ function FaizTahakkuku() {
           <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">
             Referans Faiz
           </span>
-          <span className="text-sm font-black text-[#0f172a]">%{report.market_rate_pct}</span>
+          <span className="text-sm font-bold text-[#0f172a]">%{report.market_rate_pct}</span>
         </div>
         {report.next_month_interest_try > 0 && (
           <div className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-3 py-1.5">
             <span className="text-[0.6rem] font-bold uppercase tracking-wider text-amber-700">
               Gelecek ay faiz yükü
             </span>
-            <span className="text-sm font-black text-amber-800 tabular-nums">
+            <span className="text-sm font-bold text-amber-800 tabular-nums">
               {fmtTRY(report.next_month_interest_try)}
             </span>
           </div>
@@ -686,7 +686,7 @@ function FullAmortizationSchedule() {
           <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Kalan Toplam Faiz
           </div>
-          <div className="text-base font-black text-amber-600 tabular-nums">
+          <div className="text-base font-bold text-amber-600 tabular-nums">
             {fmtTRY(report.total_interest_remaining_try)}
           </div>
         </div>

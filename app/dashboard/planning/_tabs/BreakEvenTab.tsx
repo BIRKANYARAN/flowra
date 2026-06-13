@@ -67,7 +67,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           <p className="text-xs text-[#94a3b8] mt-0.5">{period_from} — {period_to}</p>
         </div>
         {/* Above / Below break-even badge */}
-        <span className={`text-xs font-black px-3 py-1.5 rounded border ${
+        <span className={`text-xs font-bold px-3 py-1.5 rounded border ${
           is_above_breakeven
             ? 'bg-pos-light border-pos-light text-pos-text'
             : 'bg-neg-light border-neg-light text-neg-text'
@@ -82,7 +82,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Gerçek Ciro (YTD)
           </div>
-          <div className={`text-2xl font-extrabold tabular-nums ${
+          <div className={`text-2xl font-bold tabular-nums ${
             actual_revenue_try > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'
           }`}>
             {fmtTRY(actual_revenue_try)}
@@ -100,7 +100,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           }`}>
             Başabaş Noktası
           </div>
-          <div className={`text-2xl font-extrabold tabular-nums ${
+          <div className={`text-2xl font-bold tabular-nums ${
             is_above_breakeven ? 'text-pos-text' : 'text-neg-text'
           }`}>
             {beFinite ? fmtTRY(breakeven_revenue_try) : '—'}
@@ -121,7 +121,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Güvenlik Marjı
           </div>
-          <div className={`text-xl font-extrabold tabular-nums ${
+          <div className={`text-xl font-bold tabular-nums ${
             margin_of_safety_pct === null ? 'text-[#94a3b8]' :
             margin_of_safety_pct >= 20 ? 'text-pos-text' :
             margin_of_safety_pct >= 0  ? 'text-warn-text' :
@@ -139,7 +139,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Katkı Payı Oranı
           </div>
-          <div className={`text-xl font-extrabold tabular-nums ${
+          <div className={`text-xl font-bold tabular-nums ${
             cmrPct >= 40 ? 'text-pos-text' :
             cmrPct >= 20 ? 'text-warn-text' :
             'text-neg-text'
@@ -154,7 +154,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
             Değişken Maliyet Oranı
           </div>
-          <div className={`text-xl font-extrabold tabular-nums ${
+          <div className={`text-xl font-bold tabular-nums ${
             vcrPct <= 40 ? 'text-pos-text' :
             vcrPct <= 60 ? 'text-warn-text' :
             'text-neg-text'
@@ -199,7 +199,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
                     <div className="text-[10px] text-[#94a3b8]">{row.sub}</div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-xs font-extrabold tabular-nums ${row.textColor}`}>{fmtTRY(row.value)}</div>
+                    <div className={`text-xs font-bold tabular-nums ${row.textColor}`}>{fmtTRY(row.value)}</div>
                     <div className="text-[10px] text-[#94a3b8]">{fmtPct(pct, 0)} pay</div>
                   </div>
                 </div>
@@ -214,8 +214,8 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
           })}
         </div>
         <div className="mt-3 pt-3 border-t border-[#e8eaef] flex items-center justify-between text-xs">
-          <span className="font-black text-[#0f172a]">Toplam Maliyet Tahmini</span>
-          <span className="font-extrabold tabular-nums">{fmtTRY(estimated_fixed_costs_try + estimated_variable_costs_try)}</span>
+          <span className="font-bold text-[#0f172a]">Toplam Maliyet Tahmini</span>
+          <span className="font-bold tabular-nums">{fmtTRY(estimated_fixed_costs_try + estimated_variable_costs_try)}</span>
         </div>
       </div>
 
@@ -227,13 +227,13 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="text-[10px] text-[#94a3b8] mb-0.5">Hedef Kâr (%10)</div>
-            <div className="text-base font-extrabold tabular-nums text-pos-text">
+            <div className="text-base font-bold tabular-nums text-pos-text">
               {fmtTRY(target_profit_inputs.target_profit_try)}
             </div>
           </div>
           <div>
             <div className="text-[10px] text-[#94a3b8] mb-0.5">Gerekli Ciro</div>
-            <div className={`text-base font-extrabold tabular-nums ${
+            <div className={`text-base font-bold tabular-nums ${
               isFinite(target_profit_inputs.revenue_needed_try) ? 'text-info-text' : 'text-[#94a3b8]'
             }`}>
               {isFinite(target_profit_inputs.revenue_needed_try)

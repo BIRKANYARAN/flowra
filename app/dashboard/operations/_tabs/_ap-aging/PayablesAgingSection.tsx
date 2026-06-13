@@ -112,7 +112,7 @@ export function PayablesAgingSection() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs font-extrabold tabular-nums text-[#0f172a]">{fmt(report.total_outstanding_try)}</div>
+          <div className="text-xs font-bold tabular-nums text-[#0f172a]">{fmt(report.total_outstanding_try)}</div>
           <div className="text-[10px] text-[#94a3b8]">{report.total_count} kayıt</div>
         </div>
       </div>
@@ -121,20 +121,20 @@ export function PayablesAgingSection() {
       <div className="grid grid-cols-3 border-b border-[#e8eaef]">
         <div className="px-4 py-2.5 text-center">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Kritik (&gt;30 Gün)</div>
-          <div className={`text-sm font-extrabold tabular-nums ${report.critical_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-sm font-bold tabular-nums ${report.critical_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
             {fmt(report.critical_try)}
           </div>
           <div className="text-[10px] text-[#94a3b8]">{report.critical_count} kayıt</div>
         </div>
         <div className="px-4 py-2.5 text-center">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Ort. Gecikme</div>
-          <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">
+          <div className="text-sm font-bold tabular-nums text-[#0f172a]">
             {report.avg_days_outstanding !== null ? `${Math.round(report.avg_days_outstanding)} gün` : '—'}
           </div>
         </div>
         <div className="px-4 py-2.5 text-center">
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">En Eski</div>
-          <div className={`text-sm font-extrabold tabular-nums ${(report.oldest_entry_days ?? 0) > 90 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
+          <div className={`text-sm font-bold tabular-nums ${(report.oldest_entry_days ?? 0) > 90 ? 'text-[#991b1b]' : 'text-[#0f172a]'}`}>
             {report.oldest_entry_days !== null ? `${report.oldest_entry_days} gün` : '—'}
           </div>
         </div>
@@ -147,7 +147,7 @@ export function PayablesAgingSection() {
           {report.buckets.map((b: APAgingBucketSummary) => (
             <div key={b.bucket} className={`rounded px-2 py-2 text-center ${BUCKET_BADGE_COLORS[b.bucket]}`}>
               <div className="text-[0.65rem] font-bold">{b.label}</div>
-              <div className="text-sm font-extrabold tabular-nums mt-0.5">{fmt(b.total_try)}</div>
+              <div className="text-sm font-bold tabular-nums mt-0.5">{fmt(b.total_try)}</div>
               <div className="text-[10px] mt-0.5">{b.count} kayıt · %{b.pct_of_total.toFixed(0)}</div>
             </div>
           ))}

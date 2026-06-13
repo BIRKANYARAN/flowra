@@ -81,18 +81,18 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Ort. Güvenilirlik</div>
-            <div className="font-extrabold tabular-nums text-[#0f172a]">{report.avg_reliability_score}/100</div>
+            <div className="font-bold tabular-nums text-[#0f172a]">{report.avg_reliability_score}/100</div>
           </div>
           {report.excellent_count > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Mükemmel</div>
-              <div className="font-extrabold tabular-nums text-[#15803d]">{report.excellent_count} müşteri</div>
+              <div className="font-bold tabular-nums text-[#15803d]">{report.excellent_count} müşteri</div>
             </div>
           )}
           {report.unreliable_count > 0 && (
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Güvenilmez</div>
-              <div className="font-extrabold tabular-nums text-neg">{report.unreliable_count} müşteri</div>
+              <div className="font-bold tabular-nums text-neg">{report.unreliable_count} müşteri</div>
             </div>
           )}
         </div>
@@ -101,13 +101,13 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
       {/* Alert chips */}
       <div className="flex flex-wrap gap-2 px-4 py-2 border-b border-[#f1f5f9]">
         {report.high_risk_outstanding_try > 0 && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-neg-light text-neg-text">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-neg-light text-neg-text">
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
             {fmt(report.high_risk_outstanding_try)} güvenilmez/zayıf müşterilerde bekliyor
           </span>
         )}
         {report.predicted_30d_collections > 0 && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-[#f0fdf4] text-[#15803d]">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-[#f0fdf4] text-[#15803d]">
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
             {fmt(report.predicted_30d_collections)} önümüzdeki 30 günde tahmin edilen tahsilat
           </span>
@@ -144,7 +144,7 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
                     <ScoreBar score={p.reliability_score} />
                   </td>
                   <td className="px-2 py-2">
-                    <span className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded ${CLASS_COLORS[p.behavior_class]}`}>
+                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded ${CLASS_COLORS[p.behavior_class]}`}>
                       {CLASS_LABELS[p.behavior_class]}
                     </span>
                   </td>
@@ -296,12 +296,12 @@ export async function CollectionsContent({ companyId }: Props) {
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-                <div className="font-extrabold tabular-nums text-[#0f172a]">{fmt(priorityReport.total_outstanding_try)}</div>
+                <div className="font-bold tabular-nums text-[#0f172a]">{fmt(priorityReport.total_outstanding_try)}</div>
               </div>
               {priorityReport.priority_outstanding_try > 0 && (
                 <div className="text-right">
                   <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Öncelikli (Acil+Kritik)</div>
-                  <div className="font-extrabold tabular-nums text-neg">{fmt(priorityReport.priority_outstanding_try)}</div>
+                  <div className="font-bold tabular-nums text-neg">{fmt(priorityReport.priority_outstanding_try)}</div>
                 </div>
               )}
             </div>
@@ -315,7 +315,7 @@ export async function CollectionsContent({ companyId }: Props) {
               { key: 'urgent',    label: 'Acil',       count: priorityReport.by_urgency.urgent,    color: 'bg-warn-light text-warn-text' },
               { key: 'critical',  label: 'Kritik',     count: priorityReport.by_urgency.critical,  color: 'bg-neg-light text-neg-text' },
             ].map(pill => pill.count > 0 && (
-              <span key={pill.key} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black ${pill.color}`}>
+              <span key={pill.key} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${pill.color}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
                 {pill.label} · {pill.count}
               </span>
@@ -345,14 +345,14 @@ export async function CollectionsContent({ companyId }: Props) {
                 <div key={r.sale_id} className={`flex items-start gap-3 px-4 py-3 hover:bg-[#fafafa] ${urgencyColors[r.urgency] ?? ''}`}>
                   {/* Rank */}
                   <div className="w-6 h-6 rounded-full bg-[#f1f5f9] flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[9px] font-black text-[#64748b]">{r.priority_rank}</span>
+                    <span className="text-[9px] font-bold text-[#64748b]">{r.priority_rank}</span>
                   </div>
 
                   {/* Customer + action */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-xs text-[#0f172a]">{r.customer_name}</span>
-                      <span className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded ${tierColors[r.customer_risk_tier] ?? tierColors.unknown}`}>
+                      <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded ${tierColors[r.customer_risk_tier] ?? tierColors.unknown}`}>
                         {tierLabels[r.customer_risk_tier] ?? '—'}
                       </span>
                     </div>
@@ -367,7 +367,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
                   {/* Amount */}
                   <div className="text-right shrink-0">
-                    <div className={`font-extrabold tabular-nums text-sm ${
+                    <div className={`font-bold tabular-nums text-sm ${
                       r.urgency === 'critical' ? 'text-neg' :
                       r.urgency === 'urgent'   ? 'text-warn-text' : 'text-[#0f172a]'
                     }`}>{fmt(r.outstanding_try)}</div>
@@ -400,12 +400,12 @@ export async function CollectionsContent({ companyId }: Props) {
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
-                <div className="font-extrabold tabular-nums text-[#0f172a]">{fmt(heatmapReport.total_outstanding_try)}</div>
+                <div className="font-bold tabular-nums text-[#0f172a]">{fmt(heatmapReport.total_outstanding_try)}</div>
               </div>
               {heatmapReport.critical_outstanding_try > 0 && (
                 <div className="text-right">
                   <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Kritik (61+ Gün)</div>
-                  <div className="font-extrabold tabular-nums text-neg">{fmt(heatmapReport.critical_outstanding_try)}</div>
+                  <div className="font-bold tabular-nums text-neg">{fmt(heatmapReport.critical_outstanding_try)}</div>
                 </div>
               )}
             </div>

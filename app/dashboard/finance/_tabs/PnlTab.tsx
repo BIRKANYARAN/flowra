@@ -47,11 +47,11 @@ function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {
   isTotal?: boolean; isDeduction?: boolean; isSub?: boolean
 }) {
   const labelClass = isTotal
-    ? 'text-xs font-black text-[#0f172a]'
+    ? 'text-xs font-bold text-[#0f172a]'
     : isSub ? 'text-[11px] font-medium text-[#94a3b8] pl-4'
     : 'text-xs font-semibold text-[#64748b]'
   const valueClass = isTotal
-    ? `text-sm font-black ${value >= 0 ? 'text-pos-text' : 'text-neg'}`
+    ? `text-sm font-bold ${value >= 0 ? 'text-pos-text' : 'text-neg'}`
     : isDeduction
     ? 'text-xs font-bold text-neg'
     : `text-xs font-bold ${value >= 0 ? 'text-[#1e293b]' : 'text-neg'}`
@@ -137,7 +137,7 @@ function MultiPeriodRow({
     : 'border-t border-[#f1f5f9]'
 
   const labelClass = isSubtotal
-    ? 'font-black text-[#0f172a]'
+    ? 'font-bold text-[#0f172a]'
     : item.indent_level === 1
     ? 'text-[#64748b] pl-4'
     : item.indent_level === 2
@@ -161,7 +161,7 @@ function MultiPeriodRow({
           : 'text-[#1e293b]'
 
         return (
-          <td key={pk} className={`py-1.5 px-2 text-right tabular-nums align-top ${isSubtotal ? 'font-black' : 'font-medium'}`}>
+          <td key={pk} className={`py-1.5 px-2 text-right tabular-nums align-top ${isSubtotal ? 'font-bold' : 'font-medium'}`}>
             <div className={`text-[11px] ${valueColor}`}>
               {fmtTRY(displayVal, 0)}
             </div>
@@ -286,7 +286,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
       {/* Veri kaynağı indicator */}
       <div className="flex items-center gap-2 px-1">
         <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">Veri Kaynağı:</span>
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-bold ${
           glMode === 'gl_primary' && hasGlData
             ? 'bg-pos-light border-pos-light text-pos-text'
             : glMode === 'parallel'
@@ -387,7 +387,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             ].map(c => (
               <div key={c.label} className="text-center">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
-                <div className={`text-sm font-extrabold tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
+                <div className={`text-sm font-bold tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
                 {c.label === 'Net KDV' && (
                   <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-warn' : 'text-pos-text'}`}>
                     {netVat > 0 ? '⬆ Ödenecek' : netVat < 0 ? '⬇ Devir' : 'Sıfır'}
@@ -412,7 +412,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             <div key={k.label} className={`bg-white border border-l-4 border-[#e8eaef] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">{k.label}</div>
               <div className="text-[10px] text-[#94a3b8]">{k.sub}</div>
-              <div className="text-lg font-extrabold tabular-nums text-[#0f172a] mt-1">{k.value}</div>
+              <div className="text-lg font-bold tabular-nums text-[#0f172a] mt-1">{k.value}</div>
             </div>
           ))}
         </div>

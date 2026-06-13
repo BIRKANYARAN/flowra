@@ -260,7 +260,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Toplam Fark
             </div>
-            <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-lg font-bold tabular-nums text-[#0f172a]">
               {fmtTRY(report.accrual_cash_delta.absolute_delta, 0)}
             </div>
           </div>
@@ -268,7 +268,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Aylık Ort. Fark
             </div>
-            <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-lg font-bold tabular-nums text-[#0f172a]">
               {fmtTRY(report.accrual_cash_delta.avg_monthly_delta, 0)}
             </div>
           </div>
@@ -276,7 +276,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
             <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Fark Oranı
             </div>
-            <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-lg font-bold tabular-nums text-[#0f172a]">
               {report.accrual_cash_delta.delta_ratio_pct !== null
                 ? `%${report.accrual_cash_delta.delta_ratio_pct.toFixed(1)}`
                 : '—'}

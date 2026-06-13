@@ -27,7 +27,7 @@ function AccountRow({ account }: { account: BankAccountSummary }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 hover:bg-[#f8fafc]/60 border-b border-[#f1f5f9] last:border-0">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#f1f5f9] flex items-center justify-center text-[11px] font-black text-[#64748b]">
+        <div className="w-8 h-8 rounded-full bg-[#f1f5f9] flex items-center justify-center text-[11px] font-bold text-[#64748b]">
           {account.bank_name.slice(0, 2).toUpperCase()}
         </div>
         <div>
@@ -42,12 +42,12 @@ function AccountRow({ account }: { account: BankAccountSummary }) {
       </div>
       <div className="flex items-center gap-2">
         {account.is_idle && (
-          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-warn-light text-warn-text uppercase tracking-wider">
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-warn-light text-warn-text uppercase tracking-wider">
             Atıl · {account.idle_days}g
           </span>
         )}
         <div className="text-right">
-          <div className="text-sm font-extrabold tabular-nums text-[#0f172a]">{fmtTRY(account.balance_try)}</div>
+          <div className="text-sm font-bold tabular-nums text-[#0f172a]">{fmtTRY(account.balance_try)}</div>
           <div className="text-[10px] text-[#94a3b8]">{account.currency}</div>
         </div>
       </div>
@@ -198,7 +198,7 @@ export function TreasurySection() {
           </div>
           <div className="text-right">
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Toplam Nakit</div>
-            <div className="text-2xl font-extrabold tabular-nums text-[#0f172a] leading-none">
+            <div className="text-2xl font-bold tabular-nums text-[#0f172a] leading-none">
               {fmtTRY(r.total_cash_try)}
             </div>
           </div>
@@ -208,14 +208,14 @@ export function TreasurySection() {
         <div className="grid grid-cols-2 divide-x divide-[#e8eaef]">
           <div className="px-4 py-3">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Nakit Ömrü <InfoTip k="Runway" /></div>
-            <div className={`text-lg font-extrabold tabular-nums leading-none ${runwayTone}`}>
+            <div className={`text-lg font-bold tabular-nums leading-none ${runwayTone}`}>
               {r.cash_runway_months !== null ? `${r.cash_runway_months.toFixed(1)} ay` : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Aylık gider bazında</div>
           </div>
           <div className="px-4 py-3">
             <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">30G Yükümlülük Karşılama</div>
-            <div className={`text-lg font-extrabold tabular-nums leading-none ${coverageTone}`}>
+            <div className={`text-lg font-bold tabular-nums leading-none ${coverageTone}`}>
               {r.obligation_coverage_ratio !== null ? `${r.obligation_coverage_ratio.toFixed(1)}x` : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Nakit / 30 günlük yükümlülük</div>

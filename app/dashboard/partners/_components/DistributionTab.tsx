@@ -233,7 +233,7 @@ export function DistributionTab({
               ].map(row => (
                 <div key={row.label} className={`flex items-center justify-between px-4 py-3 ${row.sign === '=' ? 'bg-[#f8fafc]' : ''}`}>
                   <div className="text-xs text-[#64748b]">{row.label}</div>
-                  <div className={`text-xs font-extrabold tabular-nums font-mono ${row.color}`}>
+                  <div className={`text-xs font-bold tabular-nums font-mono ${row.color}`}>
                     {row.sign && row.sign !== '=' ? row.sign + ' ' : ''}{fmt(row.value)}
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export function DistributionTab({
                 <div>
                   <div className="text-xs font-bold text-pos-text">Dağıtım yapılabilir</div>
                   <div className="text-xs text-pos-text mt-0.5">
-                    Net dağıtılabilir: <span className="font-black">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
+                    Net dağıtılabilir: <span className="font-bold">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
                   </div>
                 </div>
                 {dividendSuccess ? (
@@ -338,7 +338,7 @@ export function DistributionTab({
                 return (
                   <div key={i} className={`border rounded px-4 py-3 text-xs ${cls}`}>
                     <span className="font-bold uppercase tracking-wide">[{w.type}]</span>{' '}{w.message}
-                    {w.amount != null && <span className="font-black ml-1">{fmt(w.amount)}</span>}
+                    {w.amount != null && <span className="font-bold ml-1">{fmt(w.amount)}</span>}
                   </div>
                 )
               })}

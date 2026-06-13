@@ -63,15 +63,15 @@ Full-width:               no wrapper class needed
 
 ```
 Page title:       text-base font-bold text-[#0f172a]                (16px / 700)
-Section label:    text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]
+Section label:    text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]
 Body:             text-xs text-[#334155]                             (12px / 400)
 Body emphasized:  text-xs font-medium text-[#0f172a]
 Caption:          text-[0.65rem] text-[#94a3b8]                     (10.4px)
-Table header:     text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]
+Table header:     text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]
 Table cell:       text-xs text-[#334155]
 Number (display): font-mono tabular-nums                              (always on financials)
-Number (KPI lg):  text-xl font-black font-mono tabular-nums
-Number (KPI md):  text-base font-black font-mono tabular-nums
+Number (KPI lg):  text-xl font-bold font-mono tabular-nums
+Number (KPI md):  text-base font-bold font-mono tabular-nums
 Number (inline):  text-xs font-mono tabular-nums
 ```
 
@@ -81,7 +81,7 @@ These patterns deviate from the canonical scale by intentional design decision.
 They must not be "corrected" in future sweeps.
 
 ```
-label-strip:      text-[9px] font-black uppercase tracking-widest text-[#94a3b8]
+label-strip:      text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]
 ```
 **Used in:** KPI strip cells (5-wide dashboard grid), command bar stat blocks, dense
 context bars with ≤80px column width. The 9px (vs 10.4px canonical) is intentional for
@@ -108,10 +108,10 @@ font-family (mono): ui-monospace, SFMono-Regular, 'SF Mono', 'Fira Code', monosp
 
 ### 2.3 Typography Rules
 
-- Section labels are **always** `text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]`. Never `font-bold`, never `text-xs`.
+- Section labels are **always** `text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]`. Never `font-bold`, never `text-xs`.
 - Financial numbers are **always** monospace. Including percentages, ratios, and days counts.
 - Page titles are **never** larger than `text-base`. This is not a marketing page.
-- `font-black` (900) is reserved for: section labels, KPI values, table totals. Not for body text.
+- `font-bold` (900) is reserved for: section labels, KPI values, table totals. Not for body text.
 
 ---
 
@@ -220,7 +220,7 @@ Tables are the primary way Flowra displays financial data. Not cards. Not grids 
 <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
   {/* Optional header */}
   <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
-    <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]">
       Section Title
     </span>
     <ActionLink />
@@ -229,10 +229,10 @@ Tables are the primary way Flowra displays financial data. Not cards. Not grids 
   <table className="w-full text-xs">
     <thead>
       <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
-        <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <th className="px-4 py-2 text-left text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]">
           Column
         </th>
-        <th className="px-4 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <th className="px-4 py-2 text-right text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]">
           Amount
         </th>
       </tr>
@@ -248,7 +248,7 @@ Tables are the primary way Flowra displays financial data. Not cards. Not grids 
     {/* Optional footer for totals */}
     <tfoot>
       <tr className="border-t-2 border-[#e2e8f0] bg-[#f8fafc] font-semibold">
-        <td className="px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        <td className="px-4 py-2.5 text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]">
           Toplam
         </td>
         <td className="px-4 py-2.5 text-right font-mono tabular-nums font-bold text-[#0f172a]">
@@ -297,10 +297,10 @@ KPI values belong in a horizontal instrument strip — a single bordered contain
 <div className="grid grid-cols-5 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
   {kpis.map((k, i) => (
     <div key={i} className={`px-4 py-3 bg-white ${i < 4 ? 'border-r border-[#e2e8f0]' : ''}`}>
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+      <div className="text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8] mb-1.5">
         {k.label}
       </div>
-      <div className={`text-xl font-black font-mono tabular-nums leading-none mb-1 ${k.color}`}>
+      <div className={`text-xl font-bold font-mono tabular-nums leading-none mb-1 ${k.color}`}>
         {k.value}
       </div>
       <div className="text-[0.65rem] text-[#94a3b8]">{k.sub}</div>
@@ -311,8 +311,8 @@ KPI values belong in a horizontal instrument strip — a single bordered contain
 
 ### 6.2 KPI Rules
 
-- **Label**: always `0.65rem font-black uppercase tracking-widest ink-4`
-- **Value**: always `text-xl font-black mono` minimum — `text-2xl` for hero single KPI
+- **Label**: always `0.65rem font-bold uppercase tracking-widest ink-4`
+- **Value**: always `text-xl font-bold mono` minimum — `text-2xl` for hero single KPI
 - **Sub**: always `0.65rem ink-4` — supporting context, not another KPI
 - **Color**: `text-ink-1` default, `text-pos` for explicitly healthy, `text-warn` for caution, `text-neg` for critical
 - **Count**: 4–6 KPIs maximum in a strip. Never 7+. Split into two strips if needed.
@@ -328,7 +328,7 @@ KPI values belong in a horizontal instrument strip — a single bordered contain
 <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
   {/* Header (optional) */}
   <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
-    <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-[#94a3b8]">
       Panel Title
     </span>
   </div>
@@ -597,7 +597,7 @@ These are banned from all new code and must be removed during refactors:
 ```
 ❌ rounded-xl, rounded-2xl, rounded-lg                → rounded only
 ❌ gap-6, gap-8 between page sections                 → gap-4 max
-❌ text-xl font-black for page titles                 → text-base font-bold
+❌ text-xl font-bold for page titles                 → text-base font-bold
 ❌ border-gray-200, border-gray-300                   → border-[#e2e8f0]
 ❌ text-green-*, bg-green-*                           → text-pos, bg-pos/*
 ❌ text-red-*, bg-red-*                               → text-neg, bg-neg/*

@@ -89,7 +89,7 @@ function ScoreBar({
             Kıyaslama: {benchmarkDays}g
           </span>
           {currentDays !== null && (
-            <span className={`font-extrabold tabular-nums ${
+            <span className={`font-bold tabular-nums ${
               currentDays > benchmarkDays ? 'text-orange-600' : 'text-green-600'
             }`}>
               {currentDays.toFixed(0)}g
@@ -157,7 +157,7 @@ function TrendRow({ period, isCurrent }: { period: CccScorecardPeriod; isCurrent
         {period.efficiency_score}
       </td>
       <td className="px-3 py-2 text-center">
-        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black ${
+        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold ${
           grade === 'A' ? 'bg-green-100 text-green-700' :
           grade === 'B' ? 'bg-info-light text-info-text' :
           grade === 'C' ? 'bg-yellow-100 text-yellow-700' :
@@ -260,7 +260,7 @@ export function CccScorecardClient({ companyId }: Props) {
       <div className={`rounded-xl border-2 ${gc.bg} ${gc.border} px-6 py-5`}>
         <div className="flex items-center gap-6">
           {/* Grade letter */}
-          <div className={`text-7xl font-black leading-none tabular-nums ${gc.text} flex-shrink-0`}>
+          <div className={`text-7xl font-bold leading-none tabular-nums ${gc.text} flex-shrink-0`}>
             {report.efficiency_grade}
           </div>
           {/* Score + label */}
@@ -268,7 +268,7 @@ export function CccScorecardClient({ companyId }: Props) {
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
               Nakit Dönüşüm Verimliliği
             </div>
-            <div className="text-3xl font-extrabold tabular-nums text-[#0f172a]">
+            <div className="text-3xl font-bold tabular-nums text-[#0f172a]">
               {report.overall_efficiency_score}
               <span className="text-base font-semibold text-[#94a3b8] ml-1">/ 100</span>
             </div>
@@ -279,7 +279,7 @@ export function CccScorecardClient({ companyId }: Props) {
             {cp.ccc_days !== null && (
               <div className="text-[11px] text-[#64748b] mt-1.5">
                 Mevcut CCC:{' '}
-                <span className="font-black text-[#0f172a]">{cp.ccc_days.toFixed(0)} gün</span>
+                <span className="font-bold text-[#0f172a]">{cp.ccc_days.toFixed(0)} gün</span>
                 {' '}·{' '}
                 Kıyaslama:{' '}
                 <span className="font-bold">{report.benchmark_ccc} gün</span>
@@ -296,7 +296,7 @@ export function CccScorecardClient({ companyId }: Props) {
               <div className="text-[9px] font-bold uppercase tracking-wide text-[#94a3b8] mb-0.5">
                 Kıyaslama vs
               </div>
-              <div className={`text-xl font-extrabold tabular-nums ${
+              <div className={`text-xl font-bold tabular-nums ${
                 cp.benchmark_delta <= 0 ? 'text-green-700' : 'text-orange-700'
               }`}>
                 {cp.benchmark_delta > 0
@@ -418,7 +418,7 @@ export function CccScorecardClient({ companyId }: Props) {
               </div>
               <div className="text-sm text-[#15803d] leading-relaxed">
                 CCC,{' '}
-                <span className="font-black">
+                <span className="font-bold">
                   {report.improvement_potential_days} gün
                 </span>{' '}
                 kısaltılabilir (kıyaslama: {report.benchmark_ccc}g).

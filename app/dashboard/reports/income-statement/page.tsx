@@ -49,10 +49,10 @@ function Row({ label, value, sub, bold, indent, positive, negative }: {
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-[#f1f5f9] last:border-0 ${indent ? 'pl-6' : ''}`}>
       <div className="min-w-0">
-        <span className={`text-xs ${bold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
+        <span className={`text-xs ${bold ? 'font-bold text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
         {sub && <span className="text-[10px] text-[#94a3b8] ml-2">{sub}</span>}
       </div>
-      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black' : 'font-semibold'} ${
+      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-bold' : 'font-semibold'} ${
         positive ? 'text-pos-text' : negative ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</span>
     </div>
@@ -192,8 +192,8 @@ export default function IncomeStatementPage() {
           {/* Net income */}
           <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-pos-light bg-pos-light' : 'border-neg-light bg-neg-light'}`}>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-black text-[#0f172a]">Dönem Net Kârı</span>
-              <span className={`text-xl font-extrabold tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <span className="text-sm font-bold text-[#0f172a]">Dönem Net Kârı</span>
+              <span className={`text-xl font-bold tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(pnl.net_after_tax_try)}
               </span>
             </div>

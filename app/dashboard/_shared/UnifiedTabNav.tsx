@@ -56,7 +56,7 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
           aria-label={`${tab.badge} bildirim`}
           className={`
           inline-flex items-center justify-center min-w-[16px] h-4 px-1
-          text-[9px] font-black rounded-full leading-none transition-colors
+          text-[9px] font-bold rounded-full leading-none transition-colors
           ${isActive
             ? 'bg-[#e2e8f0] text-[#334155]'
             : 'bg-[#f1f5f9] text-[#64748b]'
@@ -91,7 +91,7 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
               aria-current={i === activeIdx ? 'true' : undefined}
               className={`px-3 py-1.5 text-xs rounded-md transition-all duration-150 whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
                 i === activeIdx
-                  ? 'text-[#0f172a] font-black bg-[#f1f5f9]'
+                  ? 'text-[#0f172a] font-bold bg-[#f1f5f9]'
                   : 'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc] font-semibold'
               }`}
             >

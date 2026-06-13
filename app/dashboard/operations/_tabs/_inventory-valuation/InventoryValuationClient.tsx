@@ -114,7 +114,7 @@ export function InventoryValuationClient() {
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{card.label}</div>
-            <div className={`text-base font-extrabold tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className={`text-base font-bold tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 truncate">{card.sub}</div>
           </div>
         ))}
@@ -125,7 +125,7 @@ export function InventoryValuationClient() {
         <div className="px-4 py-2.5 bg-neg-light border-b border-neg/20 flex items-start gap-2">
           <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-neg shrink-0" />
           <div>
-            <span className="text-xs font-black text-neg">Yüksek Atıl Stok Riski</span>
+            <span className="text-xs font-bold text-neg">Yüksek Atıl Stok Riski</span>
             <span className="text-[10px] text-neg ml-2">
               Envanter değerinin %{report.dead_stock_pct.toFixed(1)}&apos;i son 60 günde hareket etmedi —
               indirim, iade veya stok düzenleme değerlendirin.
@@ -173,22 +173,22 @@ export function InventoryValuationClient() {
                 <td className="px-4 py-2 text-center">
                   <div className="flex items-center justify-center gap-1 flex-wrap">
                     {p.is_dead_stock && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-black bg-neg-light text-neg border border-neg/20">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-neg-light text-neg border border-neg/20">
                         Atıl
                       </span>
                     )}
                     {p.is_slow_moving && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-50 text-orange-700 border border-orange-200">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
                         Yavaş
                       </span>
                     )}
                     {!p.is_dead_stock && !p.is_slow_moving && p.total_qty > 0 && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-black bg-pos-light text-pos-text border border-pos-light">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-pos-light text-pos-text border border-pos-light">
                         Normal
                       </span>
                     )}
                     {p.total_qty === 0 && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-black bg-[#f1f5f9] text-[#94a3b8]">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#f1f5f9] text-[#94a3b8]">
                         Tükenmiş
                       </span>
                     )}
@@ -205,13 +205,13 @@ export function InventoryValuationClient() {
         <div className="flex gap-6 px-4 py-2 border-t border-[#f1f5f9] text-[10px] text-[#64748b]">
           {report.fastest_mover && (
             <span>
-              <span className="font-black text-pos-text">En hızlı:</span>{' '}
+              <span className="font-bold text-pos-text">En hızlı:</span>{' '}
               {report.fastest_mover.product_name} · {fmtTurnover(report.fastest_mover.turnover_rate)}
             </span>
           )}
           {report.slowest_mover && (
             <span>
-              <span className="font-black text-warn-text">En yavaş:</span>{' '}
+              <span className="font-bold text-warn-text">En yavaş:</span>{' '}
               {report.slowest_mover.product_name} · {fmtTurnover(report.slowest_mover.turnover_rate)}
             </span>
           )}

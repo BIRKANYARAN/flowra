@@ -86,7 +86,7 @@ export function SimulationInsightsPanel({
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
-            <div className={`text-lg font-extrabold tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-[#1e293b]' : 'text-neg'}`}>
+            <div className={`text-lg font-bold tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-[#1e293b]' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—'}
             </div>
           </div>
@@ -94,14 +94,14 @@ export function SimulationInsightsPanel({
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
               Kurumlar Vergisi (%{CORP_TAX_RATE})
             </div>
-            <div className="text-lg font-extrabold tabular-nums text-warn">
+            <div className="text-lg font-bold tabular-nums text-warn">
               {estimatedCorpTax > 0 ? `−${fmtC(toDisplay(estimatedCorpTax), S)}` : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Tahmini KV</div>
           </div>
           <div>
             <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
-            <div className={`text-lg font-extrabold tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+            <div className={`text-lg font-bold tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(netAfterCorpTax), S) : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Ortaklara dağıtılabilir</div>
@@ -155,7 +155,7 @@ export function SimulationInsightsPanel({
                 {partnerEq.entries.map(e => (
                   <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-pos-light">
                     <div className="text-xs text-[#64748b] font-semibold truncate mb-0.5">{e.partner_name}</div>
-                    <div className="text-base font-extrabold tabular-nums text-pos-text">
+                    <div className="text-base font-bold tabular-nums text-pos-text">
                       {fmtC(toDisplay(e.total_payout), S)}
                     </div>
                     <div className="text-[10px] text-[#94a3b8] mt-0.5">%{(e.share_ratio * 100).toFixed(0)} pay</div>

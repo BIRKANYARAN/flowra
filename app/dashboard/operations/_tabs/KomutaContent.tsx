@@ -88,7 +88,7 @@ function KpiCard({
   const inner = (
     <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 transition-colors hover:bg-[#f8fafc]">
       <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-extrabold tabular-nums leading-none ${valueColor}`}>{value}</div>
+      <div className={`text-xl font-bold tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
     </div>
   )
@@ -292,7 +292,7 @@ export async function KomutaContent({ companyId }: Props) {
                         {days} gün gecikmiş
                       </div>
                     </div>
-                    <div className="text-sm font-black text-right ml-3 text-neg tabular-nums">
+                    <div className="text-sm font-bold text-right ml-3 text-neg tabular-nums">
                       {fmtTRY(remaining)}
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export async function KomutaContent({ companyId }: Props) {
                     {p.sku && <div className="text-[10px] text-[#94a3b8]">{p.sku}</div>}
                   </div>
                   <div className="ml-3 text-right">
-                    <span className={`text-sm font-extrabold tabular-nums ${
+                    <span className={`text-sm font-bold tabular-nums ${
                       p.qty === 0 ? 'text-neg' : p.qty <= 2 ? 'text-warn' : 'text-warn-text'
                     }`}>
                       {p.qty} {p.unit}
@@ -378,7 +378,7 @@ export async function KomutaContent({ companyId }: Props) {
                     {ORDER_STATUS_LABEL[o.status] ?? o.status}
                   </span>
                 </div>
-                <div className="text-right text-sm font-extrabold tabular-nums text-[#1e293b]">
+                <div className="text-right text-sm font-bold tabular-nums text-[#1e293b]">
                   {o.total_try != null ? fmtTRY(o.total_try) : '—'}
                 </div>
               </div>

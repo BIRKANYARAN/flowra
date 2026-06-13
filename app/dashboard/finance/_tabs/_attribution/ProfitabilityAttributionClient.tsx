@@ -103,7 +103,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Genel Brüt Marj
         </div>
-        <div className={`text-lg font-extrabold tabular-nums ${
+        <div className={`text-lg font-bold tabular-nums ${
           overall_margin_pct !== null && overall_margin_pct >= 0 ? 'text-pos-text' : 'text-neg'
         }`}>
           {overall_margin_pct !== null ? fmtPct(overall_margin_pct) : '—'}
@@ -115,7 +115,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Gini Katsayısı
         </div>
-        <div className={`text-lg font-extrabold tabular-nums ${giniColor(gini_by_category)}`}>
+        <div className={`text-lg font-bold tabular-nums ${giniColor(gini_by_category)}`}>
           {gini_by_category !== null ? gini_by_category.toFixed(2) : '—'}
         </div>
         <div className="text-[9px] text-[#94a3b8] mt-0.5">
@@ -128,7 +128,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Pareto 80% Kategorisi
         </div>
-        <div className="text-lg font-extrabold tabular-nums text-[#0f172a]">
+        <div className="text-lg font-bold tabular-nums text-[#0f172a]">
           {summary.pareto_80_category_count}
           <span className="text-[#94a3b8] text-xs font-semibold">
             /{summary.total_categories}
@@ -142,7 +142,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
           Marj Volatilitesi
         </div>
-        <div className={`text-lg font-extrabold tabular-nums ${
+        <div className={`text-lg font-bold tabular-nums ${
           summary.margin_volatility_pct !== null && summary.margin_volatility_pct > 10
             ? 'text-warn-text' : 'text-[#0f172a]'
         }`}>
@@ -236,7 +236,7 @@ function CategoryParetoTable({
                 </td>
                 <td className="py-2 px-2 text-center">
                   {cat.is_pareto_80 && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-pos-light text-pos-text border border-pos-light">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-pos-light text-pos-text border border-pos-light">
                       TOP 80%
                     </span>
                   )}
@@ -268,7 +268,7 @@ function ProfitDragSection({ drags }: { drags: DragRow[] }) {
         <div key={drag.name} className="flex items-center justify-between gap-3 bg-neg-light border border-neg-light rounded px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0" />
-            <span className="text-xs font-black text-neg-text truncate">{drag.name}</span>
+            <span className="text-xs font-bold text-neg-text truncate">{drag.name}</span>
             {drag.revenue_pct !== null && (
               <span className="text-[10px] text-neg-text/70">
                 (Ciro: {fmtPct(drag.revenue_pct)})
@@ -276,7 +276,7 @@ function ProfitDragSection({ drags }: { drags: DragRow[] }) {
             )}
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-xs font-extrabold tabular-nums text-neg">
+            <div className="text-xs font-bold tabular-nums text-neg">
               {drag.margin_pct !== null ? fmtPct(drag.margin_pct) : 'Bilinmiyor'}
             </div>
             {drag.drag_magnitude !== null && (
@@ -368,12 +368,12 @@ function MonthlyTimeSeriesTable({ months }: { months: MonthRow[] }) {
               </td>
               <td className="py-2 px-2 text-center">
                 {m.is_peak_month && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-pos-light text-pos-text border border-pos-light">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-pos-light text-pos-text border border-pos-light">
                     ZİRVE
                   </span>
                 )}
                 {m.is_trough_month && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-neg-light text-neg border border-neg-light">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-neg-light text-neg border border-neg-light">
                     DİP
                   </span>
                 )}
