@@ -1,9 +1,9 @@
 'use client'
 
 /**
- * Sidebar — 7-hub center navigation
+ * Sidebar — zoned navigation (Kokpit · Çalışma Alanları · Muhasebe · Gelişmiş · Sistem)
  *
- * Driven entirely by lib/nav-config.ts:
+ * Driven entirely by lib/nav-config.ts (mirrors FLOWRA_FINAL_FORM.md zones):
  *   • Group-based layout — every real route is reachable
  *   • Role-filtered via getGroupsForRole()
  *   • isNavItemActive() — safe prefix match (no /sales matching /sales-flow)
@@ -90,7 +90,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             <div className="min-w-0 flex-1">
               <div className="font-bold text-sm leading-tight truncate text-white">{displayName}</div>
               <div className="text-[10px] text-white/40 uppercase tracking-wide">
-                {hasMultiCompany ? `${companies.length} şirket ▾` : 'Flowra ERP'}
+                {hasMultiCompany ? `${companies.length} şirket ▾` : 'Finansal OS'}
               </div>
             </div>
           </div>

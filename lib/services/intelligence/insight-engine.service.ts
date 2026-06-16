@@ -80,7 +80,7 @@ export function generateRevenueInsights(params: RevenueInsightParams): BusinessI
       metric_value: trend_slope,
       metric_label: 'Aylık büyüme',
       action_label: 'Trend Raporu',
-      action_href: '/dashboard/finance?tab=trends',
+      action_href: '/dashboard/finance?tab=pnl',
     })
   }
 
@@ -115,7 +115,7 @@ export function generateRevenueInsights(params: RevenueInsightParams): BusinessI
       metric_value: absDiff,
       metric_label: 'YoY düşüş',
       action_label: 'Analiz Et',
-      action_href: '/dashboard/finance?tab=trends',
+      action_href: '/dashboard/finance?tab=pnl',
     })
   }
 
@@ -153,7 +153,7 @@ export function generateExpenseInsights(params: ExpenseInsightParams): BusinessI
       metric_value: anomaly_count,
       metric_label: 'Anomali sayısı',
       action_label: 'İncele',
-      action_href: '/dashboard/finance?tab=expenses',
+      action_href: '/dashboard/operations?tab=expenses',
     })
   }
 
@@ -169,7 +169,7 @@ export function generateExpenseInsights(params: ExpenseInsightParams): BusinessI
       metric_value: expense_ratio_pct,
       metric_label: 'Gider oranı',
       action_label: 'Giderleri Gözden Geçir',
-      action_href: '/dashboard/finance?tab=expenses',
+      action_href: '/dashboard/operations?tab=expenses',
     })
   }
 
@@ -184,7 +184,7 @@ export function generateExpenseInsights(params: ExpenseInsightParams): BusinessI
       metric_value: top_category_pct,
       metric_label: top_category,
       action_label: 'Detay',
-      action_href: '/dashboard/finance?tab=expenses',
+      action_href: '/dashboard/operations?tab=expenses',
     })
   }
 
@@ -281,7 +281,7 @@ export function generateReceivablesInsights(params: ReceivablesInsightParams): B
       metric_value: overdue_pct,
       metric_label: 'Gecikmiş oran',
       action_label: 'Alacakları İncele',
-      action_href: '/dashboard/commercial?tab=receivables',
+      action_href: '/dashboard/commercial?tab=collections',
     })
   }
 
@@ -295,7 +295,7 @@ export function generateReceivablesInsights(params: ReceivablesInsightParams): B
       metric_value: dso_days,
       metric_label: 'Tahsilat süresi (gün)',
       action_label: 'DSO Analizi',
-      action_href: '/dashboard/commercial?tab=receivables',
+      action_href: '/dashboard/commercial?tab=collections',
     })
   }
 

@@ -274,10 +274,10 @@ export class PeriodCloseEnhancedService {
         if (count === 0) {
           checks.push(pass(key, label, 'accounting', 'Bu dönemde taslak masraf bulunmuyor.', true))
         } else {
-          checks.push(fail(key, label, 'accounting', `${count} adet taslak masraf var — bunların onaylanması gerekiyor.`, true, '/dashboard/finance?tab=expenses'))
+          checks.push(fail(key, label, 'accounting', `${count} adet taslak masraf var — bunların onaylanması gerekiyor.`, true, '/dashboard/operations?tab=expenses'))
         }
       } else {
-        checks.push(warn(key, label, 'accounting', 'Masraf verileri yüklenemedi — lütfen manuel kontrol edin.', true, '/dashboard/finance?tab=expenses'))
+        checks.push(warn(key, label, 'accounting', 'Masraf verileri yüklenemedi — lütfen manuel kontrol edin.', true, '/dashboard/operations?tab=expenses'))
       }
     }
 

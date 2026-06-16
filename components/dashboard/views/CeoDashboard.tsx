@@ -24,7 +24,7 @@ export function CeoDashboard({ data }: { data: HomePayload }) {
     <>
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 shrink-0">
-        <KpiTile label="Gelir (Bu Ay)" value={fmtTRY(k.revenue_mtd_try)} accent={CHART.primary} href="/dashboard/sales" />
+        <KpiTile label="Gelir (Bu Ay)" value={fmtTRY(k.revenue_mtd_try)} accent={CHART.primary} href="/dashboard/commercial?tab=sales" />
         <KpiTile label="Net Kâr (Bu Ay)" value={fmtTRY(k.net_income_mtd_try)}
           tone={k.net_income_mtd_try < 0 ? 'negative' : 'positive'}
           sub={k.net_income_mtd_try < 0 ? 'Zarar' : undefined}
@@ -37,7 +37,7 @@ export function CeoDashboard({ data }: { data: HomePayload }) {
         <KpiTile label="Alacaklar" value={fmtTRY(k.accounts_receivable_try)}
           sub={k.overdue_receivable_try > 0 ? `Vadesi geçen: ${fmtCompact(k.overdue_receivable_try)}` : 'Vadesi geçen yok'}
           tone={k.overdue_receivable_try > 0 ? 'negative' : 'neutral'}
-          accent={CHART.ink3} href="/dashboard/collections" />
+          accent={CHART.ink3} href="/dashboard/commercial?tab=collections" />
       </div>
 
       {/* Body */}

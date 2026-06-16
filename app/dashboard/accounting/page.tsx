@@ -73,7 +73,7 @@ export default function AccountingHubPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <div>
-        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Muhasebe Merkezi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Muhasebe</div>
         <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">Mali Müşavir Alanı</h1>
         <p className="text-sm text-[#94a3b8] mt-1">
           Defterler, dönem kapanış, mutabakat ve resmi raporlama — hepsi tek yerde.

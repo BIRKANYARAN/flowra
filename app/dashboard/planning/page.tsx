@@ -1,4 +1,4 @@
-// ── /dashboard/planning — Planlama Merkezi ────────────────────────────────────
+// ── /dashboard/planning — Planlama ────────────────────────────────────
 //
 // Server component. Auth + companyId + userId resolved once.
 // Active tab read from ?tab= searchParam → renders real content server-side.
@@ -114,7 +114,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
 
       {/* PAGE HERO */}
       <div>
-        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Planlama Merkezi</div>
+        <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Planlama</div>
         <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">
           {planTitles[activeTab] ?? 'Planlama'}
         </h1>

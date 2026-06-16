@@ -1,7 +1,7 @@
 'use client'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /dashboard/partners — Ortak Finans Merkezi
+// /dashboard/partners — Ortaklar
 //
 // Tabs:
 //   1. Ortaklar       — per-partner cards, equalization, share bars
@@ -363,7 +363,7 @@ export default function PartnersPage() {
       {/* PAGE HERO */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Ortak Finans Merkezi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Ortaklar</div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">
             {TAB_META[activeTab]?.title ?? 'Ortaklar'}
           </h1>

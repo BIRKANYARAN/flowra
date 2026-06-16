@@ -625,7 +625,7 @@ export class AlertRulesService {
           'Gider Anormalliği Tespit Edildi',
           `${anomalyReport.high_severity_count} yüksek seviyeli gider anormalliği bulundu.`,
           {
-            action_href:  '/dashboard/finance?tab=expenses',
+            action_href:  '/dashboard/operations?tab=expenses',
             action_label: 'Gider Analizini Gör',
           },
         ))

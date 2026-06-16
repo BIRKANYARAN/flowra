@@ -12,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   // `default` shows on routes with no own title; `template` makes every page that
   // sets a title render as "<Page> · Flowra" so browser tabs are distinguishable.
-  title: { default: 'Flowra — ERP', template: '%s · Flowra' },
+  title: { default: 'Flowra — Finansal OS', template: '%s · Flowra' },
   description: 'Profesyonel proforma ve satış yönetim sistemi.',
 }
 

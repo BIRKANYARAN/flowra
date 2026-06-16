@@ -86,7 +86,7 @@ export default function AuthPage() {
           </div>
           <div>
             <div className="font-bold text-lg leading-none">Flowra</div>
-            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-white/40 mt-0.5">ERP Sistemi</div>
+            <div className="text-[0.6rem] font-bold uppercase tracking-wider text-white/40 mt-0.5">Finansal OS</div>
           </div>
         </div>
 
@@ -124,7 +124,7 @@ export default function AuthPage() {
             </div>
             <div>
               <div className="font-bold text-[#0f172a]">Flowra</div>
-              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">ERP Sistemi</div>
+              <div className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">Finansal OS</div>
             </div>
           </div>
 

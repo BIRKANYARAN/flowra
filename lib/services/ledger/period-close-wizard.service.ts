@@ -383,7 +383,7 @@ export class PeriodCloseWizardService {
             'fail', true, true,
             `${count} adet taslak masraf var — onaylanması gerekiyor.`,
             'Masraflara git',
-            '/dashboard/finance?tab=expenses',
+            '/dashboard/operations?tab=expenses',
           ))
         }
       } else {
@@ -394,7 +394,7 @@ export class PeriodCloseWizardService {
           'skipped', true, true,
           'Masraf verileri yüklenemedi.',
           'Masraflara git',
-          '/dashboard/finance?tab=expenses',
+          '/dashboard/operations?tab=expenses',
         ))
       }
     }
@@ -757,7 +757,7 @@ export class PeriodCloseWizardService {
       'manual', false, false,
       'Manuel onay gerekiyor — CFO borç raporunu incelemelidir.',
       'Borç Raporu',
-      '/dashboard/finance?tab=expenses',
+      '/dashboard/operations?tab=expenses',
     ))
 
     // ─────────────────────────────────────────────────────────────────────────

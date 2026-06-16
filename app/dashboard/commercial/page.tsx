@@ -1,4 +1,4 @@
-// ── /dashboard/commercial — Ticari Akış Merkezi ───────────────────────────────
+// ── /dashboard/commercial — Satış ───────────────────────────────
 //
 // Server component. Auth + companyId resolved once.
 // Active tab read from ?tab= searchParam → renders real content server-side.
@@ -98,7 +98,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
       {/* PAGE HERO */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Ticari Akış Merkezi</div>
+          <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Satış</div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">
             {tabTitles[activeTab] ?? 'Ticari Akış'}
           </h1>
