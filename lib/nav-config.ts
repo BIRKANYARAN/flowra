@@ -10,18 +10,15 @@
  * Pure functions only — no React, no DB, no side effects.
  * Fully importable in Vitest without DOM / Next.js setup.
  *
- * Architecture: 7 main centers, each accessed by a single sidebar item.
- * Inner tabs use ?tab= URL param via UnifiedTabNav.
+ * Architecture (refoundation IA): owner-first zones, one sidebar entry per hub.
+ * Inner sub-sections use ?tab= URL param via UnifiedTabNav (isNavItemActive is
+ * tab-aware). Zones mirror FLOWRA_FINAL_FORM.md:
  *
- *   Komuta Merkezi  /dashboard          (CEO cockpit)
- *   Finans Merkezi  /dashboard/finance  (finance hub — 9 tabs)
- *   Ticari Akış     /dashboard/commercial (5 tabs)
- *   OPS Komuta      /dashboard/ops      (daily command center)
- *   Operasyon       /dashboard/operations (4 tabs)
- *   Ortak Fin.      /dashboard/partners
- *   Planlama        /dashboard/planning   (6 tabs)
- *   Yönetim         /dashboard/admin      (admin only)
- *   Ayarlar         /dashboard/settings
+ *   Kokpit                /dashboard            (owner home)
+ *   Çalışma Alanları      Satış · Operasyon · Finans · Ortaklar
+ *   Muhasebe              /dashboard/accounting (müşavir GL launcher → cfo/*)
+ *   Gelişmiş              Planlama · AI Analiz · Belgeler · Yönetişim
+ *   Sistem (admin)        Yönetim · İş Akışları · Ayarlar
  */
 
 import type { MemberRole } from '@/types'

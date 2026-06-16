@@ -30,7 +30,7 @@ const PRIMARY: Tab[] = [
 const SECONDARY: Tab[] = [
   { href: '/dashboard/commercial?tab=ozet',  label: 'Teklifler',   icon: 'proformas'        },
   { href: '/dashboard/commercial?tab=customers', label: 'Müşteriler',  icon: 'customers'        },
-  { href: '/dashboard/operations',               label: 'Gider & Stok',icon: 'expenses'         },
+  { href: '/dashboard/operations',               label: 'Operasyon',   icon: 'products'         },
   { href: '/dashboard/partners',                 label: 'Ortaklar',    icon: 'partners', minRole: 'admin' },
   { href: '/dashboard/planning',                 label: 'Planlama',    icon: 'planning'         },
   { href: '/dashboard/insights',                 label: 'AI Analiz',   icon: 'search'           },
