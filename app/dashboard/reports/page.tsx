@@ -242,7 +242,7 @@ export default function ReportsHubPage() {
           Raporlar CFO cockpit ve dönem kapanış süreciyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=cfo" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/accounting/cockpit" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             CFO Cockpit →
           </Link>
           <span className="text-[#e2e8f0]">|</span>

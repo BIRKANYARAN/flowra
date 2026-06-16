@@ -31,6 +31,7 @@ import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
 import { FINANCE_TABS }      from '@/lib/nav-config'
 import { getGlMode }         from '@/lib/middleware/period-guard'
+import { Icon }              from '@/components/ui/Icon'
 
 import { PnlTab }           from './_tabs/PnlTab'
 import { BalanceTab }       from './_tabs/BalanceTab'
@@ -40,12 +41,16 @@ import { RisksTab }         from './_tabs/RisksTab'
 import { CorporateTaxTab }  from './_tabs/CorporateTaxTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 import { DetailSection }     from '@/components/dashboard/DetailSection'
+import { HubFallback }       from '@/components/dashboard/HubFallback'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'kurumlar-vergisi' | 'risks' | 'cfo' | 'boardpack' | 'reports' | 'mizan'
+// OWNER-first: only the 5 owner views (+ kurumlar-vergisi merge alias). The
+// accountant tabs (cfo/boardpack/reports/mizan) MOVED to the Muhasebe zone; their
+// old keys are intercepted by the redirects below before this list is consulted.
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'kurumlar-vergisi' | 'risks'
 
-const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'kurumlar-vergisi', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'kurumlar-vergisi', 'risks']
 
 // FINANCE_TABS now lives in nav-config (single source shared with the header
 // breadcrumb); aliased here to keep the JSX below unchanged.
@@ -62,10 +67,6 @@ const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
   tax:               { title: 'Vergi Merkezi',         sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
   'kurumlar-vergisi': { title: 'Kurumlar Vergisi',     sub: 'Yıllık vergi tahmini · Geçici vergi takvimi · Ödeme planı' },
   risks:             { title: 'Risk Analizi',          sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
-  cfo:       { title: 'CFO Cockpit',          sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
-  mizan:     { title: 'Mizan',                sub: 'Hesap Kodları · Borç/Alacak Bakiyeleri · Denge Kontrolü' },
-  boardpack: { title: 'Yönetim Paketi',       sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
-  reports:   { title: 'CFO Raporlama Paketi', sub: 'Aylık CFO paketi · Tüm raporlar · ZIP indirme' },
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────────
@@ -101,23 +102,11 @@ export default async function FinancePage({ searchParams }: PageProps) {
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
   }
-  if (!userId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!userId) return <HubFallback variant="auth" retryHref="/dashboard/finance" />
 
   let companyId: string | null = null
   try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
-  if (!companyId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!companyId) return <HubFallback variant="company" retryHref="/dashboard/finance" />
 
   // ── Tab resolution — legacy redirects (server-side, no flash) ────────────────
   const params = await searchParams
@@ -130,6 +119,9 @@ export default async function FinancePage({ searchParams }: PageProps) {
   // Refoundation W3 — accountant depth moved OUT of the owner's Finance hub into
   // the Muhasebe zone. The CFO cockpit + reporting pack (and their mizan/boardpack
   // folds) now live under /dashboard/accounting; old deep-links redirect there.
+  // ⚠️ Compatibility shims — DO NOT REMOVE: these intercept the old accountant
+  // tab keys (deep-links/bookmarks) before VALID_TABS is consulted and forward
+  // them to the Muhasebe zone where those tools now live.
   if (rawTab === 'quarterly' || rawTab === 'cfo') redirect('/dashboard/accounting/cockpit')
   if (rawTab === 'reports' || rawTab === 'boardpack' || rawTab === 'mizan') redirect('/dashboard/accounting/reports')
 
@@ -152,24 +144,14 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-5 w-full">
 
       {/* ── PAGE HERO ─────────────────────────────────────────────────────────── */}
+      {/* Owner-first: no accountant CTAs here. Dönem Kapat / KDV Beyanı live in the
+          Muhasebe zone (/dashboard/accounting), not the owner's Finans hub. */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[0.65rem] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Finans</div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0f172a] leading-tight">{meta.title}</h1>
           <p className="text-sm text-[#94a3b8] mt-1">{meta.sub}</p>
         </div>
-        {activeTab === 'cfo' && (
-          <Link href="/dashboard/cfo/period-close"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
-            Dönem Kapat
-          </Link>
-        )}
-        {activeTab === 'tax' && (
-          <Link href="/dashboard/cfo/tax/kdv"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e8eaef] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
-            KDV Beyanı →
-          </Link>
-        )}
       </div>
 
       {/* ── Tab nav + persistent context bar (sticky together) ──────────────────── */}
@@ -182,25 +164,27 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* ── GL mode indicator ─────────────────────────────────────────────────── */}
+      {/* ── Data-source indicator — owner-friendly, plain language ──────────────── */}
+      {/* No GL/mizan jargon and no owner→/dashboard/cfo door; the owner is pointed
+          to the Muhasebe zone where the accountant turns on formal accounting. */}
       {glMode === 'shadow' && (
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-warn-light border border-warn-light rounded text-xs">
-          <span className="text-warn text-base leading-none">⚠</span>
+          <Icon name="info" size={16} className="text-warn shrink-0" />
           <div>
-            <span className="font-bold text-warn-text">Muhasebe kaynağı: Operasyonel tablolar</span>
-            <span className="text-warn-text ml-2">— Çift taraflı muhasebe (GL) henüz aktif değil. Bilanço ve mizan boş görünebilir.</span>
+            <span className="font-bold text-warn-text">Bilanço ve resmi tablolar hazırlanıyor</span>
+            <span className="text-warn-text ml-2">— Muhasebe bağlantısı tamamlandığında otomatik dolacak.</span>
           </div>
-          <Link href="/dashboard/cfo/reconciliation"
+          <Link href="/dashboard/accounting"
             className="ml-auto shrink-0 text-warn-text font-semibold hover:underline whitespace-nowrap">
-            GL Aktive Et →
+            Muhasebe →
           </Link>
         </div>
       )}
       {glMode === 'parallel' && (
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-info-light border border-info-light rounded text-xs">
-          <span className="text-info text-base leading-none">ℹ</span>
-          <span className="font-bold text-info-text">Muhasebe kaynağı: Paralel mod</span>
-          <span className="text-info ml-1">— GL journal yazılıyor ancak raporlama hâlâ operasyonel tablolardan.</span>
+          <Icon name="info" size={16} className="text-info shrink-0" />
+          <span className="font-bold text-info-text">Muhasebe bağlantısı etkin</span>
+          <span className="text-info ml-1">— Resmi mali tablolar hazırlanıyor.</span>
         </div>
       )}
 

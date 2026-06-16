@@ -9,6 +9,7 @@ export const metadata = { title: 'Operasyon' }
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { HubFallback }      from '@/components/dashboard/HubFallback'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { OPERATIONS_TABS } from '@/lib/nav-config'
 import { OperationsContextBar } from './_shared/OperationsContextBar'
@@ -160,23 +161,11 @@ export default async function OperationsPage({ searchParams }: PageProps) {
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
   }
-  if (!userId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/operations" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!userId) return <HubFallback variant="auth" retryHref="/dashboard/operations" />
 
   let companyId: string | null = null
   try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
-  if (!companyId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/operations" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!companyId) return <HubFallback variant="company" retryHref="/dashboard/operations" />
 
   const params    = await searchParams
   const rawTab    = params.tab ?? 'komuta'

@@ -375,7 +375,7 @@ export default function PartnersPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e8eaef] text-[#64748b] text-xs font-semibold hover:border-[#e8eaef] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
-            Yönetişim
+            Ortak Mutabakatı
           </Link>
           <Link
             href="/dashboard/partners/new"

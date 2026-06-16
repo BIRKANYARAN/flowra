@@ -13,6 +13,7 @@ import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { COMMERCIAL_TABS } from '@/lib/nav-config'
 import { CommercialContextBar } from './_shared/CommercialContextBar'
 import { HubHeroAction, type HeroAction } from '@/components/dashboard/HubHeroAction'
+import { HubFallback } from '@/components/dashboard/HubFallback'
 
 function TabSkeleton() {
   return (
@@ -48,23 +49,11 @@ export default async function CommercialPage({ searchParams }: PageProps) {
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
   }
-  if (!userId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      
-      <p className="text-xs text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/commercial" className="text-xs text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!userId) return <HubFallback variant="auth" retryHref="/dashboard/commercial" />
 
   let companyId: string | null = null
   try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
-  if (!companyId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      
-      <p className="text-xs text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/commercial" className="text-xs text-brand-light font-semibold hover:underline">Yeniden Dene</a>
-    </div>
-  )
+  if (!companyId) return <HubFallback variant="company" retryHref="/dashboard/commercial" />
 
   const params  = await searchParams
   // Legacy deep-links: ?tab=pipeline → ozet, ?tab=proformas → teklifler.
